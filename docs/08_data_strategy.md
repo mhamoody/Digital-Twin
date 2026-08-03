@@ -272,9 +272,9 @@ audit history.
 | `analytics.weekly_state` | enrolment × checkpoint × feature-set version | Cutoff, freshness, build run, completeness, origin summary |
 | `analytics.weekly_feature` | state × feature name | Typed value, missing reason, and compact provenance |
 | `analytics.split_assignment` | enrolment/presentation × experiment version | Frozen train/validation/test membership |
-| `analytics.model_version` | one trained model/calibrator | Data, feature, split, seed, code, metrics, approval scope |
-| `analytics.prediction` | state × model version | Probability, calibration version, generation time, quality-gate result |
-| `analytics.evidence` | prediction × evidence item | Feature value, SHAP attribution, display label, source reference |
+| `analytics.model_version` | one LLM or baseline model/calibrator | Provider/model, prompt/few-shot or training config, data, feature, split, seed, metrics, approval scope |
+| `analytics.prediction` | state × model version | Raw/calibrated probability, structured output, calibration version, generation time, quality-gate result |
+| `analytics.evidence` | prediction × evidence item | Supplied feature value, LLM citation/ablation or baseline attribution, display label, source reference |
 | `analytics.alert` | one policy decision on a prediction | Threshold/policy version, freshness, priority, lifecycle status |
 | `analytics.alert_review` | one append-only status transition | Reviewer pseudonym/role, prior/new state, note, timestamp |
 
@@ -327,10 +327,10 @@ weekly states + typed missing reasons
         +------> restricted outcome join after states are frozen
         |                              |
         v                              v
-feature matrix + frozen split assignments -> baselines/model/calibration
+versioned state serialization + frozen splits -> strong LLM + baselines + calibration
         |
         v
-prediction -> SHAP evidence -> alert policy -> instructor review
+validated prediction -> grounded evidence -> alert policy -> instructor review
 ```
 
 ### Pipeline stages and required outputs
@@ -357,13 +357,18 @@ prediction -> SHAP evidence -> alert policy -> instructor review
 8. **Freeze splits:** use all `2014J` presentations as the untouched temporal test
    set. Use earlier presentations for grouped model selection and out-of-fold
    calibration; no presentation or learner trajectory may cross a split.
-9. **Evaluate:** compare majority/prevalence, activity-only, submission/grade-only,
-   and regularized logistic regression before tree candidates. Report each
-   checkpoint separately with PR-AUC, ROC-AUC, macro-F1, at-risk precision/recall,
-   Brier score, calibration, and uncertainty.
+9. **Evaluate:** use the selected strong LLM as the primary model and compare it
+   with majority/prevalence, activity-only, submission/grade-only, regularized
+   logistic, and at most two tree-based baselines. Freeze the LLM model version,
+   prompt, state serialization, and any few-shot examples before the untouched
+   test run. Calibrate only on earlier-presentation validation/OOF outputs.
+   Report each checkpoint separately with PR-AUC, ROC-AUC, macro-F1, at-risk
+   precision/recall, Brier score, calibration, uncertainty, schema/grounding
+   failures, latency, and cost.
 10. **Operationalize:** run the local Moodle adapter into the same canonical
-    schema and compute the supported feature subset. An OULAD model prediction on
-    replayed Moodle data is a demo output, not an external-validity result.
+    schema and compute the supported feature subset. A primary-LLM or baseline
+    prediction on replayed Moodle data is a demo output, not an
+    external-validity result.
 
 ## Re-entry gates for a supplemental dataset
 

@@ -10,10 +10,10 @@
  Canonical observations --> weekly state builder --> evaluation dataset
           |                       |                         |
           |                       v                         v
-          |                versioned twin store     baselines + model
+          |                versioned twin store     baselines + strong LLM
           |                       ^                         |
           |                       |                         v
-          |                 evidence + alerts <------ calibrated prediction + SHAP
+          |                 evidence + alerts <------ calibrated prediction + grounded citations
           |                       |
           |                       v
           |                 FastAPI / Streamlit ----> instructor review
@@ -41,7 +41,7 @@ The database separates facts from interpretations. A later model run must not ov
 | Raw/canonical observations | activity, assessment, registration, forum event | Immutable after accepted ingestion; corrections create a new version or audit event |
 | Derived weekly state | clicks to date, active days, recency, missed work, cumulative score | Rebuildable and keyed by feature-set version plus cutoff |
 | Prediction | probability, checkpoint, model/calibrator version | Append-only result of a model run |
-| Evidence/explanation | feature values, SHAP attribution, template/LLM text | Linked to one prediction; never detached from its inputs |
+| Evidence/explanation | supplied feature values, LLM evidence citations/ablation results, baseline SHAP, validated summary | Linked to one prediction; never detached from its inputs |
 | Alert | policy version, threshold, confidence, freshness, status | Status changes are audited |
 | Instructor feedback | reviewer, note, decision, timestamp | Append-only audit record |
 
@@ -58,9 +58,9 @@ The database separates facts from interpretations. A later model run must not ov
 | `assessment_observation` | learner_id, assessment_id, submission date, score, missing/withdrawn status, origin |
 | `text_observation` | text_id, learner/pseudonym where legitimately linkable, thread/context, event_time, content or restricted-content pointer, label provenance |
 | `weekly_state` | learner_id, presentation_id, week, cutoff_at, feature_set_version, feature values, missingness flags, origin summary |
-| `prediction` | state key, model_version, calibration_version, probability/output, generated_at, quality-gate status |
-| `evidence` | prediction_id, evidence_id, feature/value, attribution method/value, display label |
-| `llm_output` | prediction_id, provider/model, prompt version, parsed object, validation result, fallback used, latency/cost metadata |
+| `prediction` | state key, model_version, prompt version, raw/calibrated probability, output, generated_at, quality-gate status |
+| `evidence` | prediction_id, evidence_id, supplied feature/value, citation/attribution method and value, display label |
+| `llm_output` | prediction_id, provider/model, prompt/few-shot versions, parsed object, validation and abstention result, fallback used, latency/cost metadata |
 | `alert` | prediction_id, policy version, type, priority, freshness, status, created_at |
 | `alert_review` | alert_id, reviewer pseudonym/role, prior/new status, note, reviewed_at |
 
@@ -160,16 +160,21 @@ rules.
 ### Prediction service
 
 - Accepts a persisted state key, not arbitrary dashboard values.
-- Returns model and calibrator versions with the probability.
+- Serializes only cutoff-safe state fields through a versioned prompt contract.
+- Uses the selected strong LLM as the primary predictor and returns its model,
+  prompt, few-shot, and calibrator versions with raw and calibrated probability.
 - Refuses unsupported checkpoint/presentation contexts.
 - Persists the exact state/model reference used for every prediction.
 
-### Explanation service
+### LLM validation and evidence service
 
-- SHAP evidence is calculated from the same model input as the prediction.
-- LLM input is an allow-listed projection of stored evidence.
+- LLM input is an allow-listed projection of the persisted weekly state.
+- The LLM must cite only evidence identifiers present in that projection.
 - Strict JSON/schema and semantic validation occur before persistence/display.
-- Deterministic template fallback is mandatory.
+- Controlled input ablation tests evidence sensitivity; SHAP is used only for
+  compatible structured baselines and is never presented as an LLM explanation.
+- A clearly labelled deterministic fallback is mandatory when the primary LLM
+  cannot return a safe result.
 
 ### Dashboard/API
 
@@ -182,10 +187,10 @@ rules.
 
 | Evidence source | Evaluate | Do not claim |
 |---|---|---|
-| OULAD/approved empirical dataset | early-warning performance, calibration, temporal generalization, subgroup slices | live Moodle performance or modern-session behaviour without evidence |
+| OULAD/approved empirical dataset | primary LLM and baseline early-warning performance, calibration, temporal generalization, subgroup slices | live Moodle performance or modern-session behaviour without evidence |
 | Moodle replay/synthetic data | ingestion, latency, schema, failure recovery, alert lifecycle, interface | real-world predictive validity or authentic learner behaviour |
 | Authentic independent text corpus | text classification/verbalization metrics | joint risk prediction for OULAD learners |
-| Template/LLM frozen cases | grounding, schema, abstention, latency, reviewer preference | educational intervention effectiveness |
+| Frozen LLM audit cases | grounding, schema, abstention, evidence sensitivity, latency, cost, reviewer interpretation | educational intervention effectiveness or hidden chain-of-thought validity |
 | Small dashboard walkthrough | task completion and major usability problems | generalizable usability or learning-outcome improvement |
 
 This separation is a core integrity requirement and should appear in the final report's results structure.

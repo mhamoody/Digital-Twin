@@ -1,6 +1,9 @@
 # 04 — Technology stack and selection rules
 
-The stack is intentionally conventional. The research value should come from temporal validity, provenance, calibration, and evaluation—not from building custom infrastructure.
+The infrastructure is intentionally conventional, while the primary modelling
+component is a capable LLM. Research value comes from testing that model on
+temporally valid, provenance-aware student states with reproducible baselines,
+calibration, and grounding controls—not from building custom infrastructure.
 
 ## Selected MVP stack
 
@@ -8,8 +11,9 @@ The stack is intentionally conventional. The research value should come from tem
 |---|---|---|
 | Language | Python | Shared ecosystem for data preparation, modelling, API, and dashboard |
 | Data processing | pandas; optional Polars only if profiling proves a need | OULAD-scale processing does not justify distributed infrastructure |
-| Structured ML | scikit-learn; one supported gradient-boosting library if needed | Covers baselines, calibration, metrics, and a small candidate set |
-| Explanations | SHAP | Core local feature-attribution mechanism for the selected model |
+| Primary model | One selected strong hosted or feasible open-weight LLM through a provider-neutral adapter | Core risk prediction and grounded evidence reasoning |
+| Structured ML | scikit-learn; one supported gradient-boosting library if needed | Baselines, calibration, metrics, and comparison experiments—not the target model |
+| Evidence analysis | Evidence-ID validation and controlled LLM input ablation; SHAP for compatible baselines | Tests whether outputs remain grounded without claiming generated prose is causal explanation |
 | Counterfactuals | DiCE-ML | Stretch dependency; do not install or integrate until MVP acceptance criteria are secure |
 | Twin store | PostgreSQL with migrations | Versioned, relational storage for observations, states, predictions, evidence, alerts, and feedback |
 | LMS sandbox | Moodle on Laragon/MySQL or MariaDB | Already running locally with a test course, assignments, pages, files, sections, and a forum |
@@ -27,11 +31,15 @@ Moodle's operational MySQL/MariaDB database and the PostgreSQL twin store must r
 - Kafka, Spark, or other streaming/distributed systems: scheduled micro-batches are sufficient.
 - Kubernetes and production orchestration: unjustified for one course and one semester.
 - A React or mobile frontend: Streamlit covers the required instructor workflows.
-- A vector database: the MVP LLM receives selected structured evidence; no open-ended retrieval is required.
-- Fine-tuning or training an LLM: prompt/schema evaluation is adequate for the constrained role.
-- Multiple model providers in production: use one adapter and one selected provider/local model, with the template fallback always available.
+- A vector database: the primary LLM receives a selected structured weekly state;
+  no open-ended retrieval is required.
+- Training a foundation model from scratch. Parameter-efficient fine-tuning may
+  be tested only if prompt-based use of the selected strong model is inadequate
+  and a leakage-safe training protocol is feasible.
+- Multiple model providers in production: use one adapter and one selected
+  strong provider/local model, with a deterministic fallback always available.
 
-## Structured-model shortlist
+## Baseline shortlist
 
 The experiment should remain small:
 
@@ -40,21 +48,37 @@ The experiment should remain small:
 3. regularized logistic regression;
 4. at most two of random forest, histogram gradient boosting, or XGBoost/LightGBM.
 
-Selection is based on checkpoint performance, calibration, stability across module presentations, interpretability, and runtime. A slightly weaker but well-calibrated and stable model may be preferable to a complex model with a marginal headline improvement.
+These models establish how much value the LLM adds. They do not replace the
+LLM as the intended project model. If a baseline performs better, report that
+result and restrict deployment claims rather than redefining the research goal
+after seeing the test set.
 
-## LLM adapter, not a fixed provider
+## Strong-LLM adapter, not a fixed provider
 
 The code should expose a provider-neutral interface such as:
 
 ```text
-render_explanation(validated_evidence, prompt_version) -> validated_explanation
+predict_risk(validated_weekly_state, prompt_version) -> validated_risk_result
 ```
 
-The final proposal listed GPT, Claude, and an open-weight Llama model as candidates. Those names are examples, not architecture. Model availability, pricing, context windows, and university credits change; confirm them at the time of the proof of concept rather than encoding dated claims in the design.
+The final proposal listed GPT, Claude, and open-weight Llama-family models as
+candidates. Those names are examples, not architecture. The selected model must
+be strong enough for the primary prediction task; a small/cheap model may be
+included as an efficiency baseline but must not silently become the target
+model. Availability, pricing, context windows, and university credits must be
+confirmed at proof-of-concept time.
+
+“Strong” means the team's explicitly approved high-capability model tier, chosen
+before the untouched test evaluation and pinned by provider, exact model/version,
+configuration, and access date. A silent fallback to a mini/lite model is not an
+equivalent experiment; any downgrade is a separately named baseline or failed
+primary-model run.
 
 ### Candidate evaluation
 
-Compare at most one hosted small/efficient model and one feasible open-weight model on the same frozen cases. Score:
+Evaluate the selected strong model on the frozen empirical protocol. Optionally
+compare one smaller/cheaper or feasible open-weight model as an efficiency
+baseline. Score:
 
 - schema-valid output before and after one repair attempt;
 - evidence-reference precision and coverage;
@@ -63,9 +87,12 @@ Compare at most one hosted small/efficient model and one feasible open-weight mo
 - compliance with the allowed-action list;
 - latency and failure rate;
 - cost and data-governance suitability; and
-- quality relative to the deterministic template.
+- predictive quality relative to classical baselines and the deterministic fallback.
 
-The chosen model must support reliable structured output or constrained decoding. If no candidate adds clear value over the template, the scientifically honest outcome is to retain the template and report the negative result.
+The chosen model must support reliable structured output or constrained
+decoding. If it does not improve on the baselines, the scientifically honest
+outcome is a negative LLM result and a restricted prototype—not a claim that
+basic ML was the intended goal.
 
 ## Configuration and secrets
 
@@ -80,7 +107,7 @@ The chosen model must support reliable structured output or constrained decoding
 | Profile | Purpose | Components |
 |---|---|---|
 | Developer | Individual feature work | Local Python environment, PostgreSQL, fixtures; Moodle may be shared or local |
-| Integrated demo | End-to-end replay and presentation | Existing Laragon Moodle, PostgreSQL, FastAPI, Streamlit, selected model or template fallback |
+| Integrated demo | End-to-end replay and presentation | Existing Laragon Moodle, PostgreSQL, FastAPI, Streamlit, selected strong LLM or clearly labelled deterministic fallback |
 | Reproducible package | Assessment hand-off | Dockerized application/database where practical, seed/replay command, migration and test commands, documented Moodle setup |
 
 Public cloud deployment is optional. If used, access control and institutional privacy rules take precedence over convenience or free-tier pricing.
@@ -90,6 +117,8 @@ Public cloud deployment is optional. If used, access control and institutional p
 - Whether Queen's provides approved compute, hosted-model access, or cloud credits.
 - Whether any external model may receive even anonymized educational text under the applicable terms.
 - Whether Docker or Laragon is the final documented Moodle setup; Laragon is the current working implementation.
-- Which accessible Open edX/Moodle dataset, if any, complements OULAD.
+- Whether a supplemental dataset later passes the re-entry gates in
+  `08_data_strategy.md` for a separately reported external evaluation. This is
+  not an MVP dependency and must not imply row-level merging with OULAD.
 
 These items need named owners and dates in `06_workflow.md`; they must not be silently assumed.

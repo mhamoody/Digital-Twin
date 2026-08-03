@@ -31,22 +31,22 @@ The proposal originally combined many substantial studies: temporal modelling, g
 
 The revised **primary scientific contribution** is narrower:
 
-> Design and evaluate a leakage-controlled, provenance-aware weekly student-state twin for early warning, and determine whether it produces useful and calibrated evidence earlier than simple static baselines.
+> Design and evaluate a leakage-controlled, provenance-aware weekly student-state twin in which a capable LLM is the primary risk model, and determine whether its calibrated, evidence-grounded predictions improve on static and conventional-ML baselines.
 
 This separates the research contribution from the engineering contribution:
 
 | Type | Contribution |
 |---|---|
-| Scientific | Temporal state construction; leakage-aware checkpoint evaluation; calibration; comparison with majority, activity-only, and grade-only baselines; analysis of alert evidence and model-quality gates |
+| Scientific | Temporal state construction; a strong LLM as the primary predictor; leakage-aware checkpoint evaluation; calibration; comparison with majority, activity-only, grade-only, logistic, and tree baselines; analysis of grounding and model-quality gates |
 | Engineering | Moodle ingestion/replay, PostgreSQL persistence, API, dashboard, alert lifecycle, and deployment packaging |
-| Supporting AI | SHAP evidence is core. An LLM may render verified evidence into constrained instructor-facing text, but it does not create the risk score. DiCE and semantic forum analysis are stretch work. |
+| Supporting analysis | Classical ML establishes comparison baselines rather than the intended final intelligence. SHAP may explain compatible baselines; LLM evidence references and controlled input ablations assess the primary model. DiCE and semantic forum analysis remain stretch work. |
 
 ### Research questions
 
-- **RQ1:** At weeks 3, 5, 8, and 10, how well do leakage-controlled weekly states predict non-success compared with majority, activity-only, and grade-only baselines?
-- **RQ2:** Are the resulting probabilities sufficiently calibrated to support threshold-based instructor alerts, and how does reliability vary by module presentation and checkpoint?
-- **RQ3:** Can every displayed alert remain traceable to observed evidence, provenance, and a model version while keeping instructor review in the loop?
-- **Optional RQ4:** Can a constrained LLM verbalize verified evidence with low unsupported-claim and invalid-schema rates compared with a deterministic template?
+- **RQ1:** At weeks 3, 5, 8, and 10, how well does a strong LLM predict non-success from leakage-controlled weekly states compared with majority, activity-only, grade-only, logistic, and tree-based baselines?
+- **RQ2:** Can the LLM's risk scores be calibrated sufficiently for threshold-based instructor alerts, and how does reliability vary by module presentation and checkpoint?
+- **RQ3:** Can every accepted LLM prediction cite only supplied evidence, satisfy the output contract, expose uncertainty, and remain traceable to its prompt, model, data, and state versions?
+- **RQ4:** Does the LLM add useful predictive or evidence-quality value beyond conventional structured models at an acceptable latency, cost, and failure rate?
 
 ## Data problem
 

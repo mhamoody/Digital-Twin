@@ -17,9 +17,10 @@ pipelines, and deployment assets are planned but have not yet been implemented.
 
 ## Research objective
 
-The primary objective is to determine whether leakage-controlled weekly student
-states can provide useful, calibrated evidence of non-success earlier than
-simple majority, activity-only, and grade-only baselines.
+The primary objective is to determine whether a capable LLM can reason over
+leakage-controlled weekly student states and produce useful, calibrated,
+evidence-grounded estimates of non-success earlier than simple majority,
+activity-only, grade-only, and conventional structured-ML baselines.
 
 The planned evaluation uses checkpoints such as weeks 3, 5, 8, and 10 and keeps
 two evidence paths separate:
@@ -39,15 +40,15 @@ not evidence of real-world predictive performance.
 2. Build one versioned state per learner, course presentation, and checkpoint.
 3. Test cutoff rules so future activity, outcomes, and assessment results cannot
    leak into earlier states.
-4. Compare transparent baselines with a small structured-model shortlist and
-   calibrate the selected model.
+4. Evaluate a strong LLM as the primary risk model against transparent and
+   conventional-ML baselines, then calibrate its risk scores.
 5. Persist observations, states, predictions, evidence, alerts, and instructor
    reviews in PostgreSQL.
 6. Expose a minimal FastAPI service and Streamlit instructor dashboard.
-7. Attach SHAP evidence to predictions and render explanations with a
-   deterministic template by default.
-8. Optionally evaluate a constrained LLM as an evidence verbalizer. Its output
-   must pass strict validation or be replaced by the deterministic template.
+7. Require the LLM to return schema-valid risk, uncertainty, and evidence
+   references grounded only in the supplied weekly state.
+8. Validate every model response and use a deterministic rule/template path
+   when the LLM is unavailable, invalid, or outside its approved context.
 
 No alert directly contacts, grades, penalizes, or refers a student. An instructor
 must remain in the decision loop.
@@ -57,8 +58,9 @@ must remain in the decision loop.
 | Area | Planned technology |
 |---|---|
 | Language and data | Python, pandas, NumPy |
-| Modelling | scikit-learn with calibrated probabilities |
-| Explanations | SHAP and deterministic templates |
+| Primary modelling | A selected strong hosted or open-weight LLM behind a provider-neutral adapter |
+| Baselines/calibration | scikit-learn; post-hoc calibration fitted without test leakage |
+| Evidence | LLM evidence references, input ablation tests, and deterministic fallback; SHAP for compatible baselines only |
 | Twin store | PostgreSQL, SQLAlchemy, Alembic |
 | LMS integration | Moodle web services/API or controlled export |
 | API | FastAPI |
@@ -85,8 +87,9 @@ python -m pip install -r requirements.txt
 
 The dependency ranges in `requirements.txt` are an initial development baseline.
 They should be resolved into a lock file after the first vertical slice is
-working. Optional model-provider, boosting, and counterfactual packages are not
-included until the team selects those components.
+working. The LLM is a core component, but its provider-specific SDK is not
+included until the team selects the model and approved access route. Boosting
+and counterfactual packages remain optional.
 
 There is no application start command yet because the implementation has not
 started. Runnable preparation, state-building, evaluation, replay, and demo
@@ -144,12 +147,12 @@ The first implementation milestone is a minimal vertical slice:
 tiny fixture
   -> canonical observation
   -> weekly state
-  -> baseline prediction
+  -> LLM prediction + baseline comparison
   -> evidence
   -> alert
   -> API/dashboard review
 ```
 
-Full OULAD preparation, Moodle integration, SHAP, and the optional LLM evaluation
-will be added incrementally after these interfaces and leakage controls are
-tested.
+Full OULAD preparation, Moodle integration, the primary LLM evaluation, and
+baseline attribution checks will be added incrementally after these interfaces
+and leakage controls are tested.
