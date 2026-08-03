@@ -1,32 +1,131 @@
 # 03 — Solution
 
-> **This is the target design the planning phase is working toward — it is not a system being built right now.** The model choice in particular is a shortlist pending the proof-of-concept test described in `02.5` of the research notes and formalized in `04_stack.md`. Nothing here should be read as a final architectural commitment; see `06_workflow.md` for the phase gate that has to be passed before any of this is implemented.
+## Solution in one sentence
 
-## The system, end to end (target design)
+Build weekly, leakage-free student states from empirical learning data; estimate and calibrate early risk; persist the states, evidence, predictions, and review history in a course-twin store; and expose only traceable, human-reviewed alerts through a minimal instructor dashboard.
 
-1. **Sandbox / LMS** — a self-hosted Moodle instance (see `02.3` sourcing notes and `05_architecture.md`) stands in for a real course, seeded with engagement, grade, and forum data derived from OULAD and MOOCPosts (see the data-gap resolution below).
-2. **Sync pipeline** — a scheduled job pulls new activity (logins, clicks, submissions, forum posts, grades) out of the sandbox/LMS on a fixed interval and writes it into the digital twin database, targeting well under an hour of lag end to end.
-3. **Digital twin database** — a structured, historized store built around the target schema in `05_architecture.md`: one row per student per time-window, linked to their forum posts, assessment results, and engagement summary for that window.
-4. **Analytics layer** — two parallel components, both reading from the twin database:
-   - A simple, interpretable classifier (e.g., logistic regression, per `02.7`) trained on structured engagement + grade features to flag at-risk students.
-   - An LLM-based text layer that reads forum posts and short answers and produces structured judgments: a confusion rating, an urgency rating, a yes/no question flag, and a one-sentence explanation of what the student appears to be stuck on.
-5. **Dashboard / API** — an instructor-facing view showing per-student and per-class trends over time, flagged students, and the AI-generated explanations feeding into recommendation text.
-6. **Instructor action** — the instructor reviews flagged students and recommendations and decides what to do; the system does not act on students directly (see `01_problem.md`'s translation table on why this is a deliberate, not accidental, limitation of the digital-twin analogy here).
+## Two evidence paths that must remain separate
 
-## Why an LLM is a *candidate* for the forum/text analysis — not an assumed winner
+The system deliberately separates model validation from operational validation.
 
-The proposal's four objectives call for "LLM-based analytics," but that does not mean an LLM is guaranteed to be the best tool for the specific sub-task of classifying forum-post confusion and urgency. The relevant prior work on the exact task this project targets (Stanford MOOCPosts-style confusion/urgency/sentiment classification) shows that **classical and mid-sized approaches already perform strongly**: Almatrafi, Johri & Rangwala (2018) report a weighted F1 of 0.88 for urgency classification using AdaBoost over linguistic and metadata features, and later BERT-embedding-based approaches (Khodeir) push weighted F1 to roughly 0.90–0.92. This is a **higher** bar than the team's original working-draft estimate of 0.64–0.82 accuracy — the literature search in `02.5` found stronger classical/BERT baselines than the team had assumed, which means the honest bar an LLM has to clear here is tougher than originally thought, not easier.
+| Path | Purpose | Valid claims |
+|---|---|---|
+| **Empirical path: OULAD or an approved replacement** | Build weekly states and evaluate early-warning models | Predictive performance, calibration, temporal behaviour, subgroup slices, and limitations on that dataset |
+| **Operational path: local Moodle sandbox** | Exercise LMS entities, API/export ingestion, replay, database updates, alerts, and dashboard refresh | Integration correctness, latency, resilience, schema validity, and usability of the prototype |
 
-This changes the framing of objective 2: the LLM's case has to be made on dimensions other than raw classification accuracy where a purpose-built classical/BERT model may already be very strong — for example, the LLM's ability to generate a **one-sentence, human-readable gap explanation** (something a plain classifier cannot do at all), its ability to work in a low-label-volume setting without a large annotated training set, and its flexibility to be redirected to slightly different judgments (e.g., "conceptual misunderstanding" categories specific to this course) without retraining. The PoC protocol in `04_stack.md` is designed specifically to test the LLM against this honest bar, on both the confusion/urgency classification task and the explanation-generation task a classical model cannot do, rather than assuming the LLM wins outright. **The model itself is not chosen yet** — this section states the candidate rationale, not a decision.
+Replaying OULAD-like records into Moodle connects the demonstration, but it does not turn synthetic Moodle identities into real learners. Results from the two paths are reported separately.
 
-## How the real-vs-synthetic data gap is resolved (concrete plan)
+## MVP flow
 
-The gap, established in `02.3` of the research notes and detailed field-by-field in `05_architecture.md`, is that OULAD has structured engagement and grade data but no free text, while Stanford MOOCPosts has richly labeled free text but no linked structured engagement or grade data for the same students, and comes from different (non-credit, Stanford-specific) courses.
+1. **Dataset preparation** filters one or more module presentations and converts raw activity, assessment, registration, and outcome records into canonical observations.
+2. **Weekly state builder** aggregates only records whose event time is at or before the checkpoint. It derives activity recency, active days, click totals, resource mix, submission status, and cumulative assessment progress.
+3. **Model evaluation** compares simple baselines and a small candidate set using presentation-aware splits. The selected model is calibrated and evaluated at early and mid-semester checkpoints.
+4. **Evidence generation** records prediction probability and SHAP attributions for the selected model. Model/data versions and feature values are stored with the prediction.
+5. **Moodle ingestion/replay** reads real sandbox entities and controlled test events, converts them to the same canonical observation schema, and updates PostgreSQL.
+6. **Alert policy** creates an alert only when data are fresh, the relevant model-quality gate has passed, and a reviewed threshold or rule is met.
+7. **Explanation rendering** uses a deterministic template by default. A constrained LLM may rewrite the same verified evidence into concise text, subject to the contract below.
+8. **Dashboard review** lets an instructor inspect the timeline and evidence, then review, dismiss, or resolve the alert. No student action is automated.
 
-The concrete plan is:
-1. Stand up a Moodle sandbox and populate its structured layer (logins, clickstream pattern, assessment scores) using **distributional patterns drawn from OULAD** — not literal OULAD records replayed verbatim, but synthetic student activity generated to match OULAD's engagement and grade *distributions* (e.g., matching the shape of click-count-vs-final-result relationships), so the structured side of the twin behaves like a real distance-learning course.
-2. Seed the sandbox's forum layer with posts **written to match the confusion, urgency, and sentiment distribution found in Stanford MOOCPosts** — again, not the literal MOOCPosts text (which is a different, non-credit course population and carries its own licensing/attribution terms), but synthetic or lightly-adapted posts constructed so their labeled-dimension distribution resembles the real dataset's.
-3. Link the two synthetic layers per student inside the sandbox, so that, unlike either public dataset alone, the twin has *one* student record with both structured engagement and labeled-adjacent forum text — this linkage is the specific thing neither public dataset provides and is the actual reason a sandbox-based synthetic bridge is needed rather than picking one dataset and living with its gap.
-4. Flag explicitly, in the evaluation report (`02_goal.md`'s "done" definition), that any predictive-accuracy numbers produced against this blended sandbox data are evaluated against a synthetic linkage and cannot be read as evidence of real-world accuracy on an actual course — the OULAD-only classifier accuracy (see `02.7`) is reported separately and is the only number in this project that reflects a fully real dataset end to end.
+## What the LLM does—and does not do
 
-This plan is the team's original fallback plan from the working draft, carried forward and made more specific per Meeting 2's instruction to evaluate gaps deliberately rather than defaulting to "we'll simulate what's missing."
+The LLM is kept small in scope because it is a major dependency and a common source of unsupported output.
+
+### Allowed
+
+- Convert already-selected evidence into a short instructor-facing summary.
+- Choose from a small approved set of review actions.
+- Abstain when the evidence is insufficient or inconsistent.
+- As an independent stretch experiment, classify authentic labelled forum text.
+
+### Not allowed
+
+- Calculate or change the risk probability.
+- Query raw personally identifiable student data.
+- Invent causes, diagnoses, topics, or events not present in the input.
+- Produce arbitrary student-facing advice.
+- Trigger an email, referral, grade change, or other intervention.
+
+### Grounding and output contract
+
+The application provides a compact object such as:
+
+```json
+{
+  "alert_id": "alert-123",
+  "checkpoint_week": 5,
+  "risk_probability": 0.71,
+  "evidence": [
+    {"id": "ev-1", "label": "days since activity", "value": 9},
+    {"id": "ev-2", "label": "missed assessments", "value": 1}
+  ],
+  "allowed_actions": ["review recent work", "check missed assessment", "contact through approved channel"]
+}
+```
+
+The model must return JSON with:
+
+- `summary`: at most two sentences;
+- `evidence_ids`: only identifiers present in the request;
+- `suggested_actions`: zero or more values from `allowed_actions`;
+- `uncertainty_note`;
+- `abstain`: Boolean; and
+- `abstention_reason`: required when `abstain` is true.
+
+Application code then:
+
+1. parses against a strict schema with additional properties forbidden;
+2. verifies that every evidence reference and suggested action is in the request;
+3. rejects prohibited or unsupported language;
+4. retries once with the validation error; and
+5. uses the deterministic template if validation still fails.
+
+Only the validated object is stored and displayed, together with the provider/model identifier, prompt version, timestamp, validation result, and fallback status. Raw model output may be retained in a restricted evaluation log, never treated as trusted application data.
+
+## Dataset strategy
+
+The comparison is complete. OULAD is the sole empirical MVP source because it is
+reproducibly accessible, linked across activity and assessments, outcome-labelled,
+and feasible within the semester. The local Moodle sandbox is a separate
+operational source. No alternative is concatenated with OULAD.
+
+An alternative replaces OULAD only if it is accessible in time and supports the minimum linkage:
+
+`learner → course/presentation → event time → activity/assessment → outcome`
+
+Open edX contributes event/xAPI schema guidance; HarvardX/MITx may provide an
+optional aggregate robustness check; MORF is future restricted replication; and
+screened Moodle releases are adapter candidates subject to byte-level linkage,
+calendar, outcome, and licence gates. A source with finer events but no valid
+outcome may test ingestion, never predictive performance. A person-course
+aggregate cannot support the weekly-state research question.
+
+Forum corpora remain independent benchmarks. Their posts are never joined to OULAD student histories. Synthetic posts may exercise the UI and ingestion path, but they are not semantic-validation evidence.
+
+The exact source evidence, feature contract, missingness rules, canonical
+database, checkpoint cohort, and processing stages are in
+[`08_data_strategy.md`](08_data_strategy.md).
+
+## Alert policy and model-quality gate
+
+An alert is eligible only when:
+
+- the state was built successfully and data are not stale;
+- the model is approved for that checkpoint and presentation context;
+- calibration and validation results are visible;
+- the probability exceeds a team-reviewed threshold or a transparent hard rule fires; and
+- the alert includes at least one observable evidence record.
+
+Each alert stores its status (`new`, `reviewed`, `resolved`, or `dismissed`), review note, timestamps, prediction, explanation, evidence, provenance, and version references. A threshold will be chosen using validation data and an explicit false-alert/false-negative trade-off, not an arbitrary score.
+
+## Failure-safe behaviour
+
+- If ingestion is stale, mark the dashboard stale and suppress new model alerts.
+- If schema validation fails, quarantine the record and continue processing other records.
+- If the model is not validated for a context, show descriptive state only.
+- If SHAP generation fails, show feature values and the risk score without pretending an explanation exists.
+- If the LLM fails, times out, cites absent evidence, or returns invalid JSON, display the deterministic template.
+- If a valid counterfactual cannot be produced, no counterfactual is shown; this stretch feature never blocks the MVP.
+
+## Why this is still a digital twin
+
+The value beyond a static dashboard is the maintained, historized state and feedback loop: source observations become versioned weekly states; states produce versioned predictions and evidence; alerts acquire an instructor-reviewed lifecycle; and each result can be replayed from its source data and cutoff. The project should demonstrate those properties clearly rather than relying on the label alone.

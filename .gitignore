@@ -1,0 +1,24 @@
+# Local scratch work
+/scribble/
+
+# Python environments and caches
+/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Local datasets and generated artifacts
+/data/raw/
+/data/interim/
+/data/processed/
+/data/synthetic/
+/artifacts/

@@ -1,45 +1,106 @@
-# 02 — Goal
+# 02 — Goals, priorities, and definition of done
 
-Goals are split into two tiers per the supervisor's phase gate (see `06_workflow.md` for the full sequencing and gate criteria). Phase 0 must be substantially complete before Phase 1 work starts.
+## Priority order
 
-## Phase 0 goals (current phase)
+The project is now organized around one research thread and one demonstrable system. A lower item must not delay a higher one.
 
-| Goal | Concrete completion criterion |
-|---|---|
-| Digital-twin literature review complete | A written synthesis (feeding `01_problem.md`) covering the concept's industrial origin, at least 2–3 non-education application domains, and at least 4–5 named educational digital-twin sources, with an explicit translation table of which properties map to a course context and which don't. Done when this document exists and has been reviewed by the team — not "when we've read a few papers." |
-| Target data schema defined | A schema document (`05_architecture.md`) listing every field the twin needs, each tagged with a status (confirmed available / gap / TBD) against at least the datasets in `02.3`. Done when every field has a status and every dataset has been checked against every field — not just the fields that happen to be easy to find. |
-| Dataset comparison complete | Every candidate dataset (OULAD, Stanford MOOCPosts, Moodle sample data, and any other public dataset surfaced during search) is compared field-by-field against the schema, with a named handling decision (exclude / approximate / substitute / simulate) and a reason for each gap. Done when no dataset in this document set is missing this comparison. |
-| System requirements defined | A functional and non-functional requirements list (`04_stack.md` / `05_architecture.md`) derived from the schema, available data, and the four proposal objectives — written *before* any model is selected. Done when every requirement can be traced back to a specific data field or proposal objective. |
-| Candidate model shortlist + PoC protocol designed | At least 3–4 candidate models identified against the requirements (not general capability), with a concrete PoC test protocol (classify conceptual misunderstanding, rate confusion 1–7, generate a one-sentence gap explanation) specified and ready to run against a 20–30 post hand-labeled sample. Done when the protocol is written and at least two candidates are named for the first test round — running the PoC itself is a Phase 0→1 gate criterion, not a Phase 0 goal (see `06_workflow.md`). |
-| Moodle sandbox stood up | A local or cloud Moodle instance is running and reachable by the team, seeded with at least placeholder course structure. Done when the team can log in and see a course shell — this was targeted for week 2 in the original draft and is unchanged here (see `06_workflow.md`). |
-
-## Phase 1 goals (future build — the four proposal objectives, sharpened with concrete thresholds)
-
-These reuse and sharpen the team's original 14-week sub-goals. Numbers are not new inventions — they come from the team's own working draft — but are now explicitly gated behind Phase 0 completion rather than tied to calendar week numbers.
-
-| Proposal objective | Measurable Phase 1 goal | Success threshold (from the team's own draft, sharpened) |
+| Priority | Deliverable | Why it is essential |
 |---|---|---|
-| 1. Real-time LMS → digital twin data pipeline | Sync job moves new engagement/grade/forum data from the Moodle sandbox into the digital twin database on a schedule | Sync lag under 60 minutes end-to-end; schema holds without breaking changes for 12+ consecutive simulated weeks |
-| 2. LLM-based analytics + at-risk prediction | LLM classifies forum/short-answer text (confusion, urgency, one-line gap explanation); a simple classifier (e.g., logistic regression) flags at-risk students from structured data | At-risk classifier cross-validated on OULAD's own `final_result` labels, reported honestly against the dataset's known limitations (see `02.7` in the research notes and `05_architecture.md`); LLM forum classification reaches ≥75% agreement with human-coded labels on a held-out sample, **and** is explicitly benchmarked against the classical-ML baseline established in `02.5` (~0.88 F1 for AdaBoost, ~0.90–0.92 F1 for BERT-based approaches on Stanford MOOCPosts urgency/confusion — see `03_solution.md`) rather than assumed to win by default |
-| 3. Instructor dashboard + AI recommendations | A working dashboard shell showing per-student risk indicators and time trends, plus an AI-generated recommendation panel | Dashboard shell functional by the target build week; recommendation panel added once the classifier and LLM layer are validated; an instructor usability check is run before the panel is considered done |
-| 4. Pilot evaluation over one semester | The full pipeline runs unattended against the sandbox (or, if approved in time, a real course) for a sustained stretch, and a written evaluation report is produced | Pipeline live and stable for 4+ consecutive weeks; evaluation report includes the explicit "done" definition below |
+| P0 | Reproducible weekly OULAD state builder with leakage tests and provenance | This is the empirical foundation and main research artifact |
+| P0 | Baselines plus one calibrated at-risk model evaluated at multiple checkpoints | Answers the primary research question |
+| P0 | Versioned PostgreSQL twin schema and a Moodle-to-twin ingestion/replay path | Demonstrates that states can be maintained operationally |
+| P0 | Minimal instructor dashboard: course overview, risk queue, student evidence, alert review | Makes the result usable and closes the human-in-the-loop cycle |
+| P1 | SHAP evidence for the selected model | Makes each risk estimate inspectable without adding a separate research programme |
+| P1 | Constrained LLM evidence verbalizer with deterministic-template fallback | Satisfies the LLM aspect while keeping it out of risk determination |
+| P1 | Small formative walkthrough with available instructors/TAs | Finds serious usability failures; it is not a full usability study |
+| P2 | Grade forecasting, knowledge/progress vectors, DiCE, forum semantics, RAG, richer course-health views | Valuable only after the MVP is stable; each is independently deferrable |
 
-## Explicit definition of "done" for the pilot
+## Phase 0 — decision and design gate
 
-The Phase 1 pilot is a **success** if, by the end of the evaluation period:
-1. The sync pipeline ran for at least 4 consecutive weeks without a schema-breaking failure.
-2. The at-risk classifier's cross-validated performance on the chosen dataset is reported honestly (including known dataset limitations — module/year coverage, generalization caveats), not just as a headline accuracy number.
-3. The LLM forum-classification layer reaches its ≥75% agreement threshold against human-coded labels **and** its performance relative to the classical-ML baseline is reported plainly, even if the LLM does not outperform the baseline — a result showing the LLM is *not* clearly better than a cheaper classical model is still a valid, useful outcome of the evaluation.
-4. The dashboard and recommendation panel pass a basic instructor usability check (the instructor can find a flagged student and understand why they were flagged, without a walkthrough).
-5. The evaluation report documents what worked, what didn't, and explicit future-work recommendations, per the original proposal's deliverables list.
+Phase 0 is complete only when the team has evidence for the choices below.
 
-The pilot is **not** a failure if the LLM underperforms the classical baseline, if a dataset gap had to be handled by exclusion rather than simulation, or if the university resource-request process (see `06_workflow.md`) turns out to gate real-course access until after this pilot — those are exactly the kinds of honest findings the phase-gated, exploration-first approach is designed to surface rather than paper over.
+| Goal | Completion criterion |
+|---|---|
+| Dataset decision | **Resolved 2026-08-02:** OULAD remains the sole empirical MVP source; local Moodle is operational; all other sources have bounded, non-merged roles. Evidence and scores are in `08_data_strategy.md`. |
+| State definition | The weekly snapshot schema, outcome definition, prediction checkpoints, allowed feature cutoffs, and missing-data policy are reviewed and frozen for the first experiment. |
+| Leakage controls | Automated checks prove that a snapshot at week `t` contains no events, assessment results, or engineered values from after the cutoff. |
+| Baseline protocol | Module-presentation-aware train/validation/test rules, metrics, seeds, and majority/activity-only/grade-only baselines are specified before model comparison. |
+| Moodle path | The existing Laragon-hosted Moodle sandbox has test users, course activities, web services, and a successful read-only API extraction or documented export fallback. |
+| LLM contract | Input evidence, output JSON schema, allowed recommendation vocabulary, abstention rule, validation/retry behaviour, and template fallback are written before any hosted-model experiment. |
 
-## Explicit non-goals
+The dataset criterion is complete. Phase 1 implementation starts only after the
+state definition, leakage controls, and baseline protocol are reviewed and
+demonstrated. Moodle and LLM work can proceed in parallel only when it does not
+block the empirical core.
 
-Carried forward from the original proposal, plus one added per Meeting 2:
-- Complex physical/multi-physics simulation of learning.
-- Multi-course scaling.
-- Adaptive content generation for students.
-- External tutoring system integration.
-- **Using Queen's internal student data before it is formally approved.**
+## MVP goals and acceptance criteria
+
+### 1. Temporal twin and data quality
+
+- Produce exactly one versioned state per student, module presentation, and selected week.
+- Store observed, derived, replayed, and synthetic records with explicit provenance.
+- Pass automated cutoff, uniqueness, referential-integrity, and schema tests.
+- Rebuild the same state set from a clean environment using documented commands and fixed configuration.
+
+### 2. Early-warning model
+
+- Compare regularized logistic regression with at most two tree-based candidates.
+- Evaluate at weeks 3, 5, 8, and 10 where data permit.
+- Prevent the same module presentation from crossing incompatible split boundaries.
+- Report PR-AUC, ROC-AUC, macro-F1, at-risk precision/recall, Brier score, calibration plots, and confidence intervals where practical.
+- Select the simplest model that materially improves on the declared baselines and has acceptable calibration. If no model does, report that result rather than tuning until a favourable number appears.
+- Publish performance by checkpoint and presentation; never present one headline accuracy as the whole result.
+
+### 3. Operational twin
+
+- Pull or export users, course structure, activities, grades, and forum events from Moodle into PostgreSQL through a repeatable adapter.
+- Replay at least 12 simulated weeks while preserving event time, ingestion time, origin, source record, and scenario.
+- Complete a four-week continuous or accelerated replay with no unrecovered schema-breaking failure.
+- Record synchronization latency and rejected/quarantined records. The target scheduled lag is under 60 minutes; true streaming is not required.
+
+### 4. Instructor dashboard and alerts
+
+- Show course status, a ranked at-risk queue, and a student timeline.
+- Every alert displays risk probability, checkpoint, model version, last data refresh, and the observed evidence that supports it.
+- An instructor can mark an alert `reviewed`, `resolved`, or `dismissed` and leave a note.
+- Stale or failed ingestion is visible; the dashboard must not silently show old predictions as current.
+- A small walkthrough verifies that an evaluator can find a flagged student, explain the evidence, and identify stale data without developer assistance.
+
+### 5. LLM component
+
+The MVP LLM is an **evidence verbalizer**, not the predictor and not an autonomous recommender.
+
+- Accept only anonymized, structured evidence selected by application code.
+- Return schema-valid JSON containing a short summary, evidence references, optional allowed actions, uncertainty, and an abstention flag.
+- Make no claim that cannot be traced to an input evidence identifier.
+- Reject or repair invalid output once; after that, fall back to a deterministic template.
+- Evaluate against that template on a small frozen set for schema validity, evidence-reference coverage, unsupported claims, abstention, latency, and cost.
+- Target 100% safe application-level handling: every accepted output is schema-valid, and every invalid/unsupported output is suppressed or replaced before display.
+
+## Definition of done
+
+The graduation-project MVP is done when:
+
+1. a clean checkout can reproduce weekly states and the selected model evaluation;
+2. the evaluation is temporally valid and includes baselines, calibration, uncertainty, and limitations;
+3. OULAD's age, aggregation, and missing-text limitations—and the alternative-dataset decision—are documented;
+4. Moodle events can be ingested/replayed into the versioned twin store;
+5. the dashboard exposes evidence-linked alerts and the instructor review lifecycle;
+6. the LLM path cannot display unvalidated free-form output and has a working template fallback;
+7. empirical OULAD results, operational Moodle results, and text/synthetic experiments are reported separately; and
+8. deployment, ethics, and evaluation documentation is sufficient for another student team to reproduce the demo.
+
+## Stretch backlog
+
+Only begin these after the definition above is secure:
+
+1. DiCE counterfactual generation and feasibility evaluation.
+2. Separate grade-band or continuous-score forecasting.
+3. Assessment-domain knowledge/progress vectors.
+4. Authentic forum confusion/urgency classification against classical text baselines.
+5. Retrieval-augmented recommendations or a vector database.
+6. Formal multi-participant usability study.
+7. Cross-platform or cross-course generalization.
+8. Live institutional pilot after ethics, privacy, and access approval.
+
+A stretch result may strengthen the thesis, but an unfinished stretch feature must never weaken the reproducibility or evaluation of the P0 core.
