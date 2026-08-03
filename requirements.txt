@@ -39,6 +39,6 @@ pytest>=8.3,<10.0
 pytest-cov>=5.0,<8.0
 ruff>=0.6,<1.0
 
-# Intentionally excluded until selected: a hosted LLM SDK, XGBoost/LightGBM,
-# and DiCE-ML. The MVP has a deterministic explanation fallback and should not
-# acquire optional dependencies before the corresponding design decision.
+# The LLM is a core model, but its provider-specific SDK is added only after the
+# strong model and approved access route are selected. httpx supports the initial
+# provider-neutral adapter. XGBoost/LightGBM and DiCE-ML remain optional.

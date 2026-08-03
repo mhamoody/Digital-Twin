@@ -7,11 +7,11 @@ The project is now organized around one research thread and one demonstrable sys
 | Priority | Deliverable | Why it is essential |
 |---|---|---|
 | P0 | Reproducible weekly OULAD state builder with leakage tests and provenance | This is the empirical foundation and main research artifact |
-| P0 | Baselines plus one calibrated at-risk model evaluated at multiple checkpoints | Answers the primary research question |
+| P0 | Strong LLM risk model evaluated and calibrated at multiple checkpoints against classical baselines | Answers the primary research question and represents the intended AI contribution |
 | P0 | Versioned PostgreSQL twin schema and a Moodle-to-twin ingestion/replay path | Demonstrates that states can be maintained operationally |
 | P0 | Minimal instructor dashboard: course overview, risk queue, student evidence, alert review | Makes the result usable and closes the human-in-the-loop cycle |
-| P1 | SHAP evidence for the selected model | Makes each risk estimate inspectable without adding a separate research programme |
-| P1 | Constrained LLM evidence verbalizer with deterministic-template fallback | Satisfies the LLM aspect while keeping it out of risk determination |
+| P0 | Grounded LLM output contract, validation, abstention, and deterministic fallback | Keeps the primary model's output auditable and safe |
+| P1 | SHAP for compatible structured baselines plus LLM input-ablation checks | Provides comparison evidence without treating generated prose as an explanation |
 | P1 | Small formative walkthrough with available instructors/TAs | Finds serious usability failures; it is not a full usability study |
 | P2 | Grade forecasting, knowledge/progress vectors, DiCE, forum semantics, RAG, richer course-health views | Valuable only after the MVP is stable; each is independently deferrable |
 
@@ -24,14 +24,14 @@ Phase 0 is complete only when the team has evidence for the choices below.
 | Dataset decision | **Resolved 2026-08-02:** OULAD remains the sole empirical MVP source; local Moodle is operational; all other sources have bounded, non-merged roles. Evidence and scores are in `08_data_strategy.md`. |
 | State definition | The weekly snapshot schema, outcome definition, prediction checkpoints, allowed feature cutoffs, and missing-data policy are reviewed and frozen for the first experiment. |
 | Leakage controls | Automated checks prove that a snapshot at week `t` contains no events, assessment results, or engineered values from after the cutoff. |
-| Baseline protocol | Module-presentation-aware train/validation/test rules, metrics, seeds, and majority/activity-only/grade-only baselines are specified before model comparison. |
+| Model protocol | Module-presentation-aware train/validation/test rules, metrics, seeds, LLM prompt/few-shot boundaries, and majority/activity-only/grade-only/conventional-ML baselines are specified before model comparison. |
 | Moodle path | The existing Laragon-hosted Moodle sandbox has test users, course activities, web services, and a successful read-only API extraction or documented export fallback. |
 | LLM contract | Input evidence, output JSON schema, allowed recommendation vocabulary, abstention rule, validation/retry behaviour, and template fallback are written before any hosted-model experiment. |
 
 The dataset criterion is complete. Phase 1 implementation starts only after the
-state definition, leakage controls, and baseline protocol are reviewed and
-demonstrated. Moodle and LLM work can proceed in parallel only when it does not
-block the empirical core.
+state definition, leakage controls, and model protocol are reviewed and
+demonstrated. The LLM experiment is part of the empirical core; Moodle work can
+proceed in parallel when it does not block that experiment.
 
 ## MVP goals and acceptance criteria
 
@@ -42,13 +42,21 @@ block the empirical core.
 - Pass automated cutoff, uniqueness, referential-integrity, and schema tests.
 - Rebuild the same state set from a clean environment using documented commands and fixed configuration.
 
-### 2. Early-warning model
+### 2. LLM-first early-warning model
 
-- Compare regularized logistic regression with at most two tree-based candidates.
+- Use one selected strong LLM as the primary model over a versioned,
+  cutoff-safe serialization of the weekly state.
+- Compare it with prevalence, activity-only, grade-only, regularized logistic,
+  and at most two tree-based baselines. These baselines are controls, not the
+  intended final model.
 - Evaluate at weeks 3, 5, 8, and 10 where data permit.
 - Prevent the same module presentation from crossing incompatible split boundaries.
 - Report PR-AUC, ROC-AUC, macro-F1, at-risk precision/recall, Brier score, calibration plots, and confidence intervals where practical.
-- Select the simplest model that materially improves on the declared baselines and has acceptable calibration. If no model does, report that result rather than tuning until a favourable number appears.
+- Fit any probability calibrator on validation/OOF LLM outputs only; never use
+  test labels in prompts, examples, thresholds, or calibration.
+- Report the LLM result even if it does not beat the baselines. A weaker result
+  changes the conclusion or deployment gate; it does not silently turn a
+  baseline into the project's intended contribution.
 - Publish performance by checkpoint and presentation; never present one headline accuracy as the whole result.
 
 ### 3. Operational twin
@@ -66,27 +74,33 @@ block the empirical core.
 - Stale or failed ingestion is visible; the dashboard must not silently show old predictions as current.
 - A small walkthrough verifies that an evaluator can find a flagged student, explain the evidence, and identify stale data without developer assistance.
 
-### 5. LLM component
+### 5. LLM prediction and evidence contract
 
-The MVP LLM is an **evidence verbalizer**, not the predictor and not an autonomous recommender.
+The MVP LLM is the **primary risk predictor and evidence reasoner**. It is not an
+autonomous recommender or decision maker.
 
-- Accept only anonymized, structured evidence selected by application code.
-- Return schema-valid JSON containing a short summary, evidence references, optional allowed actions, uncertainty, and an abstention flag.
+- Accept only anonymized, cutoff-safe structured state data selected by application code.
+- Return schema-valid JSON containing a raw risk score, short summary, evidence
+  references, uncertainty, and an abstention flag. Application code applies the
+  frozen calibrator and derives the displayed risk band.
 - Make no claim that cannot be traced to an input evidence identifier.
-- Reject or repair invalid output once; after that, fall back to a deterministic template.
-- Evaluate against that template on a small frozen set for schema validity, evidence-reference coverage, unsupported claims, abstention, latency, and cost.
+- Reject or repair invalid output once; after that, fall back to a clearly
+  labelled deterministic rule/template result rather than inventing an LLM prediction.
+- Evaluate predictive metrics on the full frozen test protocol and evaluate
+  schema validity, evidence-reference coverage, unsupported claims, abstention,
+  latency, and cost on frozen audit cases.
 - Target 100% safe application-level handling: every accepted output is schema-valid, and every invalid/unsupported output is suppressed or replaced before display.
 
 ## Definition of done
 
 The graduation-project MVP is done when:
 
-1. a clean checkout can reproduce weekly states and the selected model evaluation;
+1. a clean checkout can reproduce weekly states, LLM inputs, baseline results, and the primary LLM evaluation;
 2. the evaluation is temporally valid and includes baselines, calibration, uncertainty, and limitations;
 3. OULAD's age, aggregation, and missing-text limitations—and the alternative-dataset decision—are documented;
 4. Moodle events can be ingested/replayed into the versioned twin store;
 5. the dashboard exposes evidence-linked alerts and the instructor review lifecycle;
-6. the LLM path cannot display unvalidated free-form output and has a working template fallback;
+6. the primary LLM path cannot display unvalidated free-form output and has a working deterministic fallback;
 7. empirical OULAD results, operational Moodle results, and text/synthetic experiments are reported separately; and
 8. deployment, ethics, and evaluation documentation is sufficient for another student team to reproduce the demo.
 

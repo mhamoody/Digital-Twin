@@ -33,9 +33,9 @@ Digital-Twin/
 │       │   └── moodle.py
 │       ├── schemas/                # canonical input/output models
 │       ├── state/                  # weekly-state construction and leakage rules
-│       ├── models/                 # baselines, training, calibration, inference
-│       ├── explanations/           # SHAP and deterministic templates
-│       ├── llm/                    # adapter, prompt versions, validators, fallback
+│       ├── models/                 # classical baselines and shared calibration/metrics
+│       ├── explanations/           # evidence validation, ablations, baseline SHAP, fallback
+│       ├── llm/                    # primary predictor adapter, prompts, validators, inference
 │       ├── alerts/                 # eligibility policy and lifecycle
 │       ├── api/                    # FastAPI routes/services
 │       └── dashboard/              # Streamlit application
@@ -95,13 +95,18 @@ Create only the paths needed to prove this flow:
 fixture/raw source
     -> canonical observation
     -> weekly state
-    -> baseline prediction
+    -> primary LLM prediction + baseline comparison
     -> evidence
     -> alert
     -> API/dashboard review
 ```
 
-The first slice can use a tiny fixture and deterministic explanation. Add Moodle, full OULAD, SHAP, and the LLM adapter incrementally after the interfaces are tested. This reduces the risk of four members building incompatible components in parallel.
+The first slice can use a tiny fixture and deterministic fallback to prove the
+interfaces, but the strong-LLM prediction adapter enters before the model
+evaluation is considered complete. Add full OULAD, Moodle, LLM calibration and
+grounding tests, and baseline SHAP incrementally after the contracts are tested.
+This reduces the risk of four members building incompatible components in
+parallel without demoting the LLM to an optional add-on.
 
 ## Data and artifact policy
 
@@ -114,7 +119,12 @@ The following must not be committed:
 - large trained models, caches, or experiment directories; and
 - unrestricted raw LLM requests/responses containing educational text.
 
-Every reproducible dataset has a dataset card containing source, access date, licence, checksum, expected files, preparation command, and known limitations. Every reported model has a manifest containing data version, feature version, split, seed, code commit, model/calibrator version, and metrics.
+Every reproducible dataset has a dataset card containing source, access date,
+licence, checksum, expected files, preparation command, and known limitations.
+Every reported model has a manifest containing data version, feature version,
+split, seed, code commit, model/calibrator version, and metrics. An LLM manifest
+also pins provider, exact model identifier/snapshot, prompt, few-shot examples,
+decoding settings, access date, latency, and cost.
 
 ## Documentation update rule
 
