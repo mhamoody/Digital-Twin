@@ -1,9 +1,16 @@
-# 07 — Structure
+# 07 — Repository structure
 
-## Repository / project folder structure (reflecting Phase 0 reality)
+## Current repository
 
-```
-course-digital-twin/
+At the time of this update, the repository contains eight reviewed documentation
+files. The implementation folders below are a **target structure**, not evidence
+that those components already exist.
+
+## Target structure
+
+```text
+Digital-Twin/
+├── README.md
 ├── docs/
 │   ├── 01_problem.md
 │   ├── 02_goal.md
@@ -11,44 +18,113 @@ course-digital-twin/
 │   ├── 04_stack.md
 │   ├── 05_architecture.md
 │   ├── 06_workflow.md
-│   └── 07_structure.md
-│
-├── planning/                      # Phase 0 working area — active now
-│   ├── schema/                    # target data schema drafts + revisions
-│   ├── dataset-comparison/        # per-dataset gap analysis notes, raw comparison tables
-│   ├── requirements/              # functional/non-functional requirements drafts
-│   ├── literature-review/         # digital-twin literature notes, supervisor-provided papers once received
-│   └── poc/                       # PoC protocol, hand-labeled 20-30 post sample, PoC run results
-│
-├── pipeline/                      # NOT YET POPULATED — Phase 1, gated behind 06_workflow.md's gate criteria
-│   └── (sync job / ETL code will live here once the gate is passed)
-│
-├── analytics/                     # NOT YET POPULATED — Phase 1
-│   ├── classifier/                # structured at-risk classifier (scikit-learn)
-│   └── llm/                       # LLM forum/text analytics layer
-│
-├── dashboard/                     # NOT YET POPULATED — Phase 1
-│   └── (Streamlit app will live here once the gate is passed)
-│
-├── data/                          # NOT YET POPULATED — Phase 1
-│   └── (sandbox seed data, synthetic data generation scripts — no real Queen's data ever)
-│
-├── .github/
-│   └── workflows/                 # CI, once there is code to run CI against
-│
-├── README.md
-└── .gitignore
+│   ├── 07_structure.md
+│   └── 08_data_strategy.md
+├── planning/
+│   ├── decisions/                 # dated architecture/scope/data decision records
+│   ├── dataset-cards/             # access, licence, fields, quality, final verdict
+│   ├── literature/                # notes and reference mapping
+│   └── protocols/                 # experiment, LLM, and walkthrough protocols
+├── src/
+│   └── digital_twin/
+│       ├── config/
+│       ├── ingestion/
+│       │   ├── oulad.py
+│       │   └── moodle.py
+│       ├── schemas/                # canonical input/output models
+│       ├── state/                  # weekly-state construction and leakage rules
+│       ├── models/                 # baselines, training, calibration, inference
+│       ├── explanations/           # SHAP and deterministic templates
+│       ├── llm/                    # adapter, prompt versions, validators, fallback
+│       ├── alerts/                 # eligibility policy and lifecycle
+│       ├── api/                    # FastAPI routes/services
+│       └── dashboard/              # Streamlit application
+├── migrations/                     # PostgreSQL schema migrations
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   ├── leakage/
+│   └── fixtures/                   # small non-identifiable test records
+├── notebooks/
+│   ├── exploration/                # disposable investigation only
+│   └── reports/                    # reviewed, reproducible analysis notebooks
+├── experiments/
+│   ├── configs/                    # committed configurations/seeds/splits
+│   └── README.md                   # how artifacts are generated and located
+├── scripts/
+│   ├── prepare_data.*
+│   ├── build_states.*
+│   ├── train_evaluate.*
+│   ├── replay_moodle.*
+│   └── run_demo.*
+├── deployment/
+│   ├── docker/
+│   └── moodle/                     # Laragon and/or Docker setup instructions
+├── data/
+│   ├── README.md                   # source, download, licence, checksum instructions
+│   ├── raw/                        # ignored
+│   ├── interim/                    # ignored
+│   ├── processed/                  # ignored unless tiny fixtures
+│   └── synthetic/                  # ignored; regenerated from scripts
+├── artifacts/                      # ignored model/results output; manifest may be tracked
+├── .github/workflows/
+├── .env.example
+├── .gitignore
+├── pyproject.toml
+└── dependency lock file
 ```
 
-The `pipeline/`, `analytics/`, `dashboard/`, and `data/` folders are created as empty placeholders with a short `README.md` inside each explaining that they are Phase 1 targets, not yet populated — this keeps the repo structure visible and reviewable from week 1 without pretending build work has started.
+Use platform-appropriate script extensions (`.py`, `.ps1`, or `.sh`) and document the supported Windows workflow. The wildcard above means “one documented entry point,” not three duplicate implementations.
 
-## Naming/branching convention (3–4 person team)
+## Placement rules
 
-- **Branches:** `phase0/<short-topic>` for current planning work (e.g., `phase0/target-schema`, `phase0/dataset-comparison-oulad`) and `phase1/<short-topic>` once build work actually starts (e.g., `phase1/sync-job`, `phase1/at-risk-classifier`). This makes the phase gate visible in the git history itself, not just in `06_workflow.md`.
-- **Main branch:** `main`, protected — no direct pushes; all changes come through a pull request.
-- **PR expectations:** every PR gets at least one teammate review before merging, even during Phase 0 documentation work — this is a 3–4 person team, so review load is light, but it catches the kind of unflagged inconsistency this whole document set is trying to avoid (e.g., a schema change in `planning/schema/` that isn't reflected in `docs/05_architecture.md`). PR descriptions should note which `docs/0X_*.md` file(s), if any, need a corresponding update.
-- **Commit messages:** short imperative summary line (e.g., "Add OULAD field mapping to schema comparison"), referencing the relevant planning sub-folder or docs file where useful.
+- `docs/` is the reviewed project truth: problem, scope, design, and process.
+- `planning/` contains evidence and decisions that support the reviewed docs.
+- `src/` contains reusable application code. A notebook must not be the only implementation of state construction, leakage prevention, training, or inference.
+- `notebooks/exploration/` can be messy; a result cited in the report must be reproducible through a script/config or a reviewed report notebook.
+- `tests/fixtures/` contains only tiny, fabricated, non-identifiable examples.
+- `data/` and `artifacts/` contain local/generated files and are ignored by default. Track instructions, licences, checksums, manifests, and small summary tables instead of large datasets or models.
+- Database changes are migrations, not manual edits captured only in screenshots.
+- Prompt templates and JSON schemas are versioned code. A prompt change that affects output creates a new prompt version.
 
-## Where the docs produced by this exercise live once the repo exists
+## Minimum first vertical slice
 
-The seven files (`01_problem.md` through `07_structure.md`) live at the repo root under `/docs`, numbered exactly as delivered here so they sort in reading order in any file browser or IDE. `planning/` holds the underlying working materials (raw dataset comparison tables, schema drafts, literature notes, PoC results) that feed into the polished `docs/` files — the `docs/` files are the synthesized, reviewed output; `planning/` is the scratch work. When a `planning/` artifact matures into something that changes a `docs/` file's content (e.g., the schema is finalized), the corresponding `docs/0X_*.md` file should be updated in the same PR, not left to drift out of sync.
+Create only the paths needed to prove this flow:
+
+```text
+fixture/raw source
+    -> canonical observation
+    -> weekly state
+    -> baseline prediction
+    -> evidence
+    -> alert
+    -> API/dashboard review
+```
+
+The first slice can use a tiny fixture and deterministic explanation. Add Moodle, full OULAD, SHAP, and the LLM adapter incrementally after the interfaces are tested. This reduces the risk of four members building incompatible components in parallel.
+
+## Data and artifact policy
+
+The following must not be committed:
+
+- Queen's or other identifiable student data;
+- Moodle database dumps containing users;
+- raw licensed datasets whose terms do not permit redistribution;
+- API keys, database passwords, tokens, or `.env` files;
+- large trained models, caches, or experiment directories; and
+- unrestricted raw LLM requests/responses containing educational text.
+
+Every reproducible dataset has a dataset card containing source, access date, licence, checksum, expected files, preparation command, and known limitations. Every reported model has a manifest containing data version, feature version, split, seed, code commit, model/calibrator version, and metrics.
+
+## Documentation update rule
+
+Change the relevant documentation in the same pull request when any of these changes:
+
+- MVP versus stretch scope;
+- outcome, checkpoint, feature, or leakage policy;
+- dataset or licence decision;
+- database/API/LLM schema;
+- model-selection or evaluation protocol; or
+- deployment and privacy assumptions.
+
+This rule prevents the repository from drifting back toward the broader proposal after the feedback-driven scope correction.
