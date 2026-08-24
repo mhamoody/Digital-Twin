@@ -36,10 +36,7 @@ Thumbs.db
 
 # Local datasets and generated artifacts
 /OULAD/
-/data/raw/
-/data/interim/
-/data/processed/
-/data/synthetic/
+/data/
 /artifacts/
 *.sqlite
 *.sqlite3
