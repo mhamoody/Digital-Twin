@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Restore one project database into a newly created, empty target database.
 set -euo pipefail
+umask 077
 
 if [[ $# -ne 1 ]]; then
   echo "Usage: bash deploy/lobot/restore.sh PATH_TO_DUMP" >&2
@@ -68,6 +69,7 @@ try:
             if target_check != ("ok",):
                 raise sqlite3.DatabaseError(f"restored integrity check failed: {target_check}")
     temporary.replace(target)
+    target.chmod(0o600)
 except Exception:
     temporary.unlink(missing_ok=True)
     raise
