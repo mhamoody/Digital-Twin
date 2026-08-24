@@ -7,7 +7,7 @@ from collections import defaultdict
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import Engine, case, func, select, text
+from sqlalchemy import Engine, case, func, inspect, select, text
 from sqlalchemy.orm import Session
 
 from digital_twin.persistence import PersistenceConflict, TwinStore
@@ -60,11 +60,23 @@ class ApiService:
         self.store = TwinStore(engine)
 
     def readiness(self) -> tuple[str, str]:
+        table_names = set(inspect(self.engine).get_table_names())
         with self.engine.connect() as connection:
             connection.execute(text("SELECT 1"))
-            revision = connection.execute(
-                text("SELECT version_num FROM alembic_version")
-            ).scalar_one()
+            if "alembic_version" in table_names:
+                revision = connection.execute(
+                    text("SELECT version_num FROM alembic_version")
+                ).scalar_one()
+            elif self.engine.dialect.name == "sqlite" and {
+                "course_presentation",
+                "weekly_state",
+                "prediction",
+                "alert",
+                "sync_cursor",
+            }.issubset(table_names):
+                revision = "sqlite-pilot-schema"
+            else:
+                raise LookupError("The database schema is not initialized.")
         return self.engine.dialect.name, revision
 
     def presentation_overview(self, presentation_id: str) -> PresentationOverview:

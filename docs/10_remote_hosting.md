@@ -19,12 +19,18 @@ remains a local integration harness, not a dependency of the hosted application.
 
 ## What Lobot currently proves—and does not prove
 
-Direct inspection of the supplied Lobot URL on 2026-08-24 showed redirects into
-a GitHub-OAuth-protected JupyterHub 5.5 workspace. That is enough to prepare a
-Jupyter-proxied pilot. It does **not** prove that the workspace has Docker,
-PostgreSQL, a public port, a stable domain, backup storage, or an always-running
-lifecycle. JupyterHub workspaces may also be stopped or suspended by local
-policy; only the Lobot administrators can confirm their policy.
+Direct inspection and the 2026-08-24 capability probe show a
+GitHub-OAuth-protected JupyterHub workspace with Python 3.12, a 49 GB mounted
+Longhorn volume, `jupyter-server-proxy`, Git, and curl. Docker, Podman,
+PostgreSQL tools, FastAPI, Streamlit, and psycopg were not preinstalled. FastAPI,
+Streamlit, and psycopg can be installed in the project virtual environment; the
+absence of a database server/container runtime means PostgreSQL cannot be hosted
+inside this allocation as currently configured.
+
+The JupyterHub allocation is sufficient for a small SQLite-backed interface and
+login pilot while its pod is running. It does **not** prove an always-running
+lifecycle, public port, stable domain, or institutional backup policy. Only the
+Lobot administrators can confirm suspension/culling and service availability.
 
 Run the non-secret capability probe from the Lobot terminal first:
 
@@ -41,11 +47,12 @@ passwords, tokens, or environment-variable values.
 
 ## Path A: current Lobot/JupyterHub pilot
 
-Use this path when the probe confirms Python, `curl`, and a working Jupyter proxy,
-and when a PostgreSQL instance is reachable. PostgreSQL can be supplied by the
-host, an approved managed instance, or a separate group VM. Do not expose the
-FastAPI port to the browser; only Streamlit is proxied, and FastAPI remains on
-loopback.
+Use this path now for a small interface/login demonstration. The pilot uses a
+file-backed SQLite database on the mounted project volume. This is acceptable
+for one API process and low-concurrency demonstration access; it is not the
+research or always-on deployment database. PostgreSQL remains required for the
+group-VM deployment. FastAPI stays on loopback and only Streamlit is routed
+through the authenticated Jupyter proxy.
 
 ### 1. Install the application
 
@@ -55,8 +62,9 @@ cp deploy/lobot/env.example .env.lobot
 chmod 600 .env.lobot
 ```
 
-Edit `.env.lobot` locally on Lobot. Set a real PostgreSQL URL and the course
-presentation that should be shown. The populated file is ignored by Git.
+The supplied Lobot environment example selects
+`var/data/digital_twin.sqlite3` and presentation `oulad:AAA:2013J`. The populated
+`.env.lobot` file and SQLite database are ignored by Git.
 
 ### 2. Create instructor accounts
 
@@ -81,35 +89,37 @@ This account system is appropriate for a controlled project pilot behind
 JupyterHub's outer GitHub login. It is not institutional single sign-on. There is
 no password reset, MFA, central account deprovisioning, or LMS enrolment sync.
 
-### 3. Populate PostgreSQL
+### 3. Transfer and restore the controlled pilot database
 
 The OULAD directory and generated databases are deliberately ignored by Git, so
-a fresh GitHub clone does not contain demo data. Choose one explicit route:
+a fresh GitHub clone contains no student records. For this pilot, upload the
+locally generated file below through the authenticated Lobot/Jupyter file
+browser to a directory outside the repository, such as `~/incoming/`:
 
-- create a PostgreSQL custom-format dump on the current trusted machine, transfer
-  it to Lobot through an approved secure channel, create a new empty target
-  database, and run `bash deploy/lobot/restore.sh PATH_TO_DUMP`; or
-- securely place the approved OULAD source in the Lobot project directory and
-  rebuild the controlled demo there.
+```text
+data/processed/oulad_demo_phase3_v1/relational_validation.sqlite3
+```
 
-Do not email or commit a database dump. Even pseudonymized educational records
+It contains the prepared `oulad:AAA:2013J` architecture demonstration. It is
+about 94 MB and includes 383 learner enrolments, 1,464 weekly states and demo
+predictions, and 142 alerts. The learner identifiers come from the public OULAD
+release, but the file must still follow the project's approved educational-data
+handling policy.
+
+Restore it into the ignored pilot location before starting the service:
+
+```bash
+bash deploy/lobot/restore.sh ~/incoming/relational_validation.sqlite3
+```
+
+Do not email or commit the database. Even pseudonymized educational records
 must follow the approved storage and transfer policy. `restore.sh` refuses to
 proceed without an explicit confirmation and expects an empty database; it does
 not clean or overwrite an existing database.
 
-To rebuild the existing Phase 7 replay, run the reproducible ingestion/state
-build against the configured server database:
-
-```bash
-set -a
-source .env.lobot
-set +a
-source .venv/bin/activate
-python -m alembic upgrade head
-python scripts/run_phase7_demo.py --database-url "$DIGITAL_TWIN_DATABASE_URL"
-```
-
-This loads controlled replay data only. Do not present its risk values as model
+At startup, `initialize_pilot_database.py` adds any newer application tables to
+the restored SQLite file without changing its existing learner, state,
+prediction, or alert records. Do not present the risk values as model
 performance: `simple-rules-v1` is still the architecture test double.
 
 ### 4. Start, open, and stop the service
@@ -135,8 +145,8 @@ bash deploy/lobot/backup.sh
 bash deploy/lobot/stop.sh
 ```
 
-Logs and PID files are under ignored `var/log/` and `var/run/`. Database dumps
-are under ignored `var/backups/`; copies must also be stored in an approved,
+Logs and PID files are under ignored `var/log/` and `var/run/`. Consistent SQLite
+backups are under ignored `var/backups/`; copies must also be stored in an approved,
 access-controlled backup location and a restore must be tested.
 
 ## Path B: recommended always-on group VM

@@ -36,7 +36,11 @@ for name in api dashboard; do
 done
 
 source .venv/bin/activate
-python -m alembic upgrade head
+if [[ "${DIGITAL_TWIN_DATABASE_URL}" == sqlite* ]]; then
+  python scripts/initialize_pilot_database.py
+else
+  python -m alembic upgrade head
+fi
 
 export DIGITAL_TWIN_API_URL="http://127.0.0.1:8000"
 nohup python -m uvicorn digital_twin.api.app:app \

@@ -55,6 +55,7 @@ Digital-Twin/
 ├── scripts/
 │   ├── prepare_oulad.py            # local approved-data preparation
 │   ├── run_phase7_demo.py          # controlled database population
+│   ├── initialize_pilot_database.py # SQLite pilot schema initialization
 │   └── manage_instructor_accounts.py
 └── deploy/
     ├── lobot/                      # probe and JupyterHub service lifecycle

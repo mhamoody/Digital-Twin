@@ -9,7 +9,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install --editable .
-mkdir -p var/auth var/run var/log var/backups artifacts/lobot
+mkdir -p var/auth var/run var/log var/backups var/data artifacts/lobot
 
 echo "Bootstrap complete. Copy deploy/lobot/env.example to .env.lobot and fill it locally."
 echo "Then create an instructor account with scripts/manage_instructor_accounts.py."
