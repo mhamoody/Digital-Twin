@@ -109,8 +109,16 @@ handling policy.
 Restore it into the ignored pilot location before starting the service:
 
 ```bash
+stat --format='%s bytes' ~/incoming/relational_validation.sqlite3
+sha256sum ~/incoming/relational_validation.sqlite3
 bash deploy/lobot/restore.sh ~/incoming/relational_validation.sqlite3
 ```
+
+The verified source is `93679616` bytes with SHA-256
+`dad02543751bd9714b90a761643e02e3946e2a21ff4ad8d616a9ad231e73b097`.
+Do not attempt the restore if either value differs; upload the file again. The
+restore validates source and target integrity and only moves a complete temporary
+database into the configured location.
 
 Do not email or commit the database. Even pseudonymized educational records
 must follow the approved storage and transfer policy. `restore.sh` refuses to

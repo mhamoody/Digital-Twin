@@ -29,6 +29,7 @@ fi
 if [[ "${DIGITAL_TWIN_DATABASE_URL}" == sqlite* ]]; then
   python - "${dump_file}" <<'PY'
 import os
+import hashlib
 import sqlite3
 import sys
 from pathlib import Path
@@ -40,14 +41,36 @@ with source.open("rb") as handle:
     header = handle.read(16)
 if header != b"SQLite format 3\x00":
     raise SystemExit("The supplied file is not a SQLite database.")
+digest = hashlib.sha256()
+with source.open("rb") as handle:
+    for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+        digest.update(chunk)
+print(f"Source bytes: {source.stat().st_size}")
+print(f"Source SHA-256: {digest.hexdigest()}")
 target = Path(make_url(os.environ["DIGITAL_TWIN_DATABASE_URL"]).database)
 if not target.is_absolute():
     target = (Path.cwd() / target).resolve()
 if target.exists():
     raise SystemExit(f"Target already exists; it was not overwritten: {target}")
 target.parent.mkdir(parents=True, exist_ok=True)
-with sqlite3.connect(source) as source_connection, sqlite3.connect(target) as target_connection:
-    source_connection.backup(target_connection)
+temporary = target.with_suffix(target.suffix + ".restore-tmp")
+if temporary.exists():
+    raise SystemExit(f"A previous temporary restore exists; remove it first: {temporary}")
+try:
+    source_uri = f"file:{source.as_posix()}?mode=ro"
+    with sqlite3.connect(source_uri, uri=True) as source_connection:
+        source_check = source_connection.execute("PRAGMA quick_check").fetchone()
+        if source_check != ("ok",):
+            raise sqlite3.DatabaseError(f"source integrity check failed: {source_check}")
+        with sqlite3.connect(temporary) as target_connection:
+            source_connection.backup(target_connection)
+            target_check = target_connection.execute("PRAGMA quick_check").fetchone()
+            if target_check != ("ok",):
+                raise sqlite3.DatabaseError(f"restored integrity check failed: {target_check}")
+    temporary.replace(target)
+except Exception:
+    temporary.unlink(missing_ok=True)
+    raise
 print(f"SQLite database restored to {target}")
 PY
 else
