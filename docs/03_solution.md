@@ -81,13 +81,22 @@ The application provides a compact object such as:
 
 The model must return JSON with:
 
-- `risk_score`: a number from 0 to 1 that is calibrated by application code;
-- `summary`: at most two sentences;
-- `evidence_ids`: only identifiers present in the request;
+- `raw_risk_score`: a number from 0 to 1 that is calibrated by application code;
+- `claims`: allow-listed claim codes, each mapped to the evidence identifiers
+  that support that specific claim;
 - `suggested_actions`: zero or more values from `allowed_actions`;
 - `uncertainty_note`;
 - `abstain`: Boolean; and
 - `abstention_reason`: required when `abstain` is true.
+
+Claim-level mapping is required because a single response-level citation list
+cannot show which evidence supports each statement. The application renders
+instructor-facing factual text from the validated claim code and stored evidence
+value rather than trusting the model to reproduce numbers in free text.
+
+When `abstain` is false, raw/display scores, a risk band, and at least one
+grounded claim are required. When `abstain` is true, scores and risk band are
+null, claims/actions are empty, and the abstention reason is required.
 
 Application code then:
 
@@ -98,9 +107,14 @@ Application code then:
 5. uses a clearly labelled deterministic fallback if validation still fails.
 
 For an accepted result, application code applies the frozen calibrator to
-`risk_score`, derives the displayed probability and risk band, and applies the
+`raw_risk_score`, derives the displayed probability and risk band, and applies the
 versioned alert threshold. The LLM never sees the held-out label or chooses the
 operational threshold.
+
+During the integration-demo phases, a clearly identified deterministic
+`simple_demo` predictor may populate this same output contract. Its identity
+calibration and synthetic/replayed results validate plumbing only; they are not
+reported as predictive research results and do not replace the final strong LLM.
 
 Only the validated object is stored and displayed, together with the
 provider/model identifier, prompt and few-shot-example versions, timestamp,

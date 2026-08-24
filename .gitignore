@@ -1,6 +1,16 @@
 # Local scratch work
 /scribble/
 
+# Local-only project management and generated deliverables
+/planning/
+/presentations/
+/tests/
+/lms/
+/docs/09_lms_integration.md
+/*.docx
+/*.pptx
+/*.pdf
+
 # Python environments and caches
 /.venv/
 __pycache__/
@@ -10,15 +20,44 @@ __pycache__/
 .coverage
 htmlcov/
 .ipynb_checkpoints/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
 
 # Local configuration and secrets
 .env
 .env.*
 !.env.example
+/var/auth/
+/var/run/
+/var/log/
+/var/backups/
 
 # Local datasets and generated artifacts
+/OULAD/
 /data/raw/
 /data/interim/
 /data/processed/
 /data/synthetic/
 /artifacts/
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.bak
+*.zip
+
+# Local validation, smoke, packaging, and presentation utilities. The hosted
+# repository retains only preparation, deployment-demo, and account operations.
+/scripts/build_demo_states.py
+/scripts/build_moodle_replay.py
+/scripts/persist_phase3.py
+/scripts/profile_oulad.py
+/scripts/smoke_*.py
+/scripts/validate_*.py
+/scripts/package_*.ps1
+/scripts/create_*.ps1
+
+# Generated migration renderings; Alembic Python revisions are authoritative.
+/migrations/sql/

@@ -10,10 +10,23 @@ to simulate a student's mind, diagnose causes, or automate educational actions.
 
 ## Project status
 
-The repository is currently in the planning and architecture phase. The reviewed
-requirements, research boundaries, target architecture, and delivery workflow
-are documented under `docs/`. Application code, database migrations, runnable
-pipelines, and deployment assets are planned but have not yet been implemented.
+The repository has entered a gated implementation process. Phase 1 profiled the
+complete local OULAD release and prepared the real `AAA/2013J` presentation with
+explicit missingness, provenance, restricted outcomes, and a separately labelled
+Moodle replay calendar. Phase 2 now builds cutoff-safe states at weeks 3, 5, 8,
+and 10 and runs a deterministic, replaceable demo predictor through the validated
+result and high-risk alert contracts. Phase 3 now supplies a PostgreSQL migration
+and an idempotent lineage store, validated at full volume with a local relational
+backend and PostgreSQL 16.14. Phase 4 adds an instructor-restricted FastAPI read
+and audited-review boundary over that store. Phase 5 adds an API-only Streamlit
+instructor workspace with the ranked queue, evidence/provenance view, checkpoint
+timeline, freshness state, and audited review form. Phase 6 adds migration
+`20260806_0002` and a read-only Moodle/controlled-export adapter, validated by a
+12-week OULAD replay into a separately labelled operational presentation. Phase
+7 now packages that replay as a reproducible end-to-end demo with PostgreSQL,
+checkpoint states, temporary predictions, grounded alerts, API/dashboard reads,
+a runbook, a journey map, and rendered evidence. The primary strong-LLM
+experiment remains a later approval-gated research phase.
 
 ## Research objective
 
@@ -62,7 +75,7 @@ must remain in the decision loop.
 | Baselines/calibration | scikit-learn; post-hoc calibration fitted without test leakage |
 | Evidence | LLM evidence references, input ablation tests, and deterministic fallback; SHAP for compatible baselines only |
 | Twin store | PostgreSQL, SQLAlchemy, Alembic |
-| LMS integration | Moodle web services/API or controlled export |
+| LMS integration | Provider-neutral adapters; future LTI 1.3 external tool for Queen's onQ/Brightspace |
 | API | FastAPI |
 | Dashboard | Streamlit |
 | Testing and quality | pytest, pytest-cov, Ruff |
@@ -72,28 +85,48 @@ vector database are intentionally outside the MVP.
 
 ## Getting started
 
-Python 3.11 is the recommended development version. PostgreSQL and the local
-Moodle sandbox will be needed for the integrated application, but they are not
-required to read the documentation or begin isolated data work.
+The tracked repository is intentionally deployment-focused. Raw OULAD files,
+generated data, tests, weekly planning material, presentations, and local LMS
+harnesses remain on the developers' machines and are excluded from GitHub.
 
-On Windows PowerShell:
+Python 3.11 and PostgreSQL 16 are the supported pilot versions. For a local
+installation:
 
 ```powershell
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+python -m pip install --editable .
+Copy-Item .env.example .env
 ```
 
-The dependency ranges in `requirements.txt` are an initial development baseline.
-They should be resolved into a lock file after the first vertical slice is
-working. The LLM is a core component, but its provider-specific SDK is not
-included until the team selects the model and approved access route. Boosting
-and counterfactual packages remain optional.
+Fill `.env` locally without committing it, then apply the database migrations:
 
-There is no application start command yet because the implementation has not
-started. Runnable preparation, state-building, evaluation, replay, and demo
-commands will be added with their corresponding source code.
+```powershell
+$env:DIGITAL_TWIN_DATABASE_URL = "postgresql+psycopg://USER:PASSWORD@localhost/course_digital_twin"
+python -m alembic upgrade head
+```
+
+Start the internal API and dashboard in separate terminals:
+
+```powershell
+python -m uvicorn digital_twin.api.app:app --app-dir src --host 127.0.0.1 --port 8000
+```
+
+```powershell
+$env:DIGITAL_TWIN_API_URL = "http://127.0.0.1:8000"
+python -m streamlit run src/digital_twin/dashboard/app.py `
+    --server.address 127.0.0.1 --server.port 8501
+```
+
+Open `http://127.0.0.1:8501`. The dashboard communicates with PostgreSQL only
+through FastAPI. `simple-rules-v1` remains an untrained architecture test double,
+not the project's final strong-LLM predictor or research evidence.
+
+For Lobot, run `bash deploy/lobot/probe.sh` first and follow
+[`docs/10_remote_hosting.md`](docs/10_remote_hosting.md). That guide covers the
+protected instructor login, PostgreSQL restore, JupyterHub proxy, service
+lifecycle, backups, and the alternative always-on VM deployment.
 
 ## Documentation
 
@@ -107,6 +140,7 @@ commands will be added with their corresponding source code.
 | [`docs/06_workflow.md`](docs/06_workflow.md) | Ownership, delivery sequence, gates, and risks |
 | [`docs/07_structure.md`](docs/07_structure.md) | Target repository structure and placement rules |
 | [`docs/08_data_strategy.md`](docs/08_data_strategy.md) | Dataset decision, direct data profile, feature contract, database shape, and pipeline |
+| [`docs/10_remote_hosting.md`](docs/10_remote_hosting.md) | Lobot probe, protected remote pilot, VM deployment, backups, and LMS-neutral integration boundary |
 
 When these documents conflict with older proposals or meeting notes, the latest
 feedback-driven MVP boundary in `docs/` takes precedence.
@@ -144,15 +178,17 @@ separately.
 The first implementation milestone is a minimal vertical slice:
 
 ```text
-tiny fixture
+prepared OULAD presentation
   -> canonical observation
   -> weekly state
-  -> LLM prediction + baseline comparison
+  -> validated predictor result
   -> evidence
   -> alert
   -> API/dashboard review
 ```
 
-Full OULAD preparation, Moodle integration, the primary LLM evaluation, and
-baseline attribution checks will be added incrementally after these interfaces
-and leakage controls are tested.
+OULAD preparation, state/prediction/alert contracts, PostgreSQL lineage, the
+FastAPI boundary, the instructor dashboard, and the controlled replay boundary
+have been demonstrated end to end. The tracked repository now contains only the
+application and remote-deployment entry points. The primary LLM evaluation and
+baseline attribution checks remain later research phases.

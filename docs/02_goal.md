@@ -28,10 +28,12 @@ Phase 0 is complete only when the team has evidence for the choices below.
 | Moodle path | The existing Laragon-hosted Moodle sandbox has test users, course activities, web services, and a successful read-only API extraction or documented export fallback. |
 | LLM contract | Input evidence, output JSON schema, allowed recommendation vocabulary, abstention rule, validation/retry behaviour, and template fallback are written before any hosted-model experiment. |
 
-The dataset criterion is complete. Phase 1 implementation starts only after the
-state definition, leakage controls, and model protocol are reviewed and
-demonstrated. The LLM experiment is part of the empirical core; Moodle work can
-proceed in parallel when it does not block that experiment.
+The dataset criterion and the first cutoff-safe state slice are complete. Phase
+2 demonstrates the state, validated-result, evidence, and alert interfaces with
+a clearly labelled deterministic demo predictor; it does not satisfy the strong
+LLM or baseline-comparison criteria. The LLM experiment remains part of the
+empirical core, and Moodle work can proceed when it does not block that
+experiment.
 
 ## MVP goals and acceptance criteria
 

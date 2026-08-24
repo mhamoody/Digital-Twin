@@ -125,9 +125,12 @@ missing columns for the same OULAD learners.
 
 ## Direct OULAD profile
 
-The official UCI archive was downloaded and scanned on 2026-08-02. Missing-token
-counts below treat `?` as missing; a plain CSV null scan would incorrectly report
-no missing values.
+The official UCI archive was downloaded and scanned on 2026-08-02. The complete
+local release was re-profiled row by row on 2026-08-06, including checksums, key
+integrity, ranges, missing-token counts, and semantic window checks. Detailed
+profiles remain in the local research archive rather than the minimal deployment
+repository. Missing-token counts below treat `?` as missing; a plain CSV null
+scan would incorrectly report no missing values.
 
 | Source table | Rows | Columns | Natural grain | Missing tokens |
 |---|---:|---:|---|---|
@@ -258,6 +261,8 @@ audit history.
 |---|---|---|
 | `registry.source_dataset` | one source/version; `source_id`, licence, URI, checksum, access date | Dataset card and reproducibility |
 | `registry.ingestion_run` | one adapter run; `run_id`, source, adapter/schema version, watermark, counts, status | Idempotency, freshness, and quarantine audit |
+| `registry.sync_cursor` | one source connector/presentation; timestamp/key cursor, last success, status, failures, counts, stale threshold | Monotonic incremental replay and current/failed/stale visibility |
+| `registry.quarantined_record` | one connector/source record; reason, payload hash, safe error locations, first/last seen, recovery run | Continue after bad rows without retaining rejected raw or identifiable payloads |
 | `core.course_presentation` | one source course run; source keys, relative/calendar start/end, duration | Common course identity without false cross-source equivalence |
 | `core.learner` | one pseudonymous learner within a source | Source-local identity; no cross-dataset identity resolution |
 | `core.enrolment` | learner × presentation | Registration/status known at a checkpoint; no final label column |
@@ -277,6 +282,13 @@ audit history.
 | `analytics.evidence` | prediction × evidence item | Supplied feature value, LLM citation/ablation or baseline attribution, display label, source reference |
 | `analytics.alert` | one policy decision on a prediction | Threshold/policy version, freshness, priority, lifecycle status |
 | `analytics.alert_review` | one append-only status transition | Reviewer pseudonym/role, prior/new state, note, timestamp |
+
+Phase 6 materializes a bounded operational presentation
+`moodle-replay:AAA:2030A`: 24 pseudonymous learners, 24 enrolments, 4,372 daily
+activity aggregates, and 47 assessment observations across 12 accelerated weeks.
+All 4,443 rows are origin `replayed` and retain the fixed synthetic calendar's
+day precision. An identical replay inserts zero rows. This presentation never
+joins empirical outcome evaluation.
 
 Expected OULAD core cardinalities are 22 presentations, 28,785 learners, 32,593
 enrolments, 6,364 resources, 10,655,280 activity observations, 206 assessments,

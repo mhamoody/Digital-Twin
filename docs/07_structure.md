@@ -2,15 +2,34 @@
 
 ## Current repository
 
-At the time of this update, the repository contains eight reviewed documentation
-files. The implementation folders below are a **target structure**, not evidence
-that those components already exist.
+Implementation has started through an approval-gated vertical slice. Phase 1
+adds the package scaffold, versioned contracts, full OULAD profiling, and a
+reproducibly prepared real presentation. Phase 2 adds the cutoff-safe state
+builder, replaceable demo predictor, high-risk alert policy, generated-artifact
+validation, and leakage tests. Phase 3 adds SQLAlchemy persistence models, an
+Alembic PostgreSQL migration, full-volume replay/lineage validation, and audited
+alert review transitions. Phase 4 adds the FastAPI application factory, strict
+request/response contracts, instructor authorization placeholder, query service,
+live PostgreSQL validator, loopback smoke test, and API integration tests.
+Phase 5 implements the API-only Streamlit dashboard client/application, its live
+PostgreSQL validator, and reproducible headless-browser screenshot gate. The
+Phase 6 implementation adds the read-only Moodle REST/controlled-export adapter,
+accelerated replay orchestration, synchronization and quarantine persistence,
+the `20260806_0002` migration, and live PostgreSQL validation. The executed path
+is the controlled-export fallback because no local Moodle server was detected.
+The remaining folders below are still a target structure until their corresponding
+phase is approved and demonstrated.
 
-## Target structure
+## Tracked deployment structure
 
 ```text
 Digital-Twin/
 ├── README.md
+├── Dockerfile
+├── alembic.ini
+├── pyproject.toml
+├── requirements.txt
+├── .env.example
 ├── docs/
 │   ├── 01_problem.md
 │   ├── 02_goal.md
@@ -19,71 +38,43 @@ Digital-Twin/
 │   ├── 05_architecture.md
 │   ├── 06_workflow.md
 │   ├── 07_structure.md
-│   └── 08_data_strategy.md
-├── planning/
-│   ├── decisions/                 # dated architecture/scope/data decision records
-│   ├── dataset-cards/             # access, licence, fields, quality, final verdict
-│   ├── literature/                # notes and reference mapping
-│   └── protocols/                 # experiment, LLM, and walkthrough protocols
+│   ├── 08_data_strategy.md
+│   └── 10_remote_hosting.md
 ├── src/
 │   └── digital_twin/
-│       ├── config/
-│       ├── ingestion/
-│       │   ├── oulad.py
-│       │   └── moodle.py
-│       ├── schemas/                # canonical input/output models
-│       ├── state/                  # weekly-state construction and leakage rules
-│       ├── models/                 # classical baselines and shared calibration/metrics
-│       ├── explanations/           # evidence validation, ablations, baseline SHAP, fallback
-│       ├── llm/                    # primary predictor adapter, prompts, validators, inference
-│       ├── alerts/                 # eligibility policy and lifecycle
-│       ├── api/                    # FastAPI routes/services
-│       └── dashboard/              # Streamlit application
-├── migrations/                     # PostgreSQL schema migrations
-├── tests/
-│   ├── unit/
-│   ├── integration/
-│   ├── leakage/
-│   └── fixtures/                   # small non-identifiable test records
-├── notebooks/
-│   ├── exploration/                # disposable investigation only
-│   └── reports/                    # reviewed, reproducible analysis notebooks
-├── experiments/
-│   ├── configs/                    # committed configurations/seeds/splits
-│   └── README.md                   # how artifacts are generated and located
+│       ├── ingestion/              # canonical and controlled replay adapters
+│       ├── schemas/                # validated state/output contracts
+│       ├── state/                  # cutoff-safe state construction
+│       ├── models/                 # replaceable predictor boundary
+│       ├── alerts/                 # eligibility and lifecycle policy
+│       ├── persistence/            # PostgreSQL models and lineage store
+│       ├── api/                    # internal FastAPI boundary
+│       └── dashboard/              # protected instructor application
+├── migrations/
+│   └── versions/                   # authoritative Alembic revisions
 ├── scripts/
-│   ├── prepare_data.*
-│   ├── build_states.*
-│   ├── train_evaluate.*
-│   ├── replay_moodle.*
-│   └── run_demo.*
-├── deployment/
-│   ├── docker/
-│   └── moodle/                     # Laragon and/or Docker setup instructions
-├── data/
-│   ├── README.md                   # source, download, licence, checksum instructions
-│   ├── raw/                        # ignored
-│   ├── interim/                    # ignored
-│   ├── processed/                  # ignored unless tiny fixtures
-│   └── synthetic/                  # ignored; regenerated from scripts
-├── artifacts/                      # ignored model/results output; manifest may be tracked
-├── .github/workflows/
-├── .env.example
-├── .gitignore
-├── pyproject.toml
-└── dependency lock file
+│   ├── prepare_oulad.py            # local approved-data preparation
+│   ├── run_phase7_demo.py          # controlled database population
+│   └── manage_instructor_accounts.py
+└── deploy/
+    ├── lobot/                      # probe and JupyterHub service lifecycle
+    └── vm/                         # always-on Compose/HTTPS profile
 ```
 
-Use platform-appropriate script extensions (`.py`, `.ps1`, or `.sh`) and document the supported Windows workflow. The wildcard above means “one documented entry point,” not three duplicate implementations.
+Local datasets, tests, validation utilities, planning records, generated reports,
+presentations, and the Moodle harness remain outside the deployment repository
+through `.gitignore`. They are preserved locally and can be moved to a separate
+private research repository later if the team needs shared development history.
 
 ## Placement rules
 
 - `docs/` is the reviewed project truth: problem, scope, design, and process.
-- `planning/` contains evidence and decisions that support the reviewed docs.
-- `src/` contains reusable application code. A notebook must not be the only implementation of state construction, leakage prevention, training, or inference.
-- `notebooks/exploration/` can be messy; a result cited in the report must be reproducible through a script/config or a reviewed report notebook.
-- `tests/fixtures/` contains only tiny, fabricated, non-identifiable examples.
-- `data/` and `artifacts/` contain local/generated files and are ignored by default. Track instructions, licences, checksums, manifests, and small summary tables instead of large datasets or models.
+- `src/` contains reusable application code; runtime behavior must not exist only
+  in a notebook or local validation script.
+- `scripts/` contains only operational entry points required to prepare approved
+  data, load the controlled demo, or manage pilot accounts.
+- `deploy/` contains repeatable Lobot and group-VM service operations.
+- Local `data/`, `artifacts/`, tests, and research working material are ignored.
 - Database changes are migrations, not manual edits captured only in screenshots.
 - Prompt templates and JSON schemas are versioned code. A prompt change that affects output creates a new prompt version.
 
@@ -101,9 +92,10 @@ fixture/raw source
     -> API/dashboard review
 ```
 
-The first slice can use a tiny fixture and deterministic fallback to prove the
-interfaces, but the strong-LLM prediction adapter enters before the model
-evaluation is considered complete. Add full OULAD, Moodle, LLM calibration and
+The first state-to-alert slice now uses prepared OULAD and a deterministic demo
+predictor to prove the interfaces. This predictor is not the final fallback or a
+research baseline. The strong-LLM prediction adapter enters before model
+evaluation is considered complete. Add PostgreSQL, Moodle, LLM calibration and
 grounding tests, and baseline SHAP incrementally after the contracts are tested.
 This reduces the risk of four members building incompatible components in
 parallel without demoting the LLM to an optional add-on.
@@ -119,12 +111,10 @@ The following must not be committed:
 - large trained models, caches, or experiment directories; and
 - unrestricted raw LLM requests/responses containing educational text.
 
-Every reproducible dataset has a dataset card containing source, access date,
-licence, checksum, expected files, preparation command, and known limitations.
-Every reported model has a manifest containing data version, feature version,
-split, seed, code commit, model/calibrator version, and metrics. An LLM manifest
-also pins provider, exact model identifier/snapshot, prompt, few-shot examples,
-decoding settings, access date, latency, and cost.
+Dataset cards, evaluation evidence, and model manifests remain required research
+records, but this minimal deployment repository does not publish them. They must
+be stored in an access-controlled research location and linked only when their
+data and licensing terms permit publication.
 
 ## Documentation update rule
 

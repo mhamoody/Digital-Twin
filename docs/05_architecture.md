@@ -45,6 +45,14 @@ The database separates facts from interpretations. A later model run must not ov
 | Alert | policy version, threshold, confidence, freshness, status | Status changes are audited |
 | Instructor feedback | reviewer, note, decision, timestamp | Append-only audit record |
 
+The version-one persistence implementation maps these layers to the `registry`,
+`core`, `analytics`, and `audit` PostgreSQL schemas. Identical ingestion replays
+are no-ops. Reusing an immutable identifier with changed content raises a
+conflict, and all foreign keys use restrictive deletion so evidence behind an
+alert cannot be silently removed. SQLite remains a local relational contract
+test backend only. Migration `20260806_0001` and the full prepared slice were
+also validated on PostgreSQL 16.14 using the non-superuser project role.
+
 ## Minimum entities
 
 | Entity | Required fields |
@@ -58,8 +66,8 @@ The database separates facts from interpretations. A later model run must not ov
 | `assessment_observation` | learner_id, assessment_id, submission date, score, missing/withdrawn status, origin |
 | `text_observation` | text_id, learner/pseudonym where legitimately linkable, thread/context, event_time, content or restricted-content pointer, label provenance |
 | `weekly_state` | learner_id, presentation_id, week, cutoff_at, feature_set_version, feature values, missingness flags, origin summary |
-| `prediction` | state key, model_version, prompt version, raw/calibrated probability, output, generated_at, quality-gate status |
-| `evidence` | prediction_id, evidence_id, supplied feature/value, citation/attribution method and value, display label |
+| `prediction` | state key, model kind/version, prompt version where applicable, raw/display probability, output, generated_at, quality-gate status |
+| `evidence` | prediction_id, claim code, evidence_id, supplied feature/value, citation/attribution method and value, display label |
 | `llm_output` | prediction_id, provider/model, prompt/few-shot versions, parsed object, validation and abstention result, fallback used, latency/cost metadata |
 | `alert` | prediction_id, policy version, type, priority, freshness, status, created_at |
 | `alert_review` | alert_id, reviewer pseudonym/role, prior/new status, note, reviewed_at |
@@ -151,6 +159,15 @@ rules.
 - Recoverable: an interrupted batch can resume without corrupting state.
 - Read-only toward Moodle through supported interfaces; no direct production-table writes.
 
+Phase 6 implements this contract with `moodle-controlled-export-v1`. Each record
+is validated independently, mapped to a pseudonymous canonical observation, and
+advanced by `(occurred_at, source_record_id)`. PostgreSQL migration
+`20260806_0002` persists exact event/availability timestamps, the monotonic sync
+cursor, current/failed/stale state, and hash-only quarantine/recovery history.
+The Moodle REST preflight refuses non-allow-listed functions and permits plain
+HTTP only on loopback. The executed gate used the controlled-export fallback;
+no live Moodle server was available, so a live extraction is not claimed.
+
 ### State builder
 
 - Pure/reproducible from canonical observations, configuration, and cutoff.
@@ -165,11 +182,17 @@ rules.
   prompt, few-shot, and calibrator versions with raw and calibrated probability.
 - Refuses unsupported checkpoint/presentation contexts.
 - Persists the exact state/model reference used for every prediction.
+- The first integration slice may use a labelled deterministic `simple_demo`
+  implementation behind the same interface. It validates component integration
+  only and is replaced without changing downstream contracts.
 
 ### LLM validation and evidence service
 
 - LLM input is an allow-listed projection of the persisted weekly state.
-- The LLM must cite only evidence identifiers present in that projection.
+- Every returned claim code maps to the supplied evidence identifiers supporting
+  that claim; response-level citations without claim mapping are insufficient.
+- The application renders factual evidence labels and values from persisted
+  records rather than trusting generated prose to reproduce them.
 - Strict JSON/schema and semantic validation occur before persistence/display.
 - Controlled input ablation tests evidence sensitivity; SHAP is used only for
   compatible structured baselines and is never presented as an LLM explanation.
@@ -182,6 +205,30 @@ rules.
 - No public student or prediction endpoints.
 - Freshness and failure state visible on every relevant page.
 - Alert-status mutations are authenticated and audited.
+
+Phase 4 implements six FastAPI operations: public liveness/readiness, restricted
+presentation overview, restricted alert list/detail, and restricted alert review.
+The API response contract excludes outcomes, fairness attributes, and raw text;
+instructor responses use `Cache-Control: no-store`. Reviews require an
+idempotency key and persist through a row-locked, append-only audited transition.
+
+Phase 5 adds an API-only Streamlit instructor workspace. It displays course and
+database readiness, latest state-build time, per-alert freshness, a ranked queue,
+grounded claims and evidence provenance, four checkpoint prediction snapshots,
+and the audited review form. The dashboard has no SQL or persistence dependency;
+all reads and mutations pass through the restricted API client. It prominently
+labels `simple-rules-v1` as an untrained and uncalibrated integration model, not
+the final strong LLM or a research result.
+
+The presentation overview now also exposes ingestion status, last successful
+sync, lag, and active quarantine count. A stale or failed operational sync makes
+the dashboard freshness state unsafe even if older alert rows were individually
+marked fresh.
+
+The current `X-Instructor-ID` plus `X-Instructor-Role` check is intentionally a
+development placeholder. It proves route separation but does not authenticate a
+person. Production or shared deployment requires institutional identity, secure
+session/token validation, authorization policy, and transport security.
 
 ## Evaluation boundaries
 
