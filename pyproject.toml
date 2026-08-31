@@ -9,6 +9,7 @@ description = "Gated vertical-slice prototype for a course-level student digital
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "alembic>=1.13,<2.0",
+    "altair>=5.0,<7.0",
     "fastapi>=0.112,<1.0",
     "httpx>=0.27,<1.0",
     "pandas>=2.2,<4.0",

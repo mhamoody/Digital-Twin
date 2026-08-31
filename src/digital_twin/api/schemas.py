@@ -60,6 +60,13 @@ class LearnerListItem(ApiContract):
     alert_id: str | None = None
     alert_status: str | None = None
     evidence_count: int = Field(default=0, ge=0)
+    activity_count_14d: int | None = Field(default=None, ge=0)
+    active_days_14d: int | None = Field(default=None, ge=0)
+    days_since_last_activity: int | None = Field(default=None, ge=0)
+    assessments_due: int | None = Field(default=None, ge=0)
+    assessments_submitted: int | None = Field(default=None, ge=0)
+    assessments_missed: int | None = Field(default=None, ge=0)
+    submission_rate: float | None = Field(default=None, ge=0, le=1)
 
 
 class LearnerListResponse(ApiContract):

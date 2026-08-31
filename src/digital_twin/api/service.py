@@ -239,8 +239,7 @@ class ApiService:
             if session.get(CoursePresentation, presentation_id) is None:
                 raise ResourceNotFound(presentation_id)
             total = (
-                session.scalar(select(func.count()).select_from(Enrolment).where(*conditions))
-                or 0
+                session.scalar(select(func.count()).select_from(Enrolment).where(*conditions)) or 0
             )
             enrolments = session.scalars(
                 select(Enrolment)
@@ -477,8 +476,7 @@ class ApiService:
                     risk_band=timeline_prediction.risk_band,
                     model_version=timeline_model.model_version,
                     generated_at=timeline_prediction.generated_at,
-                    is_selected_alert=timeline_prediction.prediction_id
-                    == prediction.prediction_id,
+                    is_selected_alert=timeline_prediction.prediction_id == prediction.prediction_id,
                 )
                 for timeline_prediction, timeline_state, timeline_model in timeline_rows
             ],
@@ -617,6 +615,26 @@ class ApiService:
         latest_prediction_ids = [
             values[0][0].prediction_id for values in predictions_by_learner.values() if values
         ]
+        latest_state_ids = [state.state_id for state in latest_states.values()]
+        summary_features: dict[str, dict[str, Any]] = defaultdict(dict)
+        summary_feature_names = {
+            "clicks_last_14",
+            "active_days_last_14",
+            "days_since_last_activity",
+            "assessments_due",
+            "assessments_submitted",
+            "assessments_missed",
+            "submission_rate",
+        }
+        if latest_state_ids:
+            feature_rows = session.scalars(
+                select(WeeklyFeatureRecord).where(
+                    WeeklyFeatureRecord.state_id.in_(latest_state_ids),
+                    WeeklyFeatureRecord.feature_name.in_(summary_feature_names),
+                )
+            ).all()
+            for feature in feature_rows:
+                summary_features[feature.state_id][feature.feature_name] = feature.value_json
         alerts_by_prediction: dict[str, tuple[AlertRecord, int]] = {}
         if latest_prediction_ids:
             alert_rows = session.execute(
@@ -650,6 +668,7 @@ class ApiService:
                 probability_change = prediction.display_probability - previous_probability
             alert_row = alerts_by_prediction.get(prediction.prediction_id) if prediction else None
             alert = alert_row[0] if alert_row else None
+            state_features = summary_features.get(state.state_id, {}) if state else {}
             items.append(
                 LearnerListItem(
                     learner_id=enrolment.learner_id,
@@ -667,6 +686,13 @@ class ApiService:
                     alert_id=alert.alert_id if alert else None,
                     alert_status=alert.status if alert else None,
                     evidence_count=alert_row[1] if alert_row else 0,
+                    activity_count_14d=state_features.get("clicks_last_14"),
+                    active_days_14d=state_features.get("active_days_last_14"),
+                    days_since_last_activity=state_features.get("days_since_last_activity"),
+                    assessments_due=state_features.get("assessments_due"),
+                    assessments_submitted=state_features.get("assessments_submitted"),
+                    assessments_missed=state_features.get("assessments_missed"),
+                    submission_rate=state_features.get("submission_rate"),
                 )
             )
         return items
