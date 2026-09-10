@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import os
-from typing import Annotated
+import time
+from typing import Annotated, List
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from sqlalchemy import Engine
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -53,6 +55,21 @@ def service_dependency(request: Request) -> ApiService:
 
 ServiceDependency = Annotated[ApiService, Depends(service_dependency)]
 IdentityDependency = Annotated[InstructorIdentity, Depends(require_instructor)]
+
+
+
+class LLMStateIn(BaseModel):
+    week: int
+    engagement_score: float
+    active_days: int
+    missed_assessments: int
+    activity_trend: str
+    evidence_ids: List[str]
+
+
+class LLMEvalRequest(BaseModel):
+    model_name: str
+    state: LLMStateIn
 
 
 def create_app(*, database_url: str | None = None, engine: Engine | None = None) -> FastAPI:
@@ -117,6 +134,71 @@ def create_app(*, database_url: str | None = None, engine: Engine | None = None)
                 ).model_dump(mode="json"),
             )
         return HealthResponse(status="ok", database_backend=backend, migration_revision=revision)
+
+
+    
+    @app.post("/api/v1/llm/evaluate", tags=["llm"])
+    def llm_evaluate(payload: LLMEvalRequest):
+        import requests
+        import json
+        t0 = time.time()
+
+        prompt = (
+            "Return ONLY valid JSON with keys: "
+            "risk_level (low|medium|high), risk_score (0..1), claims (array), "
+            "recommended_actions (array), abstain (boolean).\n"
+            f"State: {payload.state.model_dump()}"
+        )
+
+        try:
+            r = requests.post(
+                "http://127.0.0.1:11434/api/generate",
+                json={
+                    "model": payload.model_name,
+                    "prompt": prompt,
+                    "stream": False,
+                },
+                timeout=120,
+            )
+            r.raise_for_status()
+            raw = r.json().get("response", "").strip()
+
+            # remove markdown code fences if present
+            if raw.startswith("```"):
+                raw = raw.replace("```json", "").replace("```", "").strip()
+
+            try:
+                data = json.loads(raw)
+                json_valid = True
+            except Exception:
+                data = {
+                    "risk_level": "medium",
+                    "risk_score": 0.5,
+                    "claims": [raw[:300]],
+                    "recommended_actions": [],
+                    "abstain": True,
+                }
+                json_valid = False
+
+            return {
+                "model": payload.model_name,
+                "json_valid": json_valid,
+                "schema_valid": True,
+                "latency_sec": round(time.time() - t0, 3),
+                "data": data,
+                "error": None,
+            }
+
+        except Exception as e:
+            return {
+                "model": payload.model_name,
+                "json_valid": False,
+                "schema_valid": False,
+                "latency_sec": round(time.time() - t0, 3),
+                "data": None,
+                "error": str(e),
+            }
+
 
     @app.get(
         "/api/v1/presentations/{presentation_id}/overview",
