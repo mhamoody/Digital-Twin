@@ -56,5 +56,4 @@ Thumbs.db
 /scripts/package_*.ps1
 /scripts/create_*.ps1
 
-# Generated migration renderings; Alembic Python revisions are authoritative.
-/migrations/sql/
+# Migration SQL is tracked because the Alembic revisions load it at runtime.
