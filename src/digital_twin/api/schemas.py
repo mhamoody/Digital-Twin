@@ -23,6 +23,7 @@ class HealthResponse(ApiContract):
 class InstructorIdentity(ApiContract):
     reviewer_id: str = Field(min_length=1, max_length=128)
     role: Literal["instructor", "supervisor"]
+    allowed_presentations: list[str] | None = None
 
 
 class PresentationOverview(ApiContract):

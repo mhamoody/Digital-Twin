@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 import httpx
@@ -114,7 +115,23 @@ class DashboardApiClient:
                 timeout=self.timeout_seconds,
                 transport=self.transport,
             ) as client:
-                response = client.request(method, path, headers=request_headers, **kwargs)
+                request = client.build_request(method, path, headers=request_headers, **kwargs)
+                if authenticated and os.environ.get("DIGITAL_TWIN_AUTH_FILE"):
+                    from digital_twin.api.auth import sign_dashboard_request
+
+                    signed_path = request.url.path + (
+                        "?" + request.url.query.decode() if request.url.query else ""
+                    )
+                    request.headers.update(
+                        sign_dashboard_request(
+                            method,
+                            signed_path,
+                            request.content,
+                            self.headers["X-Instructor-ID"],
+                            self.headers["X-Instructor-Role"],
+                        )
+                    )
+                response = client.send(request)
                 response.raise_for_status()
                 payload = response.json()
         except httpx.TimeoutException as error:
@@ -125,7 +142,18 @@ class DashboardApiClient:
             elif error.response.status_code == 404:
                 message = "The requested course or alert was not found."
             elif error.response.status_code == 409:
-                message = "That review conflicts with the current alert status. Refresh data."
+                message = (
+                    "The record changed since you opened it. Refresh data before saving again."
+                )
+            elif error.response.status_code == 503:
+                message = (
+                    "The database or requested service is not ready. "
+                    "Retry, or ask the operator to check service status."
+                )
+            elif error.response.status_code == 422:
+                message = (
+                    "The supplied values could not be validated. Check the fields and try again."
+                )
             else:
                 message = "The instructor API returned an error. Try Refresh data."
             raise DashboardApiError(message) from error

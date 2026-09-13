@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import os
-import time
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, status
 from fastapi.openapi.utils import get_openapi
@@ -15,7 +15,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from digital_twin.persistence import create_twin_engine
 
-from .auth import require_instructor
+from .auth import authorize_course, require_instructor
 from .schemas import (
     AlertDetail,
     AlertListResponse,
@@ -57,14 +57,13 @@ ServiceDependency = Annotated[ApiService, Depends(service_dependency)]
 IdentityDependency = Annotated[InstructorIdentity, Depends(require_instructor)]
 
 
-
 class LLMStateIn(BaseModel):
     week: int
     engagement_score: float
     active_days: int
     missed_assessments: int
     activity_trend: str
-    evidence_ids: List[str]
+    evidence_ids: list[str]
 
 
 class LLMEvalRequest(BaseModel):
@@ -87,6 +86,11 @@ def create_app(*, database_url: str | None = None, engine: Engine | None = None)
 
     @app.middleware("http")
     async def protect_sensitive_responses(request: Request, call_next):
+        if request.url.path.startswith("/api/"):
+            body = await request.body()
+            if len(body) > 1_000_000:
+                return JSONResponse(status_code=413, content={"detail": "Request is too large."})
+            request.state.body_hash = hashlib.sha256(body).hexdigest()
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         if request.url.path.startswith("/api/"):
@@ -135,70 +139,11 @@ def create_app(*, database_url: str | None = None, engine: Engine | None = None)
             )
         return HealthResponse(status="ok", database_backend=backend, migration_revision=revision)
 
-
-    
     @app.post("/api/v1/llm/evaluate", tags=["llm"])
-    def llm_evaluate(payload: LLMEvalRequest):
-        import requests
-        import json
-        t0 = time.time()
-
-        prompt = (
-            "Return ONLY valid JSON with keys: "
-            "risk_level (low|medium|high), risk_score (0..1), claims (array), "
-            "recommended_actions (array), abstain (boolean).\n"
-            f"State: {payload.state.model_dump()}"
+    def llm_evaluate(payload: LLMEvalRequest, _identity: IdentityDependency):
+        raise HTTPException(
+            410, "The experimental endpoint is retired. Use the course-scoped v2 analysis jobs."
         )
-
-        try:
-            r = requests.post(
-                "http://127.0.0.1:11434/api/generate",
-                json={
-                    "model": payload.model_name,
-                    "prompt": prompt,
-                    "stream": False,
-                },
-                timeout=120,
-            )
-            r.raise_for_status()
-            raw = r.json().get("response", "").strip()
-
-            # remove markdown code fences if present
-            if raw.startswith("```"):
-                raw = raw.replace("```json", "").replace("```", "").strip()
-
-            try:
-                data = json.loads(raw)
-                json_valid = True
-            except Exception:
-                data = {
-                    "risk_level": "medium",
-                    "risk_score": 0.5,
-                    "claims": [raw[:300]],
-                    "recommended_actions": [],
-                    "abstain": True,
-                }
-                json_valid = False
-
-            return {
-                "model": payload.model_name,
-                "json_valid": json_valid,
-                "schema_valid": True,
-                "latency_sec": round(time.time() - t0, 3),
-                "data": data,
-                "error": None,
-            }
-
-        except Exception as e:
-            return {
-                "model": payload.model_name,
-                "json_valid": False,
-                "schema_valid": False,
-                "latency_sec": round(time.time() - t0, 3),
-                "data": None,
-                "error": str(e),
-            }
-
 
     @app.get(
         "/api/v1/presentations/{presentation_id}/overview",
@@ -211,6 +156,7 @@ def create_app(*, database_url: str | None = None, engine: Engine | None = None)
         service: ServiceDependency,
         _identity: IdentityDependency,
     ) -> PresentationOverview:
+        authorize_course(_identity, presentation_id)
         return service.presentation_overview(presentation_id)
 
     @app.get(
@@ -227,6 +173,7 @@ def create_app(*, database_url: str | None = None, engine: Engine | None = None)
         limit: Annotated[int, Query(ge=1, le=200)] = 100,
         offset: Annotated[int, Query(ge=0)] = 0,
     ) -> LearnerListResponse:
+        authorize_course(_identity, presentation_id)
         return service.list_learners(
             presentation_id=presentation_id,
             query=query,
@@ -246,6 +193,7 @@ def create_app(*, database_url: str | None = None, engine: Engine | None = None)
         service: ServiceDependency,
         _identity: IdentityDependency,
     ) -> LearnerDetailResponse:
+        authorize_course(_identity, presentation_id)
         return service.learner_detail(
             presentation_id=presentation_id,
             learner_id=learner_id,
@@ -268,6 +216,7 @@ def create_app(*, database_url: str | None = None, engine: Engine | None = None)
         limit: Annotated[int, Query(ge=1, le=200)] = 50,
         offset: Annotated[int, Query(ge=0)] = 0,
     ) -> AlertListResponse:
+        authorize_course(_identity, presentation_id)
         return service.list_alerts(
             presentation_id=presentation_id,
             alert_status=alert_status,
@@ -286,7 +235,9 @@ def create_app(*, database_url: str | None = None, engine: Engine | None = None)
         service: ServiceDependency,
         _identity: IdentityDependency,
     ) -> AlertDetail:
-        return service.alert_detail(alert_id)
+        detail = service.alert_detail(alert_id)
+        authorize_course(_identity, detail.alert.presentation_id)
+        return detail
 
     @app.post(
         "/api/v1/alerts/{alert_id}/reviews",
@@ -307,6 +258,7 @@ def create_app(*, database_url: str | None = None, engine: Engine | None = None)
         identity: IdentityDependency,
         idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
     ) -> AlertReviewResponse:
+        authorize_course(identity, service.alert_detail(alert_id).alert.presentation_id)
         if not idempotency_key or not 8 <= len(idempotency_key) <= 128:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -338,6 +290,9 @@ def create_app(*, database_url: str | None = None, engine: Engine | None = None)
         app.openapi_schema = schema
         return schema
 
+    from digital_twin.workspace.api import router as workspace_router
+
+    app.include_router(workspace_router)
     app.openapi = phase4_openapi
     return app
 

@@ -7,12 +7,48 @@ import hmac
 import os
 import re
 import time
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import Header, HTTPException, Request, Security, status
 from fastapi.security import APIKeyHeader
 
 from .schemas import InstructorIdentity
+
+
+def _dashboard_secret() -> bytes:
+    path = os.environ.get("DIGITAL_TWIN_API_KEY_FILE", "var/auth/api.key")
+    try:
+        secret = Path(path).read_bytes().strip()
+    except OSError as error:
+        raise HTTPException(503, "Protected API signing is not configured.") from error
+    if len(secret) < 32:
+        raise HTTPException(503, "Protected API signing is not configured.")
+    return secret
+
+
+def sign_dashboard_request(
+    method: str, path: str, body: bytes, reviewer_id: str, role: str
+) -> dict[str, str]:
+    timestamp = str(int(time.time()))
+    message = "\n".join(
+        (timestamp, method.upper(), path, reviewer_id, role, hashlib.sha256(body).hexdigest())
+    )
+    return {
+        "X-Dashboard-Timestamp": timestamp,
+        "X-Dashboard-Signature": hmac.new(
+            _dashboard_secret(), message.encode(), hashlib.sha256
+        ).hexdigest(),
+    }
+
+
+def authorize_course(identity: InstructorIdentity, course_id: str | None):
+    if (
+        identity.allowed_presentations is not None
+        and course_id not in identity.allowed_presentations
+    ):
+        raise HTTPException(403, "This account is not authorized for the requested course.")
+
 
 IDENTITY_PATTERN = re.compile(r"^(instructor|supervisor):[A-Za-z0-9._-]{1,96}$")
 ALLOWED_ROLES = {"instructor", "supervisor"}
@@ -38,6 +74,53 @@ def require_instructor(
     x_lms_signature: Annotated[str | None, Header(alias="X-LMS-Signature")] = None,
 ) -> InstructorIdentity:
     """Validate a signed LMS request or the explicit development-only headers."""
+
+    # Hosted mode never accepts the legacy development identity headers alone.
+    if os.environ.get("DIGITAL_TWIN_AUTH_FILE"):
+        from digital_twin.dashboard.auth import AccountConfigurationError, load_accounts
+
+        stamp = request.headers.get("X-Dashboard-Timestamp", "")
+        signature = request.headers.get("X-Dashboard-Signature", "")
+        try:
+            if abs(int(time.time()) - int(stamp)) > 60:
+                raise ValueError("expired")
+        except ValueError as error:
+            raise HTTPException(
+                401, "A current signed application identity is required."
+            ) from error
+        path = request.url.path + ("?" + request.url.query if request.url.query else "")
+        message = "\n".join(
+            (
+                stamp,
+                request.method.upper(),
+                path,
+                x_instructor_id or "",
+                x_instructor_role or "",
+                getattr(request.state, "body_hash", hashlib.sha256(b"").hexdigest()),
+            )
+        )
+        expected = hmac.new(_dashboard_secret(), message.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(signature, expected):
+            raise HTTPException(401, "Application request signature was rejected.")
+        try:
+            accounts = load_accounts(os.environ["DIGITAL_TWIN_AUTH_FILE"])
+        except AccountConfigurationError as error:
+            raise HTTPException(503, "Account configuration is unavailable.") from error
+        account = next(
+            (
+                a
+                for a in accounts.values()
+                if a.reviewer_id == x_instructor_id and a.role == x_instructor_role
+            ),
+            None,
+        )
+        if account is None:
+            raise HTTPException(403, "This instructor account is no longer available.")
+        return InstructorIdentity(
+            reviewer_id=account.reviewer_id,
+            role=account.role,
+            allowed_presentations=list(account.allowed_presentations),
+        )
 
     signed_headers = (
         x_lms_platform,
@@ -96,17 +179,15 @@ def require_instructor(
                 role,
             )
         )
-        expected = hmac.new(
-            shared_secret.encode(), message.encode(), hashlib.sha256
-        ).hexdigest()
+        expected = hmac.new(shared_secret.encode(), message.encode(), hashlib.sha256).hexdigest()
         if not hmac.compare_digest(expected, x_lms_signature.lower()):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="The LMS request signature is invalid.",
             )
-        reviewer_digest = hashlib.sha256(
-            f"{x_lms_platform}:{x_lms_user_id}".encode()
-        ).hexdigest()[:24]
+        reviewer_digest = hashlib.sha256(f"{x_lms_platform}:{x_lms_user_id}".encode()).hexdigest()[
+            :24
+        ]
         return InstructorIdentity(
             reviewer_id=f"{role}:{x_lms_platform}-{reviewer_digest}", role=role
         )

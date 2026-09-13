@@ -1140,4 +1140,20 @@ def render_dashboard() -> None:
         render_data_health(ready, overview, roster_items)
 
 
-render_dashboard()
+def run_current_workspace():
+    from digital_twin.dashboard.workspace_client import WorkspaceClient
+    from digital_twin.dashboard.workspace_ui import render_workspace
+    st.set_page_config(page_title="Course digital twin", page_icon="◉", layout="wide", initial_sidebar_state="auto")
+    auth_file = os.environ.get("DIGITAL_TWIN_AUTH_FILE")
+    if not auth_file:
+        st.error("Instructor login is required. Configure DIGITAL_TWIN_AUTH_FILE before opening the workspace.")
+        st.stop()
+    account = require_pilot_login(auth_file)
+    if account is None:
+        st.stop()
+    client = WorkspaceClient(base_url=os.environ.get("DIGITAL_TWIN_API_URL", "http://127.0.0.1:8000"),
+                             instructor_id=account.reviewer_id, instructor_role=account.role)
+    render_workspace(client, account)
+
+
+run_current_workspace()

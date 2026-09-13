@@ -23,10 +23,18 @@ has_command() {
   echo "Working filesystem: $(df -h "${project_root}" 2>/dev/null | tail -n 1 || echo unavailable)"
   echo
   echo "Commands"
-  for candidate in git curl python3 pip3 docker podman psql pg_dump systemctl tmux; do
+  for candidate in git curl python3 pip3 docker podman psql pg_dump systemctl tmux nvidia-smi ollama; do
     has_command "${candidate}"
   done
   echo
+  echo "Allocated GPU visibility (not proof of exclusive allocation)"
+  if command -v nvidia-smi >/dev/null 2>&1; then
+    nvidia-smi --query-gpu=name,memory.total,memory.free,driver_version --format=csv
+  fi
+  echo "Container memory limit (bytes; max means no cgroup limit at this path)"
+  if [[ -r /sys/fs/cgroup/memory.max ]]; then
+    cat /sys/fs/cgroup/memory.max
+  fi
   echo "Python modules"
   python3 - <<'PY' 2>/dev/null || true
 import importlib.util

@@ -33,6 +33,9 @@ Thumbs.db
 /var/run/
 /var/log/
 /var/backups/
+/var/models/
+/var/tools/
+/var/downloads/
 
 # Local datasets and generated artifacts
 /OULAD/
