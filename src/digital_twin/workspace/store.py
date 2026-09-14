@@ -11,8 +11,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .contracts import CaseUpdate, CoursePolicy, LearnerSnapshot, ModelOutput, digest
+from .errors import describe_failure
 from .models import (
     Analysis,
+    AnalysisAttempt,
     AnalysisJob,
     CaseEvent,
     Course,
@@ -20,8 +22,10 @@ from .models import (
     Event,
     Policy,
     Snapshot,
+    SnapshotHead,
     SupportCase,
 )
+from .scheduling import MAX_ATTEMPTS, SchedulingMixin, register_heads
 
 
 class Conflict(ValueError):
@@ -36,7 +40,7 @@ def payload(value):
     return value.model_dump(mode="json") if hasattr(value, "model_dump") else value
 
 
-class Store:
+class Store(SchedulingMixin):
     def __init__(self, engine):
         self.engine = engine
 
@@ -118,6 +122,7 @@ class Store:
                             created_at=now(),
                         )
                     )
+            register_heads(session, [Snapshot(**row) for row in mappings[-1][1]])
         return counts
 
     def courses(self, allowed: list[str] | tuple[str, ...] | None = None) -> list[dict]:
@@ -165,6 +170,22 @@ class Store:
                     created_at=now(),
                 )
             )
+            session.execute(
+                update(AnalysisJob)
+                .where(
+                    AnalysisJob.state_id.in_(
+                        select(Snapshot.id).where(Snapshot.course_id == presentation_id)
+                    ),
+                    AnalysisJob.policy_version != revised.version,
+                    AnalysisJob.status == "queued",
+                )
+                .values(
+                    status="failed",
+                    error_code="ANALYSIS_SUPERSEDED",
+                    updated_at=now(),
+                    lease_until=None,
+                )
+            )
         return revised
 
     def get_snapshot(self, state_id: str) -> LearnerSnapshot:
@@ -185,7 +206,11 @@ class Store:
     ) -> list[str]:
         policy = self.get_policy(course_id)
         with Session(self.engine) as session, session.begin():
-            query = select(Snapshot).where(Snapshot.course_id == course_id, Snapshot.week == week)
+            query = (
+                select(Snapshot)
+                .join(SnapshotHead, SnapshotHead.state_id == Snapshot.id)
+                .where(Snapshot.course_id == course_id, Snapshot.week == week)
+            )
             if learner_ids is not None:
                 query = query.where(Snapshot.learner_id.in_(learner_ids))
             states = session.scalars(query).all()
@@ -219,7 +244,9 @@ class Store:
                         )
                     )
                 elif row.status == "failed":
-                    row.status, row.error_code, row.updated_at = "queued", None, now()
+                    if row.attempts >= MAX_ATTEMPTS:
+                        continue
+                    row.status, row.lease_until, row.updated_at = "queued", None, now()
                 jobs.append(key)
             return jobs
 
@@ -228,14 +255,43 @@ class Store:
     ) -> dict | None:
         moment = now()
         with Session(self.engine) as session, session.begin():
+            exhausted = session.scalars(
+                select(AnalysisJob).where(
+                    AnalysisJob.status == "running",
+                    AnalysisJob.lease_until < moment,
+                    AnalysisJob.attempts >= MAX_ATTEMPTS,
+                )
+            ).all()
+            for old_job in exhausted:
+                old_job.status = "failed"
+                old_job.error_code = "ANALYSIS_WORKER_INTERRUPTED"
+                old_job.lease_until = None
+                old_job.updated_at = moment
+                session.add(
+                    AnalysisAttempt(
+                        id=uuid.uuid4().hex,
+                        job_id=old_job.id,
+                        attempt=old_job.attempts,
+                        error_code=old_job.error_code,
+                        outcome="lease_expired",
+                        created_at=moment,
+                    )
+                )
             eligible = or_(
-                AnalysisJob.status == "queued",
+                and_(
+                    AnalysisJob.status == "queued",
+                    or_(AnalysisJob.lease_until.is_(None), AnalysisJob.lease_until <= moment),
+                ),
                 and_(AnalysisJob.status == "running", AnalysisJob.lease_until < moment),
             )
             if model_kind:
                 eligible = and_(eligible, AnalysisJob.model_kind == model_kind)
             job = session.scalar(
-                select(AnalysisJob).where(eligible).order_by(AnalysisJob.created_at).limit(1)
+                select(AnalysisJob)
+                .join(Snapshot, AnalysisJob.state_id == Snapshot.id)
+                .where(eligible)
+                .order_by(Snapshot.week.desc(), AnalysisJob.created_at)
+                .limit(1)
             )
             if job is None:
                 return None
@@ -261,6 +317,7 @@ class Store:
                 "status": "running",
                 "worker_id": worker_id,
                 "expected_model_digest": job.expected_model_digest,
+                "attempts": job.attempts + 1,
             }
 
     def complete_job(self, job_id: str, result: dict, worker_id: str | None = None):
@@ -283,6 +340,8 @@ class Store:
                     status="abstained" if output.abstain else "validated",
                     updated_at=now(),
                     lease_until=None,
+                    error_code=None,
+                    worker_id=None,
                 )
                 .execution_options(synchronize_session=False)
             )
@@ -306,19 +365,54 @@ class Store:
                     created_at=now(),
                 )
             )
+            session.add(
+                AnalysisAttempt(
+                    id=uuid.uuid4().hex,
+                    job_id=job.id,
+                    attempt=job.attempts,
+                    error_code=None,
+                    outcome="abstained" if output.abstain else "validated",
+                    created_at=now(),
+                )
+            )
 
-    def fail_job(self, job_id: str, error_code: str, worker_id: str | None = None):
+    def fail_job(
+        self, job_id: str, error_code: str, worker_id: str | None = None, *, retryable: bool = False
+    ):
         with Session(self.engine) as session, session.begin():
             conditions = [AnalysisJob.id == job_id, AnalysisJob.status == "running"]
             if worker_id:
                 conditions.append(AnalysisJob.worker_id == worker_id)
-            session.execute(
+            job = session.get(AnalysisJob, job_id)
+            if job is None or job.status != "running" or (worker_id and job.worker_id != worker_id):
+                return "lease_changed"
+            retry = retryable and job.attempts < MAX_ATTEMPTS
+            next_attempt = (
+                now() + timedelta(seconds=30 * (3 ** max(0, job.attempts - 1))) if retry else None
+            )
+            changed = session.execute(
                 update(AnalysisJob)
                 .where(*conditions)
                 .values(
-                    status="failed", error_code=error_code[:128], lease_until=None, updated_at=now()
+                    status="queued" if retry else "failed",
+                    error_code=error_code[:128],
+                    lease_until=next_attempt,
+                    worker_id=None,
+                    updated_at=now(),
                 )
             )
+            if changed.rowcount:
+                session.add(
+                    AnalysisAttempt(
+                        id=uuid.uuid4().hex,
+                        job_id=job.id,
+                        attempt=job.attempts,
+                        error_code=error_code[:128],
+                        outcome="retry_scheduled" if retry else "failed",
+                        created_at=now(),
+                    )
+                )
+            return "retry_scheduled" if retry else "failed"
 
     def job_summary(self) -> dict:
         with Session(self.engine) as session:
@@ -371,9 +465,9 @@ class Store:
                 [previous_checkpoint] if previous_checkpoint is not None else []
             )
             states = session.scalars(
-                select(Snapshot).where(
-                    Snapshot.course_id == course_id, Snapshot.week.in_(selected_weeks)
-                )
+                select(Snapshot)
+                .join(SnapshotHead, SnapshotHead.state_id == Snapshot.id)
+                .where(Snapshot.course_id == course_id, Snapshot.week.in_(selected_weeks))
             ).all()
             states_by_learner = {}
             for state in states:
@@ -383,7 +477,7 @@ class Store:
                 select(Analysis)
                 .join(Snapshot, Analysis.state_id == Snapshot.id)
                 .where(Snapshot.course_id == course_id, Snapshot.week.in_(selected_weeks))
-                .order_by(Analysis.created_at)
+                .order_by((Analysis.policy_version == policy.version), Analysis.created_at)
             ).all()
             by_state = {}
             for analysis in analyses:
@@ -394,7 +488,7 @@ class Store:
                 select(AnalysisJob)
                 .join(Snapshot, AnalysisJob.state_id == Snapshot.id)
                 .where(Snapshot.course_id == course_id, Snapshot.week == week)
-                .order_by(AnalysisJob.updated_at)
+                .order_by((AnalysisJob.policy_version == policy.version), AnalysisJob.updated_at)
             ).all()
             job_by_state = {}
             for job in jobs:
@@ -542,6 +636,7 @@ class Store:
             }
 
     def learner(self, course_id: str, learner_id: str, week: int) -> dict:
+        current_policy = self.get_policy(course_id)
         with Session(self.engine) as session:
             enrol = session.get(Enrolment, (course_id, learner_id))
             course = session.get(Course, course_id)
@@ -549,6 +644,7 @@ class Store:
                 raise LookupError("Learner not found in this course")
             states = session.scalars(
                 select(Snapshot)
+                .join(SnapshotHead, SnapshotHead.state_id == Snapshot.id)
                 .where(
                     Snapshot.course_id == course_id,
                     Snapshot.learner_id == learner_id,
@@ -564,7 +660,7 @@ class Store:
                     Snapshot.learner_id == learner_id,
                     Snapshot.week <= week,
                 )
-                .order_by(Analysis.created_at)
+                .order_by((Analysis.policy_version == current_policy.version), Analysis.created_at)
             ).all()
             by_state = {}
             for a in analyses:
@@ -617,14 +713,15 @@ class Store:
                     select(AnalysisJob)
                     .where(AnalysisJob.state_id == current.id)
                     .order_by(
-                        (AnalysisJob.model_kind == "llm").desc(), AnalysisJob.updated_at.desc()
+                        (AnalysisJob.model_kind == "llm").desc(),
+                        (AnalysisJob.policy_version == current_policy.version).desc(),
+                        AnalysisJob.updated_at.desc(),
                     )
                     .limit(1)
                 )
                 if current
                 else None
             )
-            current_policy = self.get_policy(course_id)
             analysis_status = latest_job.status if latest_job else "not_run"
             if (
                 current_a
@@ -637,6 +734,9 @@ class Store:
                 "display_name": enrol.payload.get("display_name", learner_id),
                 "analysis_status": analysis_status,
                 "job_error": latest_job.error_code if latest_job else None,
+                "job_error_detail": describe_failure(latest_job.error_code)
+                if latest_job and latest_job.error_code
+                else None,
                 "comparable": self._comparison(
                     current_a.payload if current_a else None, prev_a.payload if prev_a else None
                 )

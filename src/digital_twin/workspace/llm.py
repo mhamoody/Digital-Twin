@@ -21,8 +21,9 @@ import httpx
 from pydantic import ValidationError
 
 from .contracts import CoursePolicy, LearnerSnapshot, ModelOutput, digest
+from .errors import describe_failure
 
-PROMPT_VERSION = "course-risk-qwen-v2.1"
+PROMPT_VERSION = "course-risk-qwen-v2.2"
 APPROVED_MODELS = {"qwen2.5:7b"}
 ABSTENTION_REASONS = {
     "STALE_STATE",
@@ -120,6 +121,47 @@ class ModelRuntimeError(RuntimeError):
         super().__init__(code)
 
 
+def _reported_memory_failure(body: Any) -> bool:
+    """Recognize explicit runtime memory reports without returning their raw text."""
+    if not isinstance(body, dict) or not isinstance(body.get("error"), str):
+        return False
+    message = body["error"].lower()
+    return any(
+        phrase in message
+        for phrase in (
+            "out of memory",
+            "requires more system memory",
+            "unable to allocate",
+            "failed to allocate",
+            "not enough memory",
+            "insufficient memory",
+        )
+    )
+
+
+def _http_failure(response: httpx.Response, path: str) -> str:
+    try:
+        body = response.json()
+    except ValueError:
+        body = None
+    if _reported_memory_failure(body):
+        return "MODEL_OUT_OF_MEMORY"
+    code = response.status_code
+    if code == 404:
+        return "MODEL_NOT_INSTALLED" if path == "/api/generate" else "MODEL_ENDPOINT_UNAVAILABLE"
+    if code in {401, 403}:
+        return "MODEL_ACCESS_DENIED"
+    if code == 429:
+        return "MODEL_BUSY"
+    if code in {408, 504}:
+        return "MODEL_TIMEOUT"
+    if 500 <= code <= 599:
+        return "MODEL_SERVER_ERROR"
+    if 400 <= code <= 499:
+        return "MODEL_REQUEST_REJECTED"
+    return "MODEL_HTTP_ERROR"
+
+
 @dataclass(frozen=True)
 class RuntimeConfig:
     base_url: str = "http://127.0.0.1:11434"
@@ -185,14 +227,19 @@ class OllamaClient:
         except httpx.TimeoutException as error:
             raise ModelRuntimeError("MODEL_TIMEOUT") from error
         except httpx.HTTPStatusError as error:
-            code = "MODEL_UNAVAILABLE" if error.response.status_code == 404 else "MODEL_HTTP_ERROR"
-            raise ModelRuntimeError(code) from error
+            raise ModelRuntimeError(_http_failure(error.response, path)) from error
         except httpx.RequestError as error:
             raise ModelRuntimeError("MODEL_UNAVAILABLE") from error
         except (ValueError, TypeError) as error:
             raise ModelRuntimeError("MODEL_RESPONSE_INVALID") from error
         if not isinstance(body, dict):
             raise ModelRuntimeError("MODEL_RESPONSE_INVALID")
+        if body.get("error"):
+            raise ModelRuntimeError(
+                "MODEL_OUT_OF_MEMORY"
+                if _reported_memory_failure(body)
+                else "MODEL_RESPONSE_INVALID"
+            )
         return body
 
     def model_digest(self, *, timeout: float | None = None) -> str:
@@ -204,7 +251,7 @@ class OllamaClient:
             (
                 m
                 for m in installed
-                if isinstance(m, dict) and self.config.model in {m.get("name"), m.get("model")}
+                if isinstance(m, dict) and self.config.model in (m.get("name"), m.get("model"))
             ),
             None,
         )
@@ -227,6 +274,7 @@ class OllamaClient:
                 "model": self.config.model,
                 "digest": None,
                 "error_code": error.code,
+                "failure": describe_failure(error.code),
                 "inference_verified": False,
             }
         return {
@@ -234,6 +282,7 @@ class OllamaClient:
             "model": self.config.model,
             "digest": actual,
             "error_code": None,
+            "failure": None,
             "inference_verified": False,
         }
 
@@ -613,6 +662,8 @@ def build_prompt(snapshot: LearnerSnapshot, policy: CoursePolicy) -> tuple[str, 
         "Medium/high requires a concern claim. When require_academic_corroboration is true, high "
         "requires an academic concern claim as well. INACTIVITY_GAP follows the instructor's "
         "warning threshold and day_basis, not a universal seven-day rule. "
+        "If academic corroboration is disabled, high risk based only on INACTIVITY_GAP still "
+        "requires inactivity_under_current_policy.days >= inactivity_high_days. "
         "Unknown/not-applicable features are not zero or failures. "
         "For insufficient or conflicting evidence you cannot responsibly score, abstain with null "
         "risk_score/risk_band, empty claims/actions, and abstention_reason INSUFFICIENT_CONFIDENCE "
@@ -621,6 +672,10 @@ def build_prompt(snapshot: LearnerSnapshot, policy: CoursePolicy) -> tuple[str, 
         "LOW_GRADE, LOW_LATEST_GRADE or DECLINING_GRADES; offer_resources requires LOW_GRADE, "
         "LOW_LATEST_GRADE, DECLINING_GRADES, LOW_COMPLETION or MISSED_ASSESSMENT; "
         "no_action is only for low risk and cannot accompany other actions. "
+        "A scored response requires 1 to 8 distinct claims and 1 to 6 distinct actions. "
+        'If no concern claim is selected, use low risk and exactly ["no_action"], or abstain '
+        "when evidence is insufficient. Never repeat a claim code or an evidence ID "
+        "within a claim. "
         "Recommend instructor actions only; never contact a student."
     )
     schema = copy.deepcopy(ModelOutput.model_json_schema())
@@ -628,6 +683,17 @@ def build_prompt(snapshot: LearnerSnapshot, policy: CoursePolicy) -> tuple[str, 
     schema["$defs"]["GroundedClaim"]["properties"]["code"]["enum"] = sorted(eligible) or [
         "NO_CLAIM"
     ]
+    schema["$defs"]["GroundedClaim"]["properties"]["evidence_ids"]["items"]["enum"] = sorted(
+        aliases
+    )
+    schema["properties"]["suggested_actions"]["items"]["enum"] = sorted(
+        _actions_for(set(eligible), "low")
+    )
+    # Decode only approved reason codes, including null for a non-abstaining answer.
+    schema["properties"]["abstention_reason"]["anyOf"][0]["enum"] = sorted(ABSTENTION_REASONS)
+    # The decoding grammar alone does not teach the model the expected object.
+    # Include the same contract in its prompt, as recommended by Ollama's docs.
+    model_input["required_output_schema"] = schema
     prompt = json.dumps(model_input, separators=(",", ":"), allow_nan=False)
     return system, prompt, schema, aliases
 

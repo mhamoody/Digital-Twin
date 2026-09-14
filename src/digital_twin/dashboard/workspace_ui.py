@@ -17,6 +17,8 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from digital_twin.workspace.errors import describe_failure
+
 from .client import DashboardApiError
 from .workspace_client import WorkspaceClient
 
@@ -77,6 +79,7 @@ WORKSPACE_CSS = """
  [data-testid="stMetricValue"] {overflow-x:auto;text-overflow:clip;}
  [data-testid="stMetricLabel"] p {white-space:normal;}
  [data-testid="stDataFrame"], [data-testid="stCode"] {max-width:100%;overflow-x:auto;}
+ [data-testid="stButton"] p {white-space:normal;}
  :focus-visible {outline:3px solid #a85a2d!important;outline-offset:3px;}
  @media(max-width:850px) {
    .block-container {padding:1.2rem .9rem 2rem;}
@@ -434,6 +437,7 @@ def render_overview(
     else:
         st.info("There are no student records at this checkpoint.")
     render_analysis_controls(client, course_id, week)
+    render_course_analysis(client, course_id)
 
 
 def render_roster(
@@ -589,6 +593,167 @@ def render_analysis_controls(
                 st.rerun()
 
 
+def render_course_analysis(client: WorkspaceClient, course_id: str) -> None:
+    """Course-wide progress is kept distinct from selected-checkpoint student counts."""
+    st.divider()
+    st.subheader("LLM analysis · every course checkpoint")
+    st.caption(
+        "These are student-checkpoint records across all weeks, not unique student counts. "
+        "Only the current approved Qwen model and policy count as LLM analysis; "
+        "a rules-baseline result does not mark a record as analyzed by the LLM."
+    )
+    try:
+        status = client.analysis_status(course_id)
+    except DashboardApiError as error:
+        _show_error(error)
+        return
+    summary = status.get("summary", {})
+    total = int(summary.get("total_snapshots", 0))
+    validated = int(summary.get("validated", 0))
+    abstained = int(summary.get("abstained", 0))
+    queued = int(summary.get("queued", 0))
+    running = int(summary.get("running", 0))
+    retries = int(summary.get("retry_scheduled", 0))
+    failed = int(summary.get("failed", 0))
+    render_cards(
+        [
+            (
+                "LLM analysis completed",
+                f"{validated + abstained:,} / {total:,}",
+                f"{validated:,} validated results; {abstained:,} abstentions without a risk score.",
+            ),
+            (
+                "Queued / running",
+                f"{queued:,} / {running:,}",
+                f"{retries:,} retries scheduled. Refresh to check progress.",
+            ),
+            (
+                "Awaiting queue",
+                str(summary.get("unassessed", 0)),
+                "Records without a current LLM result or pending job. Failed jobs are separate.",
+            ),
+            ("Failed analysis", str(failed), "See the cause and recommended next step below."),
+        ]
+    )
+    if total:
+        st.progress(
+            min(1.0, (validated + abstained) / total),
+            text="Course-wide LLM completion · validated results and explicit abstentions",
+        )
+    if summary.get("baseline_only", 0):
+        st.caption(
+            f"{summary['baseline_only']:,} records have a temporary rules result but no current "
+            "LLM assessment. They may already be queued; this is not an additional record count."
+        )
+    model, worker = status.get("model", {}), status.get("worker", {})
+    st.write(
+        f"**Model:** {model.get('model', 'Qwen')} · {label(model.get('status'))}  \n"
+        f"**Analysis worker:** {label(worker.get('status'))}"
+    )
+    if model.get("status") != "ready":
+        st.info(
+            "You can queue work now. Analysis will start when the model service and "
+            "worker are available. Queued work is not a completed prediction."
+        )
+    if worker.get("pause_until"):
+        st.caption(f"Worker retry pause until {timestamp(worker['pause_until'])}.")
+    service_code = worker.get("last_error_code") or model.get("error_code")
+    if service_code:
+        service_failure = describe_failure(service_code)
+        st.warning(f"{service_failure['title']}: {service_failure['detail']}")
+        st.write(f"**Next step:** {service_failure['action']}")
+    if worker.get("status") == "paused":
+        st.warning(
+            "Analysis is paused to avoid repeating the same failure. "
+            "Queuing work does not resume it."
+        )
+        if st.button(
+            "Resume analysis after checking the error", key=f"workspace_resume_{course_id}"
+        ):
+            try:
+                client.resume_analysis(course_id)
+            except DashboardApiError as error:
+                _show_error(error)
+            else:
+                st.session_state["workspace_flash"] = (
+                    "Resume requested. The worker still checks model health before analysis."
+                )
+                st.rerun()
+    left, right = st.columns(2)
+    with left:
+        if st.button(
+            "Analyze all unassessed checkpoints",
+            type="primary",
+            key=f"workspace_catchup_{course_id}",
+        ):
+            _queue_batch(client, course_id, "unassessed")
+    with right:
+        if st.button(
+            "Retry eligible failed analysis",
+            disabled=failed == 0,
+            key=f"workspace_retry_failed_{course_id}",
+        ):
+            _queue_batch(client, course_id, "retry_failed")
+    st.caption(
+        f"Retries respect a maximum of {status.get('max_attempts', 3)} attempts. "
+        "Configuration or validation failures may require a correction before retrying."
+    )
+    automation = status.get("automation", {})
+    with st.form(f"workspace_automation_{course_id}_{automation.get('version', 1)}"):
+        enabled = st.checkbox(
+            "Automatically analyze new or changed checkpoint records",
+            value=automation.get("enabled", True),
+        )
+        st.caption(
+            "Applies to this course. New records and policy changes are picked up "
+            "when the analysis worker and model are ready. Already assessed records are reused."
+        )
+        save = st.form_submit_button("Save automatic analysis setting")
+    if save:
+        try:
+            client.save_automation(course_id, enabled=enabled, version=automation.get("version", 1))
+        except DashboardApiError as error:
+            _show_error(error)
+        else:
+            st.session_state["workspace_flash"] = (
+                "Automatic course analysis enabled."
+                if enabled
+                else "Automatic discovery disabled. Work already queued may still finish."
+            )
+            st.rerun()
+    failures = status.get("failures", [])
+    if failures:
+        st.markdown("#### Why analysis failed")
+        for failure in failures:
+            st.error(
+                f"{failure.get('count', 0)} record(s) · {failure.get('title', 'Analysis failed')}"
+            )
+            if failure.get("detail"):
+                st.write(failure["detail"])
+            if failure.get("action"):
+                st.write(f"**Next step:** {failure['action']}")
+            st.caption(f"Diagnostic code: {failure.get('code', 'ANALYSIS_UNKNOWN_ERROR')}")
+    if status.get("weeks"):
+        with st.expander("Progress by course week"):
+            _frame([{label(key): value for key, value in row.items()} for row in status["weeks"]])
+
+
+def _queue_batch(client: WorkspaceClient, course_id: str, mode: str) -> None:
+    try:
+        result = client.batch_analysis(course_id, mode=mode, scope="all_weeks")
+    except DashboardApiError as error:
+        _show_error(error)
+    else:
+        st.session_state["workspace_flash"] = (
+            f"Added {result.get('queued', 0)} record(s) to the LLM queue. "
+            f"{result.get('already_queued', 0)} already queued; "
+            f"{result.get('already_assessed', 0)} already assessed; "
+            f"{result.get('failed_skipped', 0)} failures need attention; "
+            f"{result.get('exhausted', 0)} reached the attempt limit."
+        )
+        st.rerun()
+
+
 def comparable_results(current: dict[str, Any] | None, previous: dict[str, Any] | None) -> bool:
     if not current or not previous:
         return False
@@ -680,6 +845,12 @@ def render_profile(
             "A current validated result is unavailable. Check data/model health and "
             "request analysis again when ready."
         )
+    if state_status == "failed":
+        failure = detail.get("job_error_detail") or describe_failure(detail.get("job_error"))
+        st.error(failure.get("title", "Analysis failed"))
+        st.write(failure.get("detail", "The saved job did not produce a validated result."))
+        st.write(f"**Next step:** {failure.get('action', 'Check data and model health.')} ")
+        st.caption(f"Diagnostic code: {failure.get('code', 'ANALYSIS_UNKNOWN_ERROR')}")
     if analysis:
         st.write(f"**Result source:** {model_label(analysis.get('model_version'))}")
         if analysis.get("model_kind") == "llm" and analysis.get("inference_performed") is False:
@@ -1382,3 +1553,5 @@ def render_health(client: WorkspaceClient, workspace: dict[str, Any]) -> None:
             "- **Completed action:** the instructor records that the action occurred; "
             "it is not an automatic message."
         )
+    if course.get("presentation_id"):
+        render_course_analysis(client, course["presentation_id"])

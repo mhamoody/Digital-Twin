@@ -4,6 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -115,6 +116,18 @@ class Analysis(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class AnalysisPlan(Base):
+    """Planned prompt/runtime identity, also retained for failed inference attempts."""
+
+    __tablename__ = "workspace_analysis_plan"
+    __table_args__ = {"schema": "analytics"}
+    job_id: Mapped[str] = mapped_column(
+        ForeignKey("analytics.workspace_analysis_job.id"), primary_key=True
+    )
+    fingerprint: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class SupportCase(Base):
     __tablename__ = "workspace_support_case"
     __table_args__ = (
@@ -150,4 +163,46 @@ class CaseEvent(Base):
     request_hash: Mapped[str] = mapped_column(String(64))
     occurred_day: Mapped[int] = mapped_column(Integer)
     payload: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SnapshotHead(Base):
+    """Current immutable revision of each learner-week, without deleting older evidence."""
+
+    __tablename__ = "workspace_snapshot_head"
+    __table_args__ = {"schema": "analytics"}
+    course_id: Mapped[str] = mapped_column(ForeignKey("core.workspace_course.id"), primary_key=True)
+    learner_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    week: Mapped[int] = mapped_column(Integer, primary_key=True)
+    state_id: Mapped[str] = mapped_column(ForeignKey("analytics.workspace_snapshot.id"), index=True)
+
+
+class Automation(Base):
+    __tablename__ = "workspace_automation"
+    __table_args__ = {"schema": "analytics"}
+    course_id: Mapped[str] = mapped_column(ForeignKey("core.workspace_course.id"), primary_key=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    actor: Mapped[str] = mapped_column(String(128))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RuntimeState(Base):
+    __tablename__ = "workspace_runtime"
+    __table_args__ = {"schema": "analytics"}
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    payload: Mapped[dict] = mapped_column(JSON)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class AnalysisAttempt(Base):
+    __tablename__ = "workspace_analysis_attempt"
+    __table_args__ = {"schema": "audit"}
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    job_id: Mapped[str] = mapped_column(
+        ForeignKey("analytics.workspace_analysis_job.id"), index=True
+    )
+    attempt: Mapped[int] = mapped_column(Integer)
+    error_code: Mapped[str | None] = mapped_column(String(128))
+    outcome: Mapped[str] = mapped_column(String(32))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

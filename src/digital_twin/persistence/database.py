@@ -40,4 +40,8 @@ def create_validation_schema(engine: Engine) -> None:
     if engine.dialect.name != "sqlite":
         raise ValueError("PostgreSQL schemas must be created through Alembic migrations")
     from digital_twin.workspace import models  # noqa: F401 - register additive v2 tables
+
     Base.metadata.create_all(engine)
+    from digital_twin.workspace.store import Store
+
+    Store(engine).ensure_heads()

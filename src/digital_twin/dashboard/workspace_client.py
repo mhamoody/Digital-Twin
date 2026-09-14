@@ -82,3 +82,33 @@ class WorkspaceClient(DashboardApiClient):
 
     def model_status(self) -> dict[str, Any]:
         return self._request("GET", "/api/v2/model/status")
+
+    def analysis_status(self, presentation_id: str) -> dict[str, Any]:
+        return self._request("GET", f"{_course_path(presentation_id)}/analysis/status")
+
+    def batch_analysis(
+        self,
+        presentation_id: str,
+        *,
+        mode: str = "unassessed",
+        scope: str = "all_weeks",
+        week: int | None = None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {"scope": scope, "mode": mode}
+        if week is not None:
+            payload["week"] = week
+        return self._request(
+            "POST", f"{_course_path(presentation_id)}/analysis/batch", json=payload
+        )
+
+    def save_automation(
+        self, presentation_id: str, *, enabled: bool, version: int
+    ) -> dict[str, Any]:
+        return self._request(
+            "POST",
+            f"{_course_path(presentation_id)}/analysis/automation",
+            json={"enabled": enabled, "version": version},
+        )
+
+    def resume_analysis(self, presentation_id: str) -> dict[str, Any]:
+        return self._request("POST", f"{_course_path(presentation_id)}/analysis/resume", json={})
