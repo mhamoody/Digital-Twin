@@ -111,4 +111,5 @@ class WorkspaceClient(DashboardApiClient):
         )
 
     def resume_analysis(self, presentation_id: str) -> dict[str, Any]:
+        """Request resumption for this course; cannot resume a shared service pause."""
         return self._request("POST", f"{_course_path(presentation_id)}/analysis/resume", json={})

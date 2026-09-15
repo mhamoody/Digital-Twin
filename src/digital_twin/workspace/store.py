@@ -11,13 +11,16 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .contracts import CaseUpdate, CoursePolicy, LearnerSnapshot, ModelOutput, digest
+from .controls import save_control
 from .errors import describe_failure
 from .models import (
     Analysis,
     AnalysisAttempt,
     AnalysisJob,
+    AnalysisPlan,
     CaseEvent,
     Course,
+    CourseAnalysisControl,
     Enrolment,
     Event,
     Policy,
@@ -26,6 +29,7 @@ from .models import (
     SupportCase,
 )
 from .scheduling import MAX_ATTEMPTS, SchedulingMixin, register_heads
+from .tracing import persist_traces, safe_attempts
 
 
 class Conflict(ValueError):
@@ -286,10 +290,34 @@ class Store(SchedulingMixin):
             )
             if model_kind:
                 eligible = and_(eligible, AnalysisJob.model_kind == model_kind)
+            controls = {
+                row.course_id: row.payload for row in session.scalars(select(CourseAnalysisControl))
+            }
+            paused = [
+                course for course, control in controls.items() if control.get("status") == "paused"
+            ]
+            course_filter = or_(AnalysisJob.model_kind != "llm", Snapshot.course_id.not_in(paused))
+            candidates = session.execute(
+                select(Snapshot.course_id, func.min(AnalysisJob.created_at))
+                .join(AnalysisJob, AnalysisJob.state_id == Snapshot.id)
+                .where(eligible, course_filter)
+                .group_by(Snapshot.course_id)
+            ).all()
+            if not candidates:
+                return None
+            # Least recently served course first; within a course prioritize its newest week.
+            course_id = min(
+                candidates,
+                key=lambda row: (
+                    controls.get(row[0], {}).get("last_claimed_at") or "",
+                    row[1].isoformat(),
+                    row[0],
+                ),
+            )[0]
             job = session.scalar(
                 select(AnalysisJob)
                 .join(Snapshot, AnalysisJob.state_id == Snapshot.id)
-                .where(eligible)
+                .where(eligible, course_filter, Snapshot.course_id == course_id)
                 .order_by(Snapshot.week.desc(), AnalysisJob.created_at)
                 .limit(1)
             )
@@ -309,6 +337,14 @@ class Store(SchedulingMixin):
             )
             if not changed.rowcount:
                 return None
+            state = session.get(Snapshot, job.state_id)
+            if job.model_kind == "llm":
+                save_control(
+                    session,
+                    course_id,
+                    last_claimed_at=moment.isoformat(),
+                    resume_acknowledged_at=moment.isoformat(),
+                )
             return {
                 "id": job.id,
                 "state_id": job.state_id,
@@ -318,6 +354,9 @@ class Store(SchedulingMixin):
                 "worker_id": worker_id,
                 "expected_model_digest": job.expected_model_digest,
                 "attempts": job.attempts + 1,
+                "course_id": course_id,
+                "week": state.week,
+                "lease_until": (moment + timedelta(seconds=lease_seconds)).isoformat(),
             }
 
     def complete_job(self, job_id: str, result: dict, worker_id: str | None = None):
@@ -347,13 +386,16 @@ class Store(SchedulingMixin):
             )
             if changed.rowcount != 1:
                 raise Conflict("Analysis lease expired or changed ownership")
+            plan = session.get(AnalysisPlan, job.id)
             stored = {
                 **result,
+                "inference_attempts": safe_attempts(result.get("inference_attempts", [])),
                 "policy_version": job.policy_version,
                 "state_id": job.state_id,
                 "job_id": job.id,
                 "model_kind": job.model_kind,
                 "generated_at": now().isoformat(),
+                "planned_runtime_fingerprint": plan.fingerprint if plan else None,
             }
             session.add(
                 Analysis(
@@ -375,9 +417,16 @@ class Store(SchedulingMixin):
                     created_at=now(),
                 )
             )
+            persist_traces(session, job, stored["inference_attempts"])
 
     def fail_job(
-        self, job_id: str, error_code: str, worker_id: str | None = None, *, retryable: bool = False
+        self,
+        job_id: str,
+        error_code: str,
+        worker_id: str | None = None,
+        *,
+        retryable: bool = False,
+        attempt_metadata: list | None = None,
     ):
         with Session(self.engine) as session, session.begin():
             conditions = [AnalysisJob.id == job_id, AnalysisJob.status == "running"]
@@ -412,6 +461,7 @@ class Store(SchedulingMixin):
                         created_at=now(),
                     )
                 )
+                persist_traces(session, job, attempt_metadata)
             return "retry_scheduled" if retry else "failed"
 
     def job_summary(self) -> dict:
@@ -421,6 +471,41 @@ class Store(SchedulingMixin):
                     select(AnalysisJob.status, func.count()).group_by(AnalysisJob.status)
                 ).all()
             )
+
+    @staticmethod
+    def _current_result(result, policy_version):
+        if result.policy_version != policy_version:
+            return False
+        if result.model_kind != "llm":
+            return True
+        from .llm import PROMPT_VERSION, RuntimeConfig
+
+        try:
+            config = RuntimeConfig.from_environment()
+        except ValueError:
+            return False
+        data = result.payload
+        if (
+            data.get("prompt_version") != PROMPT_VERSION
+            or data.get("model_version") != config.model
+        ):
+            return False
+        if (
+            config.expected_digest
+            and data.get("inference_performed")
+            and data.get("model_digest") != config.expected_digest
+        ):
+            return False
+        planned = data.get("planned_runtime_fingerprint")
+        if planned:
+            return planned == digest(
+                [config.model, PROMPT_VERSION, config.context_tokens, config.max_tokens]
+            )
+        runtime = data.get("runtime", {})
+        return not data.get("inference_performed") or (
+            runtime.get("context_tokens") == config.context_tokens
+            and runtime.get("max_tokens") == config.max_tokens
+        )
 
     @staticmethod
     def _comparison(a: dict | None, b: dict | None) -> bool:
@@ -535,7 +620,7 @@ class Store(SchedulingMixin):
                     analysis_status = "abstained" if out.get("abstain") else "validated"
                 if (
                     result
-                    and result.policy_version != policy.version
+                    and not self._current_result(result, policy.version)
                     and analysis_status not in {"queued", "running", "failed"}
                 ):
                     analysis_status = "outdated"
@@ -725,7 +810,7 @@ class Store(SchedulingMixin):
             analysis_status = latest_job.status if latest_job else "not_run"
             if (
                 current_a
-                and current_a.policy_version != current_policy.version
+                and not self._current_result(current_a, current_policy.version)
                 and analysis_status not in {"queued", "running", "failed"}
             ):
                 analysis_status = "outdated"

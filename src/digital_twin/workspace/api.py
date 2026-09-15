@@ -186,7 +186,7 @@ def automation(course_id: str, change: AutomationRequest, identity: Identity, st
 @router.post("/courses/{course_id}/analysis/resume")
 def resume(course_id: str, identity: Identity, store: Storage):
     authorize_course(identity, course_id)
-    return checked(store.resume_analysis)
+    return checked(store.resume_analysis, course_id, identity.reviewer_id)
 
 
 @router.get("/model/status")

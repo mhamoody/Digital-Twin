@@ -206,3 +206,33 @@ class AnalysisAttempt(Base):
     error_code: Mapped[str | None] = mapped_column(String(128))
     outcome: Mapped[str] = mapped_column(String(32))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class CourseAnalysisControl(Base):
+    """Course-scoped validation pause and fair scheduling, separate from service health."""
+
+    __tablename__ = "workspace_course_analysis_control"
+    __table_args__ = {"schema": "analytics"}
+    course_id: Mapped[str] = mapped_column(ForeignKey("core.workspace_course.id"), primary_key=True)
+    payload: Mapped[dict] = mapped_column(JSON)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class InferenceTrace(Base):
+    """Safe metadata for initial/correction generations, never prompts or raw replies."""
+
+    __tablename__ = "workspace_inference_trace"
+    __table_args__ = (
+        UniqueConstraint(
+            "job_id", "job_attempt", "generation", name="uq_workspace_inference_generation"
+        ),
+        {"schema": "audit"},
+    )
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    job_id: Mapped[str] = mapped_column(
+        ForeignKey("analytics.workspace_analysis_job.id"), index=True
+    )
+    job_attempt: Mapped[int] = mapped_column(Integer)
+    generation: Mapped[int] = mapped_column(Integer)
+    payload: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

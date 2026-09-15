@@ -7,6 +7,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from .contracts import digest
+from .controls import ControlsMixin
 from .errors import describe_failure
 from .models import (
     Analysis,
@@ -103,7 +104,7 @@ def plan_matches(plan, result, spec):
     return old_fingerprint == spec["fingerprint"]
 
 
-class SchedulingMixin:
+class SchedulingMixin(ControlsMixin):
     def ensure_heads(self):
         """Backfill pointers when upgrading the old pilot; called outside request inference."""
         with Session(self.engine) as session, session.begin():
@@ -155,14 +156,19 @@ class SchedulingMixin:
             if row is None:
                 return {"status": "not_started", "heartbeat_at": None}
             result = dict(row.payload)
-            result["heartbeat_at"] = aware(row.updated_at).isoformat()
-            # A bounded call can take 300s; don't label an active inference as a dead worker.
-            if (moment() - aware(row.updated_at)).total_seconds() > 360:
+            heartbeat = aware(result.get("worker_heartbeat_at") or row.updated_at)
+            result["heartbeat_at"] = heartbeat.isoformat()
+            result["heartbeat_age_seconds"] = max(0, int((moment() - heartbeat).total_seconds()))
+            # A correction can use a second bounded call. Honor its actual job lease.
+            deadline = result.get("active_deadline_at")
+            inference_in_bounds = deadline and aware(deadline) > moment()
+            if result["heartbeat_age_seconds"] > 360 and not inference_in_bounds:
                 result["last_reported_status"] = result.get("status")
                 result["status"] = "heartbeat_stale"
             return result
 
     def set_runtime(self, **values):
+        values = {**values, "worker_heartbeat_at": moment().isoformat()}
         with Session(self.engine) as session, session.begin():
             row = session.get(RuntimeState, "worker")
             if row is None:
@@ -170,12 +176,6 @@ class SchedulingMixin:
             else:
                 row.payload = {**row.payload, **values}
                 row.updated_at = moment()
-
-    def resume_analysis(self):
-        self.set_runtime(
-            status="resuming", pause_until=None, last_error_code=None, failure_streak=0
-        )
-        return self.get_runtime()
 
     def job_matches_runtime(self, job_id, spec):
         with Session(self.engine) as session:
@@ -391,17 +391,25 @@ class SchedulingMixin:
                     )
                 )
         with Session(self.engine) as session:
+            courses = session.scalars(select(Course.id).order_by(Course.id)).all()
+        active_courses = [
+            course for course in courses if self.get_course_control(course)["status"] != "paused"
+        ]
+        # Paused-course backlog must not prevent healthy courses from discovering work.
+        with Session(self.engine) as session:
             backlog = session.scalar(
                 select(func.count())
                 .select_from(AnalysisJob)
+                .join(Snapshot)
                 .where(
-                    AnalysisJob.model_kind == "llm", AnalysisJob.status.in_(["queued", "running"])
+                    AnalysisJob.model_kind == "llm",
+                    AnalysisJob.status.in_(["queued", "running"]),
+                    Snapshot.course_id.in_(active_courses),
                 )
             )
-            courses = session.scalars(select(Course.id).order_by(Course.id)).all()
         remaining = max(0, limit - backlog)
         total = 0
-        for course in courses:
+        for course in active_courses:
             if self.get_automation(course)["enabled"]:
                 urgent = self.queue_analysis(course, spec, limit=20, priority_only=True)["queued"]
                 total += urgent
@@ -442,7 +450,9 @@ class SchedulingMixin:
             return {
                 "automation": self.get_automation(course_id),
                 "model": spec["ready"],
-                "worker": self.get_runtime(),
+                "worker": self.public_worker_status(course_id),
+                "course_control": self.get_course_control(course_id),
+                "served_at": moment().isoformat(),
                 "summary": {k: total[k] for k in keys},
                 "weeks": [
                     {"week": w, **{k: counts[k] for k in keys}}

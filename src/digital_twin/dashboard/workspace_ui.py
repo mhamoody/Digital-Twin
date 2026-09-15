@@ -9,7 +9,7 @@ from __future__ import annotations
 import hashlib
 import html
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
@@ -137,14 +137,29 @@ def comparison_card(current: Any, previous: Any, comparable: bool, week: Any) ->
     return "Unavailable", comparison(current, previous, comparable=comparable)
 
 
-def timestamp(value: Any) -> str:
+def timestamp(value: Any, *, seconds: bool = False) -> str:
     if not value:
         return "Not recorded"
     try:
         parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-        return parsed.strftime("%d %b %Y, %H:%M %Z").strip()
+        return parsed.strftime("%d %b %Y, %H:%M:%S %Z" if seconds else "%d %b %Y, %H:%M %Z").strip()
     except ValueError:
         return str(value)
+
+
+def resume_is_pending(control: dict[str, Any]) -> bool:
+    requested = control.get("resume_requested_at")
+    acknowledged = control.get("resume_acknowledged_at")
+    if not requested:
+        return False
+    if not acknowledged:
+        return True
+    try:
+        request_at = datetime.fromisoformat(str(requested).replace("Z", "+00:00"))
+        acknowledged_at = datetime.fromisoformat(str(acknowledged).replace("Z", "+00:00"))
+        return request_at > acknowledged_at
+    except (ValueError, TypeError):
+        return False
 
 
 def render_cards(cards: list[tuple[str, str, str]]) -> None:
@@ -594,6 +609,12 @@ def render_analysis_controls(
 
 
 def render_course_analysis(client: WorkspaceClient, course_id: str) -> None:
+    render_course_progress(client, course_id)
+    render_automation_setting(client, course_id)
+
+
+@st.fragment(run_every=10)
+def render_course_progress(client: WorkspaceClient, course_id: str) -> None:
     """Course-wide progress is kept distinct from selected-checkpoint student counts."""
     st.divider()
     st.subheader("LLM analysis · every course checkpoint")
@@ -602,11 +623,20 @@ def render_course_analysis(client: WorkspaceClient, course_id: str) -> None:
         "Only the current approved Qwen model and policy count as LLM analysis; "
         "a rules-baseline result does not mark a record as analyzed by the LLM."
     )
+    st.caption(
+        "This analysis panel refreshes automatically every 10 seconds while it is open. "
+        "Student cards and profiles update when you choose Refresh workspace or navigate."
+    )
     try:
         status = client.analysis_status(course_id)
     except DashboardApiError as error:
         _show_error(error)
+        st.caption("The progress read failed. Previously displayed counts are not being confirmed.")
         return
+    served_at = status.get("served_at")
+    read_at = datetime.now(UTC).strftime("%d %b %Y, %H:%M:%S UTC")
+    verified_read = timestamp(served_at, seconds=True) if served_at else read_at
+    st.caption(f"Latest verified progress read: {verified_read}")
     summary = status.get("summary", {})
     total = int(summary.get("total_snapshots", 0))
     validated = int(summary.get("validated", 0))
@@ -625,7 +655,7 @@ def render_course_analysis(client: WorkspaceClient, course_id: str) -> None:
             (
                 "Queued / running",
                 f"{queued:,} / {running:,}",
-                f"{retries:,} retries scheduled. Refresh to check progress.",
+                f"{retries:,} retries scheduled. This panel updates automatically.",
             ),
             (
                 "Awaiting queue",
@@ -646,10 +676,31 @@ def render_course_analysis(client: WorkspaceClient, course_id: str) -> None:
             "LLM assessment. They may already be queued; this is not an additional record count."
         )
     model, worker = status.get("model", {}), status.get("worker", {})
+    course_control = status.get("course_control", {})
     st.write(
         f"**Model:** {model.get('model', 'Qwen')} · {label(model.get('status'))}  \n"
         f"**Analysis worker:** {label(worker.get('status'))}"
     )
+    heartbeat_age = worker.get("heartbeat_age_seconds")
+    age_text = f" · {int(heartbeat_age)} seconds ago" if heartbeat_age is not None else ""
+    st.caption(
+        f"Last worker heartbeat: {timestamp(worker.get('heartbeat_at'), seconds=True)}{age_text}"
+    )
+    if worker.get("status") == "heartbeat_stale":
+        st.warning(
+            "The worker has not reported within its expected activity window. "
+            "The server operator should check worker status and logs; refreshing or "
+            "queuing more work does not restart a stopped worker."
+        )
+    if worker.get("is_processing_this_course") is True:
+        st.caption("The worker is currently processing this course.")
+    elif worker.get("processing_another_course") is True:
+        st.caption("The shared worker is processing another course. This course remains queued.")
+    if resume_is_pending(course_control):
+        st.info(
+            "A resume request for this course has been recorded. The worker has not yet "
+            "acknowledged it. The heartbeat above is the last actual worker update."
+        )
     if model.get("status") != "ready":
         st.info(
             "You can queue work now. Analysis will start when the model service and "
@@ -664,11 +715,27 @@ def render_course_analysis(client: WorkspaceClient, course_id: str) -> None:
         st.write(f"**Next step:** {service_failure['action']}")
     if worker.get("status") == "paused":
         st.warning(
-            "Analysis is paused to avoid repeating the same failure. "
-            "Queuing work does not resume it."
+            "The shared analysis service is paused. The server operator must resolve and "
+            "resume this shared pause; a course resume cannot clear it."
+        )
+        if worker.get("pause_scope") == "legacy_validation":
+            st.caption("This is an earlier shared validation pause that requires operator review.")
+    if course_control.get("status") == "paused":
+        st.warning(
+            "Automatic analysis is paused for this course after repeated validation failures. "
+            "Other courses can continue. Check the error before requesting a course resume."
+        )
+        if course_control.get("last_error_code"):
+            course_failure = describe_failure(course_control["last_error_code"])
+            st.write(f"**Course pause reason:** {course_failure['title']}")
+            st.write(f"**Next step:** {course_failure['action']}")
+            st.code(course_failure["code"], language=None)
+        st.caption(
+            f"Consecutive failures: {course_control.get('failure_streak', 0)} "
+            f"· course control updated {timestamp(course_control.get('updated_at'))}"
         )
         if st.button(
-            "Resume analysis after checking the error", key=f"workspace_resume_{course_id}"
+            "Resume this course after checking the error", key=f"workspace_resume_{course_id}"
         ):
             try:
                 client.resume_analysis(course_id)
@@ -676,7 +743,8 @@ def render_course_analysis(client: WorkspaceClient, course_id: str) -> None:
                 _show_error(error)
             else:
                 st.session_state["workspace_flash"] = (
-                    "Resume requested. The worker still checks model health before analysis."
+                    "Course resume requested. The worker still checks service health; "
+                    "a request does not confirm that processing has restarted."
                 )
                 st.rerun()
     left, right = st.columns(2)
@@ -698,7 +766,31 @@ def render_course_analysis(client: WorkspaceClient, course_id: str) -> None:
         f"Retries respect a maximum of {status.get('max_attempts', 3)} attempts. "
         "Configuration or validation failures may require a correction before retrying."
     )
-    automation = status.get("automation", {})
+    failures = status.get("failures", [])
+    if failures:
+        st.markdown("#### Why analysis failed")
+        for failure in failures:
+            st.error(
+                f"{failure.get('count', 0)} record(s) · {failure.get('title', 'Analysis failed')}"
+            )
+            if failure.get("detail"):
+                st.write(failure["detail"])
+            if failure.get("action"):
+                st.write(f"**Next step:** {failure['action']}")
+            st.caption("Diagnostic code · use the copy control to share this with the operator")
+            st.code(failure.get("code", "ANALYSIS_UNKNOWN_ERROR"), language=None)
+    if status.get("weeks"):
+        with st.expander("Progress by course week"):
+            _frame([{label(key): value for key, value in row.items()} for row in status["weeks"]])
+
+
+def render_automation_setting(client: WorkspaceClient, course_id: str) -> None:
+    """Keep unsaved instructor choices outside the timed progress fragment."""
+    try:
+        automation = client.analysis_status(course_id).get("automation", {})
+    except DashboardApiError as error:
+        _show_error(error)
+        return
     with st.form(f"workspace_automation_{course_id}_{automation.get('version', 1)}"):
         enabled = st.checkbox(
             "Automatically analyze new or changed checkpoint records",
@@ -721,21 +813,6 @@ def render_course_analysis(client: WorkspaceClient, course_id: str) -> None:
                 else "Automatic discovery disabled. Work already queued may still finish."
             )
             st.rerun()
-    failures = status.get("failures", [])
-    if failures:
-        st.markdown("#### Why analysis failed")
-        for failure in failures:
-            st.error(
-                f"{failure.get('count', 0)} record(s) · {failure.get('title', 'Analysis failed')}"
-            )
-            if failure.get("detail"):
-                st.write(failure["detail"])
-            if failure.get("action"):
-                st.write(f"**Next step:** {failure['action']}")
-            st.caption(f"Diagnostic code: {failure.get('code', 'ANALYSIS_UNKNOWN_ERROR')}")
-    if status.get("weeks"):
-        with st.expander("Progress by course week"):
-            _frame([{label(key): value for key, value in row.items()} for row in status["weeks"]])
 
 
 def _queue_batch(client: WorkspaceClient, course_id: str, mode: str) -> None:
@@ -865,6 +942,7 @@ def render_profile(
             f"· policy revision {analysis.get('policy_version', 'Not recorded')} "
             f"· generated {timestamp(analysis.get('generated_at'))}"
         )
+        render_validation_provenance(analysis)
     if snapshot and snapshot.get("is_fresh") is False:
         st.warning("The selected snapshot is marked stale. Confirm its evidence before acting.")
     tabs = st.tabs(
@@ -923,6 +1001,47 @@ def render_profile(
         render_risk_history(detail.get("history", []))
     with tabs[3]:
         render_case(client, course_id, week, learner_id, detail)
+
+
+def render_validation_provenance(analysis: dict[str, Any]) -> None:
+    attempts = analysis.get("inference_attempts") or []
+    outcome = analysis.get("validation_outcome")
+    if not attempts and not outcome:
+        return
+    descriptions = {
+        "first_pass_validated": "Validated on the first model response",
+        "repaired_validated": "Validated after a model correction",
+        "quality_abstained": "Quality gate abstained before model inference",
+    }
+    st.write(f"**Output validation:** {descriptions.get(outcome, label(outcome))}")
+    if outcome == "repaired_validated":
+        st.caption(
+            "The model received structured feedback about a rejected response and made "
+            "a bounded correction. Passing structure and evidence checks does not "
+            "establish that the prediction is accurate."
+        )
+    elif outcome == "first_pass_validated":
+        st.caption(
+            "The first response passed structure and evidence checks; "
+            "predictive accuracy is evaluated separately."
+        )
+    if attempts:
+        with st.expander("Model response and correction history"):
+            _frame(
+                [
+                    {
+                        "Attempt": attempt.get("attempt"),
+                        "Stage": "Initial response"
+                        if attempt.get("kind") == "initial"
+                        else "Validation feedback",
+                        "Outcome": label(attempt.get("outcome")),
+                        "Time (seconds)": attempt.get("latency_seconds"),
+                        "Validation code": attempt.get("error_code") or "None",
+                    }
+                    for attempt in attempts
+                ]
+            )
+            st.caption("These records describe model response validation, not student progress.")
 
 
 def render_claims(output: dict[str, Any], snapshot: dict[str, Any]) -> None:

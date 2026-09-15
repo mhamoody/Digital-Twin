@@ -6,6 +6,8 @@ working. Inspect the stored error-code breakdown before changing model settings.
 
 For the update commands, automatic discovery and all-weeks queue controls, see
 [Automatic course analysis and safe catch-up](16_automatic_analysis.md).
+For the current course-specific pause behaviour and a status report restricted to
+the active model/prompt/policy, see [Reliable Qwen analysis](17_model_reliability.md).
 
 ## Read-only diagnosis on Lobot
 

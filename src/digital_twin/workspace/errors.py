@@ -247,6 +247,46 @@ SERVICE_BLOCKING_CODES = frozenset(
     }
 )
 
+# A single new generation with corrective contract feedback is distinct from
+# retrying a failed service request. These errors stay non-retryable at job level.
+# No runtime/input/identity/quality failure is included. Values are fixed trusted
+# instructions, never arbitrary validation messages or rejected model content.
+REPAIR_FEEDBACK: dict[str, str] = {
+    "MODEL_JSON_INVALID": "Return one strict JSON object: no markdown, duplicate keys or NaN.",
+    "MODEL_SCHEMA_INVALID": (
+        "Follow every required field, type and score-band boundary in required_output_schema. "
+        "Scored mode requires nonempty claims/actions; abstention requires null score/band, "
+        "empty claims/actions and an approved reason."
+    ),
+    "MODEL_CLAIM_UNSUPPORTED": (
+        "Select unique codes only from permitted_claims; copy the exact matched evidence list."
+    ),
+    "MODEL_EVIDENCE_INVALID": (
+        "Each selected code must use exactly its permitted_claims evidence_ids, without repeats."
+    ),
+    "MODEL_RISK_NOT_SUPPORTED": (
+        "The previous medium/high answer selected no eligible concern claim. Protective "
+        "observations alone do not justify that level. Reassess evidence and claim_semantics; "
+        "do not invent a concern to preserve the previous judgment."
+    ),
+    "MODEL_POLICY_CONFLICT": (
+        "High risk requires a selected academic concern when academic corroboration is required. "
+        "Otherwise inactivity-only high risk still requires this course's "
+        "high inactivity threshold."
+    ),
+    "MODEL_ACTION_INVALID": (
+        "Use 1 to 6 distinct actions for scored mode, empty actions for abstention. "
+        "no_action is allowed only alone at low risk."
+    ),
+    "MODEL_ACTION_NOT_SUPPORTED": (
+        "Each action must be supported by a selected claim's supports_actions, not merely an "
+        "unselected eligible claim. no_action is permitted only alone at low risk."
+    ),
+    "MODEL_ABSTENTION_REASON_INVALID": (
+        "Use one of the approved abstention reason codes, not free text; use null for scored mode."
+    ),
+}
+
 
 def describe_failure(code: str | None) -> dict:
     """Return only allowlisted public text, never echo an unknown raw error string."""

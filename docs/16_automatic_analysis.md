@@ -1,5 +1,10 @@
 # Automatic course analysis and safe catch-up
 
+The September 14 reliability revision supersedes the original shared-validation
+pause behaviour described by this rollout. See [Reliable Qwen analysis](17_model_reliability.md)
+for the current update command, course-specific pauses, one bounded validation
+correction, live progress, audit traces and the frozen evaluation procedure.
+
 The primary model is Qwen2.5:7B. Rules results remain comparison results and do not
 count as completed LLM assessment. This update does not claim that the original
 22 failures were timeouts: their stored error codes or Lobot worker log are needed.
@@ -33,7 +38,8 @@ In **Overview** or **Data health**, find **LLM analysis · every course checkpoi
 - **Retry eligible failed analysis** requests another attempt for failed records,
   up to three attempts per job. Fix configuration/validation causes first. Automatic
   discovery never retries a failed output indefinitely.
-- **Resume analysis after checking the error** appears for a protective pause.
+- **Resume this course after checking the error** appears for a course validation
+  pause. It cannot clear a shared service pause; those require the server operator.
   Correct the reported problem first. Queuing more work does not clear the pause.
 - **Refresh workspace** updates the displayed counters. Background analysis does
   not require a browser to remain open, but the Lobot allocation must stay running.
@@ -87,9 +93,10 @@ The historical OULAD mapping remains explicit through `workspace/legacy.py`.
 4. Invalid JSON/schema, ungrounded facts/actions, and policy conflicts stay rejected.
    The revised prompt/schema constrain evidence IDs and allowed action codes;
    validation is not disabled to increase apparent success.
-5. Three consecutive non-retryable failures trigger a persisted protective pause.
-   Service configuration or memory failures can pause immediately. A pause remains
-   across restarts until explicitly resumed; exhausted jobs are not silently reset.
+5. Three consecutive final validation failures trigger a persisted pause for that
+   course. Other courses continue. Service configuration or memory failures can
+   pause the shared worker immediately. Pauses survive restarts; exhausted jobs
+   are not silently reset. See the reliability revision for legacy pause migration.
 6. Persist attempt outcomes separately from the current job status. Clear an active
    error only after successful completion; historical attempts remain available.
 
@@ -103,7 +110,8 @@ is available. Successful structured output does not establish predictive accurac
 
 ## Acceptance checks
 
-The local regression suite passes 183 tests. Checks cover all-weeks/course isolation, repeated button calls,
+The original automatic-analysis rollout passed 183 local tests (historical result,
+before the reliability revision). Checks cover all-weeks/course isolation, repeated button calls,
 new/unchanged revision handling, policy changes, failed-job diagnosis, retry bounds,
 service outages, and protective pauses. The full 5,760-state synthetic fixture fits
 the revised prompt budget (largest prompt plus schema: 9,883 characters against

@@ -18,23 +18,46 @@ from .scheduling import aware, moment, runtime_spec
 LOGGER = logging.getLogger(__name__)
 
 
-def record_failure(store, job, code, worker_id):
+def record_failure(store, job, code, worker_id, attempt_metadata=None):
     retryable = is_retryable(code)
-    recorded = store.fail_job(job["id"], code, worker_id=worker_id, retryable=retryable)
+    options = {"retryable": retryable}
+    if attempt_metadata:
+        options["attempt_metadata"] = attempt_metadata
+    recorded = store.fail_job(job["id"], code, worker_id=worker_id, **options)
     if recorded == "lease_changed" or job["model_kind"] != "llm":
         return
-    prior = store.get_runtime()
-    previous_streak = int(prior.get("failure_streak", 0))
-    streak = (previous_streak if is_retryable(prior.get("last_error_code")) == retryable else 0) + 1
     failure = describe_failure(code)
-    blocked = not retryable and (failure["service_blocking"] or streak >= 3)
-    delay = min(120, 30 * streak) if retryable else 0
-    store.set_runtime(
-        status="paused" if blocked else "cooldown" if delay else "working",
-        last_error_code=code,
-        failure_streak=streak,
-        pause_until=(moment() + timedelta(seconds=delay)).isoformat() if delay else None,
-    )
+    if (
+        not retryable
+        and not failure["service_blocking"]
+        and failure["category"] in {"output", "grounding", "input"}
+    ):
+        course_id = job.get("course_id") or store.get_snapshot(job["state_id"]).presentation_id
+        store.record_course_outcome(course_id, code)
+        store.set_runtime(
+            status="working",
+            pause_scope=None,
+            last_error_code=None,
+            failure_streak=0,
+            pause_until=None,
+            active_course_id=None,
+            active_week=None,
+            active_deadline_at=None,
+        )
+    else:
+        prior = store.get_runtime()
+        streak = int(prior.get("failure_streak", 0)) + 1
+        delay = min(120, 30 * streak) if retryable else 0
+        store.set_runtime(
+            status="cooldown" if retryable else "paused",
+            pause_scope="service",
+            last_error_code=code,
+            failure_streak=streak,
+            pause_until=(moment() + timedelta(seconds=delay)).isoformat() if delay else None,
+            active_course_id=None,
+            active_week=None,
+            active_deadline_at=None,
+        )
     LOGGER.warning(
         "Analysis job %s attempt %s failed: %s; automatic retry=%s",
         job["id"],
@@ -61,7 +84,7 @@ def process_one(
     worker_id = worker_id or f"worker-{uuid.uuid4().hex}"
     timeout = client.config.timeout_seconds if client is not None else 300
     job = store.claim_job(
-        worker_id, lease_seconds=max(300, int(timeout) + 30), model_kind=model_kind
+        worker_id, lease_seconds=max(300, int(timeout) * 2 + 90), model_kind=model_kind
     )
     if job is None:
         return False
@@ -78,6 +101,12 @@ def process_one(
         if job["model_kind"] == "baseline":
             result = predict_rules(snapshot, policy)
         elif job["model_kind"] == "llm":
+            store.set_runtime(
+                status="working",
+                active_course_id=snapshot.presentation_id,
+                active_week=snapshot.checkpoint_week,
+                active_deadline_at=job.get("lease_until"),
+            )
             runtime = client or OllamaClient()
             expected = job.get("expected_model_digest") or job.get("model_digest")
             if expected and runtime.model_digest(timeout=3) != expected:
@@ -89,11 +118,20 @@ def process_one(
             raise ModelRuntimeError("MODEL_KIND_INVALID")
         store.complete_job(job["id"], result, worker_id=worker_id)
         if job["model_kind"] == "llm":
+            if result.get("inference_performed"):
+                store.record_course_outcome(snapshot.presentation_id)
             store.set_runtime(
-                status="working", failure_streak=0, last_error_code=None, pause_until=None
+                status="working",
+                failure_streak=0,
+                last_error_code=None,
+                pause_until=None,
+                pause_scope=None,
+                active_course_id=None,
+                active_week=None,
+                active_deadline_at=None,
             )
     except ModelRuntimeError as error:
-        record_failure(store, job, error.code, worker_id)
+        record_failure(store, job, error.code, worker_id, getattr(error, "attempt_metadata", None))
     except (LookupError, ValueError):
         record_failure(store, job, "ANALYSIS_INPUT_OR_LEASE_INVALID", worker_id)
     except SQLAlchemyError:
@@ -119,7 +157,10 @@ def run_worker(
     if not 0.1 <= poll_seconds <= 60:
         raise ValueError("Worker polling must be between 0.1 and 60 seconds.")
     stopped = stop_event or threading.Event()
+    LOGGER.info("Checking worker database and checkpoint revisions before accepting work")
     store.ensure_heads()
+    if model_kind != "baseline":
+        store.migrate_legacy_validation_pause()
     worker_id = f"worker-{uuid.uuid4().hex}"
     last_scan = -30.0
     if threading.current_thread() is threading.main_thread():
@@ -146,7 +187,12 @@ def run_worker(
                 spec = runtime_spec(client)
                 if spec["ready"]["status"] != "ready":
                     store.set_runtime(
-                        status="waiting_for_model", last_error_code=spec["ready"].get("error_code")
+                        status="waiting_for_model",
+                        last_error_code=spec["ready"].get("error_code"),
+                        pause_scope="service",
+                        active_course_id=None,
+                        active_week=None,
+                        active_deadline_at=None,
                     )
                     if once:
                         return
@@ -159,7 +205,7 @@ def run_worker(
                         LOGGER.info(
                             "Automatically queued %s new/changed learner-week records", discovered
                         )
-                store.set_runtime(status="working", pause_until=None)
+                store.set_runtime(status="working", pause_until=None, pause_scope=None)
             else:
                 client = None
                 spec = None
@@ -167,13 +213,22 @@ def run_worker(
                 store, worker_id, model_kind=model_kind, client=client, spec=spec
             )
             if not processed and model_kind != "baseline":
-                store.set_runtime(status="idle")
+                store.set_runtime(
+                    status="idle", active_course_id=None, active_week=None, active_deadline_at=None
+                )
         except SQLAlchemyError:
             LOGGER.error("Analysis database unavailable; will retry")
             processed = False
         except ValueError:
             LOGGER.error("Model configuration is invalid; no model jobs were consumed")
-            store.set_runtime(status="paused", last_error_code="MODEL_REQUEST_REJECTED")
+            store.set_runtime(
+                status="paused",
+                last_error_code="MODEL_REQUEST_REJECTED",
+                pause_scope="service",
+                active_course_id=None,
+                active_week=None,
+                active_deadline_at=None,
+            )
             processed = False
         if once:
             return
