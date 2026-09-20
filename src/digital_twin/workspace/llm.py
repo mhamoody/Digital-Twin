@@ -11,6 +11,7 @@ import copy
 import json
 import math
 import os
+import re
 import time
 from dataclasses import dataclass
 from datetime import date
@@ -18,12 +19,19 @@ from typing import Any
 from urllib.parse import urlparse
 
 import httpx
-from pydantic import ValidationError
 
 from .contracts import CoursePolicy, LearnerSnapshot, ModelOutput, digest
 from .errors import REPAIR_FEEDBACK, describe_failure
+from .output_contract import (
+    OutputContractError,
+    diagnostic_detail,
+    parse_response,
+    response_schema,
+    safe_normalizations,
+    safe_validation_details,
+)
 
-PROMPT_VERSION = "course-risk-qwen-v2.3"
+PROMPT_VERSION = "course-risk-qwen-v3.0"
 APPROVED_MODELS = {"qwen2.5:7b"}
 ABSTENTION_REASONS = {
     "STALE_STATE",
@@ -122,6 +130,8 @@ class ModelRuntimeError(RuntimeError):
         self.attempt_metadata = copy.deepcopy(attempt_metadata or [])
         self.validation_outcome = "final_rejected"
         self.response_metadata: dict = {}
+        self.validation_details: list[dict] = []
+        self.normalizations: list[dict] = []
         super().__init__(code)
 
 
@@ -578,30 +588,49 @@ def validate_output(
     seen = set()
     for claim in output.claims:
         if claim.code in seen or claim.code not in eligible:
-            raise ModelRuntimeError("MODEL_CLAIM_UNSUPPORTED")
+            raise _output_failure("MODEL_CLAIM_UNSUPPORTED", "claim_not_eligible", "claims")
         seen.add(claim.code)
         if len(set(claim.evidence_ids)) != len(claim.evidence_ids):
-            raise ModelRuntimeError("MODEL_EVIDENCE_INVALID")
+            raise _output_failure("MODEL_EVIDENCE_INVALID", "evidence_not_matched", "claims")
         if set(claim.evidence_ids) != set(eligible[claim.code]):
-            raise ModelRuntimeError("MODEL_EVIDENCE_INVALID")
+            raise _output_failure("MODEL_EVIDENCE_INVALID", "evidence_not_matched", "claims")
     if output.risk_band in {"medium", "high"} and not seen & CONCERN_CODES:
-        raise ModelRuntimeError("MODEL_RISK_NOT_SUPPORTED")
+        raise _output_failure(
+            "MODEL_RISK_NOT_SUPPORTED", "risk_requires_concern", "risk_score", output.risk_score
+        )
     if output.risk_band == "high" and policy.require_academic_corroboration:
         if not seen & ACADEMIC_CONCERNS:
-            raise ModelRuntimeError("MODEL_POLICY_CONFLICT")
+            raise _output_failure(
+                "MODEL_POLICY_CONFLICT", "high_requires_academic", "risk_score", output.risk_score
+            )
     if output.risk_band == "high" and not seen & ACADEMIC_CONCERNS:
         inactivity = _inactivity(snapshot, policy)
         if not inactivity or inactivity[0] < policy.inactivity_high_days:
-            raise ModelRuntimeError("MODEL_POLICY_CONFLICT")
+            raise _output_failure(
+                "MODEL_POLICY_CONFLICT",
+                "high_requires_inactivity_threshold",
+                "risk_score",
+                output.risk_score,
+            )
     if not output.suggested_actions or len(set(output.suggested_actions)) != len(
         output.suggested_actions
     ):
-        raise ModelRuntimeError("MODEL_ACTION_INVALID")
+        raise _output_failure(
+            "MODEL_ACTION_INVALID", "actions_empty_or_duplicate", "suggested_actions"
+        )
     if not set(output.suggested_actions) <= _actions_for(seen, output.risk_band):
-        raise ModelRuntimeError("MODEL_ACTION_NOT_SUPPORTED")
+        raise _output_failure(
+            "MODEL_ACTION_NOT_SUPPORTED", "action_not_supported", "suggested_actions"
+        )
     if "no_action" in output.suggested_actions and len(output.suggested_actions) != 1:
-        raise ModelRuntimeError("MODEL_ACTION_INVALID")
+        raise _output_failure("MODEL_ACTION_INVALID", "actions_conflict", "suggested_actions")
     return output
+
+
+def _output_failure(code, subcode, path, received=None):
+    error = ModelRuntimeError(code)
+    error.validation_details = [diagnostic_detail(subcode, path, received)]
+    return error
 
 
 def _reject_constant(_value: str):
@@ -618,21 +647,51 @@ def _unique_object(pairs):
 
 
 def parse_output(
-    raw: str, aliases: dict[str, str], snapshot: LearnerSnapshot, policy: CoursePolicy
+    raw: str,
+    aliases: dict[str, str],
+    snapshot: LearnerSnapshot,
+    policy: CoursePolicy,
+    *,
+    audit: dict | None = None,
 ) -> ModelOutput:
+    normalizations = []
+    # Strip only one complete, unambiguous JSON code fence. Never search prose for JSON.
+    fence = (
+        re.fullmatch(r"\s*```(?:json)?[ \t]*\r?\n([\s\S]*?)\r?\n```\s*", raw, re.I)
+        if isinstance(raw, str)
+        else None
+    )
+    if fence:
+        raw = fence.group(1)
+        normalizations.append({"path": "$", "code": "json_fence"})
     try:
         parsed = json.loads(raw, parse_constant=_reject_constant, object_pairs_hook=_unique_object)
-    except (TypeError, ValueError) as error:
-        raise ModelRuntimeError("MODEL_JSON_INVALID") from error
+    except (TypeError, ValueError, RecursionError) as error:
+        failure = ModelRuntimeError("MODEL_JSON_INVALID")
+        failure.normalizations = normalizations
+        raise failure from error
     try:
-        output = ModelOutput.model_validate(parsed, strict=True)
-    except ValidationError as error:
-        raise ModelRuntimeError("MODEL_SCHEMA_INVALID") from error
-    for claim in output.claims:
-        if any(value not in aliases for value in claim.evidence_ids):
-            raise ModelRuntimeError("MODEL_EVIDENCE_INVALID")
-        claim.evidence_ids = [aliases[value] for value in claim.evidence_ids]
-    return validate_output(output, snapshot, policy)
+        output, changes = parse_response(parsed)
+        normalizations.extend(changes)
+    except OutputContractError as error:
+        failure = ModelRuntimeError("MODEL_SCHEMA_INVALID")
+        failure.validation_details = safe_validation_details(error.details)
+        failure.normalizations = safe_normalizations(
+            normalizations + getattr(error, "normalizations", [])
+        )
+        raise failure from error
+    try:
+        for claim in output.claims:
+            if any(value not in aliases for value in claim.evidence_ids):
+                raise _output_failure("MODEL_EVIDENCE_INVALID", "evidence_not_matched", "claims")
+            claim.evidence_ids = [aliases[value] for value in claim.evidence_ids]
+        result = validate_output(output, snapshot, policy)
+    except ModelRuntimeError as error:
+        error.normalizations = safe_normalizations(normalizations)
+        raise
+    if audit is not None:
+        audit["normalizations"] = safe_normalizations(normalizations)
+    return result
 
 
 def build_prompt(snapshot: LearnerSnapshot, policy: CoursePolicy) -> tuple[str, str, dict, dict]:
@@ -703,16 +762,20 @@ def build_prompt(snapshot: LearnerSnapshot, policy: CoursePolicy) -> tuple[str, 
         "Other features are context, not automatically additional concern claims. "
         "Weigh conflicting activity and academic evidence, course schedule and policy; "
         "low activity alone is not failure. "
-        "Choose low for score below .35, medium for .35 to below .65, and high for .65 or above. "
-        "Medium/high requires a concern claim. When require_academic_corroboration is true, high "
+        "Return exactly one of two response modes: "
+        "decision=assess has only decision, risk_score, claims, suggested_actions; "
+        "decision=abstain has only decision and reason. Do not return risk_band, abstain, "
+        "abstention_reason, confidence, explanation or metadata. The server derives the band "
+        "from your unchanged score: below .35 low, .35 to below .65 medium, .65 or above high. "
+        "A score >=.35 requires a concern claim. When require_academic_corroboration is true, high "
         "requires an academic concern claim as well. INACTIVITY_GAP follows the instructor's "
         "warning threshold and day_basis, not a universal seven-day rule. "
         "If academic corroboration is disabled, high risk based only on INACTIVITY_GAP still "
         "requires inactivity_under_current_policy.days >= inactivity_high_days. "
         "Unknown/not-applicable features are not zero or failures. "
-        "For insufficient or conflicting evidence you cannot responsibly score, abstain with null "
-        "risk_score/risk_band, empty claims/actions, and abstention_reason INSUFFICIENT_CONFIDENCE "
-        "or CONFLICTING_EVIDENCE. Otherwise abstention_reason is null. "
+        "For insufficient or conflicting evidence you cannot responsibly score, return "
+        '{"decision":"abstain","reason":"INSUFFICIENT_CONFIDENCE"} or use reason '
+        "CONFLICTING_EVIDENCE. An abstention has no score, claims or actions fields. "
         "Actions: review_recent_work or send_check_in require a concern; review_grades requires "
         "LOW_GRADE, LOW_LATEST_GRADE or DECLINING_GRADES; offer_resources requires LOW_GRADE, "
         "LOW_LATEST_GRADE, DECLINING_GRADES, LOW_COMPLETION or MISSED_ASSESSMENT; "
@@ -729,19 +792,9 @@ def build_prompt(snapshot: LearnerSnapshot, policy: CoursePolicy) -> tuple[str, 
         "or abstain if the available claim vocabulary cannot support your judgment. "
         "Recommend instructor actions only; never contact a student."
     )
-    schema = copy.deepcopy(ModelOutput.model_json_schema())
-    schema["required"] = list(schema["properties"])
-    schema["$defs"]["GroundedClaim"]["properties"]["code"]["enum"] = sorted(eligible) or [
-        "NO_CLAIM"
-    ]
-    schema["$defs"]["GroundedClaim"]["properties"]["evidence_ids"]["items"]["enum"] = sorted(
-        aliases
+    schema = response_schema(
+        sorted(eligible), sorted(aliases), sorted(_actions_for(set(eligible), "low"))
     )
-    schema["properties"]["suggested_actions"]["items"]["enum"] = sorted(
-        _actions_for(set(eligible), "low")
-    )
-    # Decode only approved reason codes, including null for a non-abstaining answer.
-    schema["properties"]["abstention_reason"]["anyOf"][0]["enum"] = sorted(ABSTENTION_REASONS)
     # The decoding grammar alone does not teach the model the expected object.
     # Include the same contract in its prompt, as recommended by Ollama's docs.
     model_input["required_output_schema"] = schema
@@ -749,11 +802,13 @@ def build_prompt(snapshot: LearnerSnapshot, policy: CoursePolicy) -> tuple[str, 
     return system, prompt, schema, aliases
 
 
-def validation_feedback_prompt(original_prompt: str, error_code: str) -> str:
+def validation_feedback_prompt(
+    original_prompt: str, error_code: str, validation_details: list | None = None
+) -> str:
     """Regenerate from identical evidence, never from an untrusted previous answer.
 
-    No model-supplied text, field value or Pydantic exception is interpolated.
-    The feedback only describes a fixed contract failure; it supplies no score.
+    No arbitrary model text or raw exception is interpolated. Only allowlisted
+    diagnostic fields/scalars describe the failure; no replacement score is supplied.
     """
     if error_code not in REPAIR_FEEDBACK:
         raise ValueError("This error does not permit a validation-feedback generation.")
@@ -762,6 +817,7 @@ def validation_feedback_prompt(original_prompt: str, error_code: str) -> str:
         "attempt": 2,
         "previous_error_code": error_code,
         "requirement": REPAIR_FEEDBACK[error_code],
+        "field_errors": safe_validation_details(validation_details or [])[:3],
         "instruction": (
             "Generate a fresh complete answer from the unchanged evidence and policy. "
             "The previous answer is withheld because it failed validation. Reassess, do not "
@@ -780,6 +836,8 @@ def _attempt_record(
     runtime: dict | None = None,
     error_code: str | None = None,
     outcome: str,
+    validation_details: list | None = None,
+    normalizations: list | None = None,
 ) -> dict:
     """Persist measurements and hashes only; never record learner/model free text."""
     return {
@@ -789,6 +847,8 @@ def _attempt_record(
         "error_code": describe_failure(error_code)["code"] if error_code else None,
         "latency_seconds": round(max(0, time.perf_counter() - started), 4),
         "output_hash": digest(raw) if raw is not None else None,
+        "validation_details": safe_validation_details(validation_details or []),
+        "normalizations": safe_normalizations(normalizations or []),
         "runtime": {
             key: value
             for key, value in (runtime or {}).items()
@@ -910,7 +970,8 @@ def analyze(
             raise ModelRuntimeError("MODEL_DIGEST_CHANGED", attempt_metadata=attempts)
         first_digest = actual_digest
         try:
-            output = parse_output(raw, aliases, snapshot, policy)
+            audit: dict = {}
+            output = parse_output(raw, aliases, snapshot, policy, audit=audit)
         except ModelRuntimeError as error:
             attempts.append(
                 _attempt_record(
@@ -920,10 +981,14 @@ def analyze(
                     runtime=runtime,
                     error_code=error.code,
                     outcome="rejected",
+                    validation_details=error.validation_details,
+                    normalizations=error.normalizations,
                 )
             )
             if attempt == 1 and error.code in REPAIR_FEEDBACK:
-                request_prompt = validation_feedback_prompt(prompt, error.code)
+                request_prompt = validation_feedback_prompt(
+                    prompt, error.code, error.validation_details
+                )
                 continue
             error.attempt_metadata = copy.deepcopy(attempts)
             raise
@@ -934,6 +999,7 @@ def analyze(
                 raw=raw,
                 runtime=runtime,
                 outcome="validated",
+                normalizations=audit.get("normalizations", []),
             )
         )
         break
@@ -953,6 +1019,8 @@ def analyze(
     )
     result["inference_performed"] = True
     result["inference_attempts"] = attempts
+    result["wire_contract_version"] = "risk-decision-v3"
+    result["risk_band_origin"] = "server_thresholds"
     result["validation_outcome"] = (
         "first_pass_validated" if len(attempts) == 1 else "repaired_validated"
     )

@@ -106,7 +106,7 @@ class GroundedClaim(Contract):
 
 
 class ModelOutput(Contract):
-    """Only these fields come from the LLM; metadata is attached by the server."""
+    """Canonical result, including server-derived display fields from the LLM decision."""
 
     risk_score: float | None = Field(ge=0, le=1)
     risk_band: Literal["low", "medium", "high"] | None

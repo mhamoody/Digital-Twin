@@ -18,6 +18,7 @@ import pandas as pd
 import streamlit as st
 
 from digital_twin.workspace.errors import describe_failure
+from digital_twin.workspace.tracing import safe_attempts
 
 from .client import DashboardApiError
 from .workspace_client import WorkspaceClient
@@ -779,6 +780,7 @@ def render_course_progress(client: WorkspaceClient, course_id: str) -> None:
                 st.write(f"**Next step:** {failure['action']}")
             st.caption("Diagnostic code · use the copy control to share this with the operator")
             st.code(failure.get("code", "ANALYSIS_UNKNOWN_ERROR"), language=None)
+            render_failure_samples(failure.get("diagnostic_samples", []))
     if status.get("weeks"):
         with st.expander("Progress by course week"):
             _frame([{label(key): value for key, value in row.items()} for row in status["weeks"]])
@@ -813,6 +815,67 @@ def render_automation_setting(client: WorkspaceClient, course_id: str) -> None:
                 else "Automatic discovery disabled. Work already queued may still finish."
             )
             st.rerun()
+
+
+def render_failure_samples(samples: list[dict[str, Any]]) -> None:
+    """Show only server-sanitized field details, never model replies or learner identifiers."""
+    with st.expander("Exact validation details · recent samples"):
+        st.caption(
+            "Up to three current failure jobs and two model responses per job are shown. "
+            "These are diagnostic samples, not a complete evaluation of every failure."
+        )
+        if not samples:
+            st.info("Older attempt detail unavailable. No field-level diagnostic was retained.")
+            return
+        for index, sample in enumerate(samples[:3], 1):
+            st.markdown(
+                f"**Sample {index} · job attempt {sample.get('job_attempt') or 'not recorded'}**"
+            )
+            st.caption("Job reference for the operator")
+            st.code(sample.get("job_id", "Not recorded"), language=None)
+            detail_rows, normalization_rows = [], []
+            generations = sample.get("generations", [])[:2]
+            for generation in generations:
+                stage = (
+                    "Initial response"
+                    if generation.get("kind") == "initial"
+                    else "Validation feedback"
+                )
+                for detail in generation.get("validation_details", []):
+                    detail_rows.append(
+                        {
+                            "Response": generation.get("attempt"),
+                            "Stage": stage,
+                            "Field": detail.get("path", "Not recorded"),
+                            "Problem": detail.get("code", "Not recorded"),
+                            "Expected": detail.get("expected", "Not recorded"),
+                            "Received type": detail.get("received_type", "Not recorded"),
+                            "Safe received value": json.dumps(
+                                detail["received"], ensure_ascii=False
+                            )
+                            if "received" in detail
+                            else "Not retained",
+                        }
+                    )
+                for normalization in generation.get("normalizations", []):
+                    normalization_rows.append(
+                        {
+                            "Response": generation.get("attempt"),
+                            "Stage": stage,
+                            "Field": normalization.get("path", "Not recorded"),
+                            "Normalization": normalization.get("code", "Not recorded"),
+                        }
+                    )
+            if detail_rows:
+                _frame(detail_rows)
+            else:
+                st.info(
+                    "Older attempt detail unavailable. The failure code was retained, "
+                    "but this sample has no field-level diagnostic."
+                )
+            if normalization_rows:
+                st.caption("Recorded normalizations")
+                _frame(normalization_rows)
 
 
 def _queue_batch(client: WorkspaceClient, course_id: str, mode: str) -> None:
@@ -1004,10 +1067,17 @@ def render_profile(
 
 
 def render_validation_provenance(analysis: dict[str, Any]) -> None:
-    attempts = analysis.get("inference_attempts") or []
+    attempts = safe_attempts(analysis.get("inference_attempts") or [])
     outcome = analysis.get("validation_outcome")
     if not attempts and not outcome:
         return
+    if analysis.get("wire_contract_version") == "risk-decision-v3":
+        st.caption("Model output contract: risk-decision-v3.")
+    if analysis.get("risk_band_origin") == "server_thresholds":
+        st.caption(
+            "The model supplies the risk score. The server assigns its support level "
+            "using the documented score thresholds; this label is deterministic."
+        )
     descriptions = {
         "first_pass_validated": "Validated on the first model response",
         "repaired_validated": "Validated after a model correction",
@@ -1042,6 +1112,21 @@ def render_validation_provenance(analysis: dict[str, Any]) -> None:
                 ]
             )
             st.caption("These records describe model response validation, not student progress.")
+            normalizations = [
+                {
+                    "Response": attempt["attempt"],
+                    "Field": entry["path"],
+                    "Formatting normalization": entry["code"],
+                }
+                for attempt in attempts
+                for entry in attempt.get("normalizations", [])
+            ]
+            if normalizations:
+                st.caption(
+                    "Audited formatting normalizations are separate from a model correction "
+                    "or an evidence check. They are not evidence of predictive accuracy."
+                )
+                _frame(normalizations)
 
 
 def render_claims(output: dict[str, Any], snapshot: dict[str, Any]) -> None:

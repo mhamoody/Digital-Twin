@@ -1,5 +1,6 @@
 """Course-scoped catch-up and bounded automatic discovery; no inference in HTTP requests."""
 
+import re
 from collections import Counter, defaultdict
 from datetime import UTC, datetime
 
@@ -15,10 +16,12 @@ from .models import (
     AnalysisPlan,
     Automation,
     Course,
+    InferenceTrace,
     RuntimeState,
     Snapshot,
     SnapshotHead,
 )
+from .tracing import safe_attempts
 
 MAX_ATTEMPTS = 3
 AUTO_BACKLOG_LIMIT = 200
@@ -102,6 +105,60 @@ def plan_matches(plan, result, spec):
         ]
     )
     return old_fingerprint == spec["fingerprint"]
+
+
+def failure_diagnostic_samples(session, jobs):
+    """Expose only bounded, sanitized traces for the already selected current jobs."""
+    samples = []
+    latest_jobs = sorted(jobs, key=lambda job: (aware(job.updated_at), job.id), reverse=True)[:3]
+    for job in latest_jobs:
+        latest_attempt = session.scalar(
+            select(func.max(InferenceTrace.job_attempt)).where(
+                InferenceTrace.job_id == job.id,
+                InferenceTrace.job_attempt <= job.attempts,
+            )
+        )
+        generations = []
+        if latest_attempt is not None:
+            traces = session.scalars(
+                select(InferenceTrace)
+                .where(
+                    InferenceTrace.job_id == job.id,
+                    InferenceTrace.job_attempt == latest_attempt,
+                    InferenceTrace.generation.in_([1, 2]),
+                )
+                .order_by(InferenceTrace.generation.desc())
+                .limit(2)
+            ).all()
+            for trace in reversed(traces):
+                sanitized = safe_attempts([trace.payload])
+                if not sanitized:
+                    continue
+                record = sanitized[0]
+                generations.append(
+                    {
+                        "attempt": trace.generation,
+                        "kind": "initial" if trace.generation == 1 else "validation_feedback",
+                        "outcome": record["outcome"],
+                        "error_code": record["error_code"],
+                        "latency_seconds": record["latency_seconds"],
+                        "validation_details": record.get("validation_details", []),
+                        "normalizations": record.get("normalizations", []),
+                    }
+                )
+        job_reference = job.id if re.fullmatch(r"[0-9a-f]{64}", job.id) else digest(job.id)
+        samples.append(
+            {
+                "job_id": job_reference,
+                "job_attempt": latest_attempt,
+                "generations": generations,
+                "detail_available": any(
+                    generation["validation_details"] or generation["normalizations"]
+                    for generation in generations
+                ),
+            }
+        )
+    return samples
 
 
 class SchedulingMixin(ControlsMixin):
@@ -424,6 +481,7 @@ class SchedulingMixin(ControlsMixin):
         with Session(self.engine) as session:
             _policy, rows = self._analysis_rows(session, course_id, spec)
             total, weeks, failures = Counter(), defaultdict(Counter), Counter()
+            failed_jobs = defaultdict(list)
             for row in rows:
                 state, job, status = row["state"], row["job"], row["status"]
                 for count in (total, weeks[state.week]):
@@ -436,6 +494,7 @@ class SchedulingMixin(ControlsMixin):
                     and status in {"failed", "retry_scheduled", "queued", "running"}
                 ):
                     failures[job.error_code] += 1
+                    failed_jobs[job.error_code].append(job)
             keys = (
                 "total_snapshots",
                 "validated",
@@ -459,7 +518,14 @@ class SchedulingMixin(ControlsMixin):
                     for w, counts in sorted(weeks.items())
                 ],
                 "failures": [
-                    {**describe_failure(code), "count": n} for code, n in failures.most_common()
+                    {
+                        **describe_failure(code),
+                        "count": n,
+                        "diagnostic_samples": failure_diagnostic_samples(
+                            session, failed_jobs[code]
+                        ),
+                    }
+                    for code, n in failures.most_common()
                 ],
                 "max_attempts": MAX_ATTEMPTS,
             }

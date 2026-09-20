@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 
 from .errors import describe_failure
 from .models import InferenceTrace
+from .output_contract import safe_normalizations, safe_validation_details
 
 
 def safe_attempts(attempts):
@@ -37,6 +38,8 @@ def safe_attempts(attempts):
                 "output_hash": output_hash
                 if isinstance(output_hash, str) and re.fullmatch(r"[0-9a-f]{64}", output_hash)
                 else None,
+                "validation_details": safe_validation_details(item.get("validation_details", [])),
+                "normalizations": safe_normalizations(item.get("normalizations", [])),
                 "runtime": {
                     key: runtime[key]
                     for key in (

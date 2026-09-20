@@ -1,5 +1,10 @@
 # Reliable Qwen analysis: correction, isolation and verification
 
+The subsequent [v3 output-contract revision](18_output_contract.md) simplifies
+the model's response shape and adds exact field diagnostics. This document
+retains the v2.3 rollout evidence and queue/pause design; use the v3 guide for the
+current response contract and controlled failure reproduction.
+
 ## What the supplied Lobot evidence established
 
 The September 14 logs showed successful local Qwen requests. Three consecutive

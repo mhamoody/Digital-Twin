@@ -36,6 +36,10 @@ from digital_twin.workspace.llm import (  # noqa: E402
     predict_rules,
     validate_output,
 )
+from digital_twin.workspace.output_contract import (  # noqa: E402
+    safe_normalizations,
+    safe_validation_details,
+)
 from digital_twin.workspace.synthetic import generate_dataset  # noqa: E402
 
 
@@ -78,6 +82,21 @@ def summarize(rows: list[dict]) -> dict:
         "rejected_generations": sum(attempt["outcome"] == "rejected" for attempt in generations),
         "generation_error_counts": dict(
             Counter(attempt["error_code"] for attempt in generations if attempt["error_code"])
+        ),
+        "validation_subcode_counts": dict(
+            Counter(
+                detail["code"]
+                for attempt in generations
+                for detail in attempt.get("validation_details", [])
+            )
+        ),
+        "normalized_generations": sum(bool(a.get("normalizations")) for a in generations),
+        "normalization_counts": dict(
+            Counter(
+                change["code"]
+                for attempt in generations
+                for change in attempt.get("normalizations", [])
+            )
         ),
         "repair_generation_seconds": round(
             sum(attempt["latency_seconds"] for attempt in repairs), 6
@@ -212,6 +231,8 @@ def safe_attempts(records: list[dict]) -> list[dict]:
                 "output_hash": output_hash
                 if isinstance(output_hash, str) and re.fullmatch(r"[0-9a-f]{64}", output_hash)
                 else None,
+                "validation_details": safe_validation_details(raw.get("validation_details", [])),
+                "normalizations": safe_normalizations(raw.get("normalizations", [])),
                 "runtime": {
                     key: val
                     for key, val in raw.get("runtime", {}).items()
@@ -271,6 +292,7 @@ def evaluate(
                 "attempt_metadata": [],
                 "model_digest": None,
                 "prompt_version": None,
+                "wire_contract_version": None,
             }
             started = time.perf_counter()
             result = None
@@ -290,6 +312,7 @@ def evaluate(
                     claim_codes="|".join(claim.code for claim in parsed.claims),
                     model_digest=result.get("model_digest"),
                     prompt_version=result.get("prompt_version"),
+                    wire_contract_version=result.get("wire_contract_version"),
                 )
                 if parsed.abstain:
                     row["outcome"] = (

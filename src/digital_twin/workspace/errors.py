@@ -164,7 +164,7 @@ ERRORS: dict[str, Failure] = {
     "MODEL_SCHEMA_INVALID": Failure(
         "Model output failed its contract",
         "The answer has missing, extra, mistyped or inconsistent output fields.",
-        "Review the output contract and prompt before running the same case again.",
+        "Inspect field-level diagnostics below or replay one failed job with the operator tool.",
         "output",
     ),
     "MODEL_CLAIM_UNSUPPORTED": Failure(
@@ -254,9 +254,10 @@ SERVICE_BLOCKING_CODES = frozenset(
 REPAIR_FEEDBACK: dict[str, str] = {
     "MODEL_JSON_INVALID": "Return one strict JSON object: no markdown, duplicate keys or NaN.",
     "MODEL_SCHEMA_INVALID": (
-        "Follow every required field, type and score-band boundary in required_output_schema. "
-        "Scored mode requires nonempty claims/actions; abstention requires null score/band, "
-        "empty claims/actions and an approved reason."
+        "Use exactly one required_output_schema alternative. decision=assess requires a "
+        "numeric risk_score, nonempty claims and actions. decision=abstain requires only "
+        "decision and reason. Never emit risk_band, abstain, abstention_reason or metadata. "
+        "Read field_errors for the exact rejected condition; do not invent a score or claim."
     ),
     "MODEL_CLAIM_UNSUPPORTED": (
         "Select unique codes only from permitted_claims; copy the exact matched evidence list."
