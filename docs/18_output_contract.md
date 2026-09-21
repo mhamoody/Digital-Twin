@@ -1,5 +1,10 @@
 # Output contract v3: prevent contradictions and make failures inspectable
 
+September 21 follow-up: `course-risk-qwen-v3.2` adds evidence-first generation,
+exact claim/evidence decoder alternatives, and explicit missingness guidance.
+See [the direct live evaluation](19_live_model_validation.md) for measured results
+and remaining limitations; the original v3.0 checks below are historical.
+
 ## Evidence and limits of the diagnosis
 
 The supplied September 15 status report showed 15 current-version validated
@@ -23,7 +28,7 @@ on Lobot; simulated unit tests cannot supply that finding.
 
 ## What the model now returns
 
-Qwen2.5:7B remains the predictor. Prompt `course-risk-qwen-v3.0` asks for exactly
+Qwen2.5:7B remains the predictor. Prompt `course-risk-qwen-v3.2` asks for exactly
 one of two independent object shapes. The same schema is supplied in the prompt
 and to Ollama's structured decoder.
 
@@ -32,8 +37,8 @@ Assessment example (illustrative evidence aliases, not an actual learner):
 ```json
 {
   "decision": "assess",
-  "risk_score": 0.72,
   "claims": [{"code": "LOW_GRADE", "evidence_ids": ["E001"]}],
+  "risk_score": 0.72,
   "suggested_actions": ["review_grades"]
 }
 ```
@@ -51,6 +56,17 @@ student-facing schema. For an assessment the server derives the display band fro
 the model's **unchanged** score: `<0.35` low, `[0.35,0.65)` medium, `>=0.65` high.
 The model no longer generates this duplicate deterministic label. It still
 chooses the score, grounded claims, actions and whether to abstain.
+
+The decoder now offers complete permitted claim objects, not a cross-product of
+claim codes and every possible evidence ID. A two-feature claim cannot omit one
+of its required citations or borrow another claim's ID. The generated field order
+places claims before the score. The receiver does not require JSON key order,
+and independent source, duplicate-claim, action and policy checks still run.
+
+The prompt explicitly lists available concern claims and distinguishes unknown
+attainment from bad attainment. Missing knowledge must not be encoded as a
+middle Risk score. If the model cannot responsibly support its judgment, it must
+abstain; the application does not lower an unsupported score or insert a concern.
 
 An out-of-policy score is rejected, not reduced until it passes. Existing
 grounding, action-support, medium/high concern and academic-corroboration checks
@@ -89,6 +105,13 @@ receives the specific trusted field diagnostics plus the unchanged evidence,
 policy and schema. It never consumes the previous raw answer as instructions.
 Both generations remain independently validated and audited. Service failures
 remain distinct from model-content rejection.
+
+In v3.2 the second generation uses a concise, application-written recheck system
+instruction. Its learner evidence, policy and decoder are unchanged; the rejected
+answer is still withheld. Exact received values remain in the diagnostic trace,
+but correction feedback contains the condition/path without the rejected scalar,
+to avoid presenting a wrong score as an anchor. A corrected score is a new model
+judgment, not a server edit to the rejected one. At most two generations occur.
 
 New diagnostics do not backfill information that earlier runs discarded. The
 operator tool labels that limitation explicitly. Course pauses and attempt
@@ -176,7 +199,7 @@ courses are running, stop the worker safely before measuring isolated latency.
 Only after inspecting these outputs should the instructor resume one course;
 verify actual queue progress and errors before resuming every course.
 
-## Local verification and remaining live check
+## Historical v3.0 local verification
 
 All 299 tests in the targeted local regression suite passed. These checks cover
 native and legacy contracts, bounded correction,

@@ -277,29 +277,37 @@ class _Legacy(Contract):
     abstention_reason: str | None = Field(default=None, max_length=300)
 
 
-def response_schema(eligible_codes, evidence_alias_ids, allowed_actions):
+def response_schema(permitted_claims, allowed_actions):
     """Complete native branches, including null-free explicit abstention.
 
     The schema constrains structure; independent evidence/action/policy checks
     remain authoritative. No branch prescribes a risk score from selected claims.
     """
-    codes, ids, actions = (
-        sorted(set(values))
-        for values in (
-            eligible_codes,
-            evidence_alias_ids,
-            allowed_actions,
-        )
-    )
-    if (
-        any(
-            not isinstance(value, str) or not value
-            for values in (codes, ids, actions)
-            for value in values
-        )
-        or not set(actions) <= ACTIONS
-    ):
-        raise ValueError("Schema allowlists must contain approved nonempty string values.")
+    # A whole-object enum prevents the decoder from attaching another claim's
+    # otherwise valid ID, or dropping one ID from a multi-feature fact. The
+    # model still selects claims; the receiver still verifies the source facts.
+    claims, seen = [], set()
+    for item in permitted_claims:
+        if not isinstance(item, dict) or set(item) != {"code", "evidence_ids"}:
+            raise ValueError("Expected a complete permitted claim.")
+        code, ids = item["code"], item["evidence_ids"]
+        if (
+            not isinstance(code, str)
+            or code not in CLAIM_CODES
+            or code in seen
+            or not isinstance(ids, list)
+            or not 1 <= len(ids) <= 12
+            or any(
+                not isinstance(value, str) or not re.fullmatch(r"E[0-9]{3}", value) for value in ids
+            )
+            or len(set(ids)) != len(ids)
+        ):
+            raise ValueError("Permitted claims require unique codes and exact aliased evidence.")
+        seen.add(code)
+        claims.append({"code": code, "evidence_ids": list(ids)})
+    if any(not isinstance(action, str) or action not in ACTIONS for action in allowed_actions):
+        raise ValueError("Schema actions must be approved values.")
+    actions = sorted(set(allowed_actions))
     abstain = {
         "type": "object",
         "additionalProperties": False,
@@ -309,29 +317,15 @@ def response_schema(eligible_codes, evidence_alias_ids, allowed_actions):
         },
         "required": ["decision", "reason"],
     }
-    if not codes or not ids or not actions:
+    if not claims or not actions:
         return {"anyOf": [abstain]}
-    claim = {
-        "type": "object",
-        "additionalProperties": False,
-        "properties": {
-            "code": {"type": "string", "enum": codes, "minLength": 1, "maxLength": 64},
-            "evidence_ids": {
-                "type": "array",
-                "minItems": 1,
-                "maxItems": 12,
-                "items": {"type": "string", "enum": ids},
-            },
-        },
-        "required": ["code", "evidence_ids"],
-    }
     assess = {
         "type": "object",
         "additionalProperties": False,
         "properties": {
             "decision": {"type": "string", "const": "assess"},
+            "claims": {"type": "array", "minItems": 1, "maxItems": 8, "items": {"enum": claims}},
             "risk_score": {"type": "number", "minimum": 0, "maximum": 1},
-            "claims": {"type": "array", "minItems": 1, "maxItems": 8, "items": claim},
             "suggested_actions": {
                 "type": "array",
                 "minItems": 1,
@@ -339,7 +333,7 @@ def response_schema(eligible_codes, evidence_alias_ids, allowed_actions):
                 "items": {"type": "string", "enum": actions},
             },
         },
-        "required": ["decision", "risk_score", "claims", "suggested_actions"],
+        "required": ["decision", "claims", "risk_score", "suggested_actions"],
     }
     return {"anyOf": [assess, abstain]}
 

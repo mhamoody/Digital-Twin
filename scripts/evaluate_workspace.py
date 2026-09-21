@@ -55,10 +55,37 @@ def percentile(values: list[float], quantile: float) -> float | None:
 
 def summarize(rows: list[dict]) -> dict:
     returned = [row for row in rows if row["schema_valid"]]
+    accepted = [row for row in rows if row["schema_valid"] and row["grounding_valid"]]
     attempted = [row for row in rows if row["generation_attempts"]]
     inference = [row for row in rows if row["inference_performed"]]
     generations = [attempt for row in rows for attempt in row["attempt_metadata"]]
     repairs = [attempt for attempt in generations if attempt["attempt"] > 1]
+    model_accepted = [row for row in attempted if row["schema_valid"] and row["grounding_valid"]]
+    model_rejected = [
+        row
+        for row in attempted
+        if not (row["schema_valid"] and row["grounding_valid"])
+        and row["attempt_metadata"][-1]["outcome"] == "rejected"
+    ]
+    # A failed request is not a JSON/schema failure: no parseable reply may have
+    # reached validation. Corrections count as separate generations, not cases.
+    checked = [
+        attempt for attempt in generations if attempt["outcome"] in {"validated", "rejected"}
+    ]
+    structural_rejections = [
+        attempt
+        for attempt in checked
+        if attempt["outcome"] == "rejected"
+        and attempt["error_code"] in {"MODEL_JSON_INVALID", "MODEL_SCHEMA_INVALID"}
+    ]
+    grounding_rejections = [
+        attempt
+        for attempt in checked
+        if attempt["outcome"] == "rejected"
+        and attempt["error_code"] in ERRORS
+        and ERRORS[attempt["error_code"]].category == "grounding"
+    ]
+    checked_rejections = sum(attempt["outcome"] == "rejected" for attempt in checked)
     return {
         "attempted_snapshots": len(rows),
         "validated_schema_results": len(returned),
@@ -69,8 +96,68 @@ def summarize(rows: list[dict]) -> dict:
         ),
         "inference_performed": len(inference),
         "generation_attempted_cases": len(attempted),
-        "accepted_pipeline_results": len(returned),
-        "accepted_pipeline_fraction": len(returned) / len(rows) if rows else None,
+        "accepted_pipeline_results": len(accepted),
+        "accepted_pipeline_fraction": len(accepted) / len(rows) if rows else None,
+        "model_case_validation": {
+            "denominator": "cases_with_at_least_one_generation_attempt",
+            "denominator_count": len(attempted),
+            "accepted": len(model_accepted),
+            "accepted_scored": sum(row["abstain"] is False for row in model_accepted),
+            "accepted_abstentions": sum(row["abstain"] is True for row in model_accepted),
+            "rejected_after_validation": len(model_rejected),
+            "runtime_or_other_failures": len(attempted) - len(model_accepted) - len(model_rejected),
+            "accepted_fraction": len(model_accepted) / len(attempted) if attempted else None,
+            "rejected_after_validation_fraction": len(model_rejected) / len(attempted)
+            if attempted
+            else None,
+        },
+        "generation_validation": {
+            "denominator": "generation_replies_checked_by_output_validation_including_corrections",
+            "denominator_count": len(checked),
+            "all_generation_attempts": len(generations),
+            "validated": sum(attempt["outcome"] == "validated" for attempt in checked),
+            "structural_contract_rejections": len(structural_rejections),
+            "grounding_or_policy_rejections": len(grounding_rejections),
+            "other_validation_rejections": checked_rejections
+            - len(structural_rejections)
+            - len(grounding_rejections),
+            "runtime_error_attempts": sum(
+                attempt["outcome"] == "runtime_error" for attempt in generations
+            ),
+            "structural_contract_rejection_fraction": len(structural_rejections) / len(checked)
+            if checked
+            else None,
+            "grounding_or_policy_rejection_fraction": len(grounding_rejections) / len(checked)
+            if checked
+            else None,
+            "validated_fraction": sum(attempt["outcome"] == "validated" for attempt in checked)
+            / len(checked)
+            if checked
+            else None,
+            "responses_with_allowed_normalizations": sum(
+                bool(attempt.get("normalizations")) for attempt in checked
+            ),
+        },
+        "non_model_case_results": {
+            "denominator": "cases_without_generation_attempts",
+            "denominator_count": len(rows) - len(attempted),
+            "pre_inference_abstentions": sum(
+                row["outcome"] == "pre_inference_abstention" for row in rows
+            ),
+            "baseline_validated": sum(row["outcome"] == "baseline_validated" for row in rows),
+        },
+        "legacy_metric_notes": {
+            "validated_schema_results": "Pipeline-returned canonical results, not raw LLM replies.",
+            "schema_success_per_attempt": (
+                "Deprecated: pipeline-returned canonical results / all snapshots, including "
+                "pre-inference abstentions and baseline results. Use model_case_validation "
+                "and generation_validation for model reliability."
+            ),
+            "grounding_success_per_attempt": (
+                "Deprecated: grounded pipeline results / all snapshots, including "
+                "pre-inference abstentions and baseline results; not prediction accuracy."
+            ),
+        },
         "outcomes": dict(Counter(row["outcome"] for row in rows)),
         "first_pass_validated": sum(row["outcome"] == "first_pass_validated" for row in rows),
         "repaired_validated": sum(row["outcome"] == "repaired_validated" for row in rows),
@@ -354,7 +441,7 @@ def evaluate(
                     }
                 )
     report = {
-        "evaluation_version": "workspace-operational-eval-v2",
+        "evaluation_version": "workspace-operational-eval-v3",
         "generated_at": datetime.now(UTC).isoformat(),
         "seed": pack["seed"],
         "input_hash": pack["input_hash"],
@@ -393,8 +480,12 @@ def evaluate(
             "no empirical accuracy, F1, AUC or causal-effect claims.",
             "A new seed reserves numeric histories; "
             "scenario families are shared, not unseen-family validation.",
-            "Schema success includes gate-produced abstentions. "
-            "It is not a raw-LLM JSON success rate.",
+            "Pipeline acceptance includes gate-produced abstentions and baseline results. "
+            "Model-case acceptance uses only cases with generation attempts; generation "
+            "validation uses returned replies checked by validation, including corrections.",
+            "Structural JSON/schema rejection, grounding/policy rejection and runtime errors "
+            "are separate. Validation can include audited formatting normalization, so "
+            "acceptance does not establish strict raw-JSON compliance before normalization.",
             "No numeric Risk score target is derived from the rules baseline "
             "or the private scenario oracle.",
             "Missing local model reports readiness failure; "
