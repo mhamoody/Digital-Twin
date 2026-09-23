@@ -7,6 +7,7 @@ import hmac
 import os
 import re
 import time
+import json
 from pathlib import Path
 from typing import Annotated
 
@@ -43,11 +44,24 @@ def sign_dashboard_request(
 
 
 def authorize_course(identity: InstructorIdentity, course_id: str | None):
-    if (
-        identity.allowed_presentations is not None
-        and course_id not in identity.allowed_presentations
-    ):
+    if course_id is None or identity.allowed_presentations is None:
+        raise HTTPException(403, "This account has no explicit course grant.")
+    if course_id not in identity.allowed_presentations:
         raise HTTPException(403, "This account is not authorized for the requested course.")
+
+
+def _development_grants(reviewer_id: str) -> list[str]:
+    if os.environ.get("DIGITAL_TWIN_DEVELOPMENT_AUTH") != "1":
+        return []
+    path = os.environ.get("DIGITAL_TWIN_COURSE_GRANTS_FILE")
+    if not path:
+        return []
+    try:
+        grants = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    values = grants.get(reviewer_id)
+    return list(values) if isinstance(values, list) and all(isinstance(v, str) for v in values) else []
 
 
 IDENTITY_PATTERN = re.compile(r"^(instructor|supervisor):[A-Za-z0-9._-]{1,96}$")
@@ -189,7 +203,11 @@ def require_instructor(
             :24
         ]
         return InstructorIdentity(
-            reviewer_id=f"{role}:{x_lms_platform}-{reviewer_digest}", role=role
+            reviewer_id=f"{role}:{x_lms_platform}-{reviewer_digest}",
+            role=role,
+            allowed_presentations=_development_grants(
+                f"{role}:{x_lms_platform}-{reviewer_digest}"
+            ),
         )
 
     if not x_instructor_id or not x_instructor_role:
@@ -216,4 +234,8 @@ def require_instructor(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Instructor identity prefix and role header do not match.",
         )
-    return InstructorIdentity(reviewer_id=x_instructor_id, role=role)
+    return InstructorIdentity(
+        reviewer_id=x_instructor_id,
+        role=role,
+        allowed_presentations=_development_grants(x_instructor_id),
+    )

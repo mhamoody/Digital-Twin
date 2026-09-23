@@ -654,8 +654,13 @@ class ApiService:
         for enrolment in enrolments:
             state = latest_states.get(enrolment.learner_id)
             learner_predictions = predictions_by_learner.get(enrolment.learner_id, [])
-            latest = learner_predictions[0] if learner_predictions else None
-            previous = learner_predictions[1] if len(learner_predictions) > 1 else None
+            # Bind the displayed prediction to the exact displayed state. An older
+            # prediction is not a valid substitute when the newest state is unassessed.
+            latest = next(
+                (value for value in learner_predictions if state and value[0].state_id == state.state_id),
+                None,
+            )
+            previous = None
             prediction = latest[0] if latest else None
             model = latest[1] if latest else None
             previous_probability = previous[0].display_probability if previous else None
@@ -683,6 +688,11 @@ class ApiService:
                     probability_change=probability_change,
                     risk_band=prediction.risk_band if prediction else None,
                     model_version=model.model_version if model else None,
+                    prediction_id=prediction.prediction_id if prediction else None,
+                    prediction_state_id=prediction.state_id if prediction else None,
+                    assessment_status="assessed" if prediction else "not_assessed",
+                    comparison_available=False,
+                    comparison_reason=("NO_PREVIOUS_PREDICTION" if prediction else "NO_CURRENT_PREDICTION"),
                     alert_id=alert.alert_id if alert else None,
                     alert_status=alert.status if alert else None,
                     evidence_count=alert_row[1] if alert_row else 0,

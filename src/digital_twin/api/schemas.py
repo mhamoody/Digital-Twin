@@ -58,6 +58,11 @@ class LearnerListItem(ApiContract):
     probability_change: float | None = Field(default=None, ge=-1, le=1)
     risk_band: str | None = None
     model_version: str | None = None
+    prediction_id: str | None = None
+    prediction_state_id: str | None = None
+    assessment_status: Literal["assessed", "not_assessed"] = "not_assessed"
+    comparison_available: bool = False
+    comparison_reason: str = "NO_PREVIOUS_PREDICTION"
     alert_id: str | None = None
     alert_status: str | None = None
     evidence_count: int = Field(default=0, ge=0)
