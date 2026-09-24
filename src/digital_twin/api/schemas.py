@@ -59,6 +59,7 @@ class LearnerListItem(ApiContract):
     learner_id: str
     presentation_id: str
     data_origin: str
+    state_id: str | None = None
     latest_checkpoint_week: int | None = Field(default=None, ge=1)
     latest_cutoff_course_day: int | None = None
     completeness: float | None = Field(default=None, ge=0, le=1)

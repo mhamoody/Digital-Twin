@@ -689,6 +689,7 @@ class ApiService:
                     learner_id=enrolment.learner_id,
                     presentation_id=enrolment.presentation_id,
                     data_origin=enrolment.data_origin,
+                    state_id=state.state_id if state else None,
                     latest_checkpoint_week=state.checkpoint_week if state else None,
                     latest_cutoff_course_day=state.cutoff_course_day if state else None,
                     completeness=state.completeness if state else None,
