@@ -144,8 +144,10 @@ render_workspace(client, 'oulad:AAA:2013J', 'Overview')
     assert len(history['actions']) == 2
     assert history['actions'][-1]['note'] == 'Recorded check-in'
 
+    display = {'reviewed': 'Reviewed', 'ongoing': 'Ongoing', 'set_follow_up': 'Set Follow Up',
+               'clear_follow_up': 'Clear Follow Up', 'resolved': 'Resolved', 'dismissed': 'Dismissed'}
     for choice in ('reviewed', 'ongoing', 'set_follow_up', 'clear_follow_up', terminal):
-        next(w for w in app.selectbox if w.label == 'Instructor action').select(choice).run()
+        next(w for w in app.selectbox if w.label == 'Instructor action').select(display[choice]).run()
         labels = [w.label for w in app.text_area]
         date_labels = [w.label for w in app.date_input]
         time_labels = [w.label for w in app.time_input]
@@ -244,7 +246,8 @@ render_workspace(c, 'oulad:AAA:2013J', 'Students')
     if kind == 'create':
         next(b for b in app.button if b.label == 'Open new support case').click().run()
     else:
-        next(w for w in app.selectbox if w.label == 'Instructor action').select(kind)
+        display = {'add_note': 'Add Note', 'resolved': 'Resolved'}
+        next(w for w in app.selectbox if w.label == 'Instructor action').select(display[kind])
         next(w for w in app.text_area).set_value('One intended action')
         next(b for b in app.button if b.label == 'Save support action').click().run()
     assert app.error and not app.exception

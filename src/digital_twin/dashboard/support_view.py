@@ -37,6 +37,16 @@ ACTION_LABELS = {
     "link_alert": "Alert linked",
 }
 
+ACTION_DISPLAY_LABELS = {
+    "add_note": "Add Note",
+    "set_follow_up": "Set Follow Up",
+    "clear_follow_up": "Clear Follow Up",
+    "reviewed": "Reviewed",
+    "ongoing": "Ongoing",
+    "resolved": "Resolved",
+    "dismissed": "Dismissed",
+}
+
 
 def action_label(action_type):
     return ACTION_LABELS.get(action_type, action_type.replace("_", " ").title())

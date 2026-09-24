@@ -3,7 +3,8 @@ from datetime import UTC, datetime, time
 import streamlit as st
 from .client import DashboardApiError
 from .support_view import (ACTIVE, TRANSITIONS, Intent, comparison_text, counters, current_risk,
-    due, evidence_view, history_view, action_label, load_all, roster_rows, scoped_rows, score_label, time_text)
+    due, evidence_view, history_view, action_label, ACTION_DISPLAY_LABELS, load_all, roster_rows,
+    scoped_rows, score_label, time_text)
 from .view_model import RISK_LABELS
 
 CARD_HELP = {
@@ -229,7 +230,11 @@ def render_case(client, detail, now):
     version_key = 'support_form_version:' + case['case_id']
     displayed_version = st.session_state.get(version_key, case['version'])
     with st.form('case-form-' + case['case_id'], clear_on_submit=True):
-        kind = st.selectbox('Instructor action', choices, format_func=lambda v: v.replace('_', ' ').title())
+        # The widget exposes presentation labels only; all branching and payload
+        # construction use the canonical internal action key.
+        display_to_key = {ACTION_DISPLAY_LABELS.get(v, v): v for v in choices}
+        selected_label = st.selectbox('Instructor action', list(display_to_key))
+        kind = display_to_key[selected_label]
         note = None
         if kind == 'add_note':
             note = st.text_area('Instructor note', max_chars=4000)
