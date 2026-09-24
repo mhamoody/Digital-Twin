@@ -44,6 +44,7 @@ from .schemas import (
     PresentationOverview,
     ReviewHistoryItem,
 )
+from .comparison import DEFAULT_CHECKPOINTS, compare_predictions
 
 
 class ResourceNotFound(LookupError):
@@ -54,10 +55,18 @@ class ReviewConflict(RuntimeError):
     pass
 
 
+def select_bound_prediction(state, predictions):
+    """Return only a prediction whose state identity equals the displayed state."""
+    if state is None:
+        return None
+    return next((value for value in predictions if value[0].state_id == state.state_id), None)
+
+
 class ApiService:
-    def __init__(self, engine: Engine):
+    def __init__(self, engine: Engine, checkpoint_schedules: dict[str, tuple[int, ...]] | None = None):
         self.engine = engine
         self.store = TwinStore(engine)
+        self.checkpoint_schedules = checkpoint_schedules if checkpoint_schedules is not None else DEFAULT_CHECKPOINTS
 
     def readiness(self) -> tuple[str, str]:
         table_names = set(inspect(self.engine).get_table_names())
@@ -604,6 +613,7 @@ class ApiService:
         predictions_by_learner: dict[str, list[tuple[PredictionRecord, ModelVersion]]] = (
             defaultdict(list)
         )
+        predictions_by_state: dict[str, tuple[PredictionRecord, ModelVersion]] = {}
         seen_checkpoint: set[tuple[str, int]] = set()
         for prediction, state, model in prediction_rows:
             checkpoint_key = (state.learner_id, state.checkpoint_week)
@@ -611,6 +621,7 @@ class ApiService:
                 continue
             seen_checkpoint.add(checkpoint_key)
             predictions_by_learner[state.learner_id].append((prediction, model))
+            predictions_by_state[state.state_id] = (prediction, model)
 
         latest_prediction_ids = [
             values[0][0].prediction_id for values in predictions_by_learner.values() if values
@@ -656,21 +667,21 @@ class ApiService:
             learner_predictions = predictions_by_learner.get(enrolment.learner_id, [])
             # Bind the displayed prediction to the exact displayed state. An older
             # prediction is not a valid substitute when the newest state is unassessed.
-            latest = next(
-                (value for value in learner_predictions if state and value[0].state_id == state.state_id),
-                None,
-            )
+            latest = select_bound_prediction(state, learner_predictions)
             previous = None
             prediction = latest[0] if latest else None
             model = latest[1] if latest else None
-            previous_probability = previous[0].display_probability if previous else None
+            comparison = compare_predictions(
+                enrolment, state, latest,
+                {candidate.checkpoint_week: candidate for candidate in state_rows
+                 if candidate.learner_id == enrolment.learner_id},
+                predictions_by_state,
+                self.checkpoint_schedules.get(enrolment.presentation_id),
+            )
+            previous_probability = comparison.previous_value if comparison.available else None
             probability_change = None
-            if (
-                prediction is not None
-                and prediction.display_probability is not None
-                and previous_probability is not None
-            ):
-                probability_change = prediction.display_probability - previous_probability
+            if comparison.available:
+                probability_change = comparison.delta
             alert_row = alerts_by_prediction.get(prediction.prediction_id) if prediction else None
             alert = alert_row[0] if alert_row else None
             state_features = summary_features.get(state.state_id, {}) if state else {}
@@ -691,8 +702,9 @@ class ApiService:
                     prediction_id=prediction.prediction_id if prediction else None,
                     prediction_state_id=prediction.state_id if prediction else None,
                     assessment_status="assessed" if prediction else "not_assessed",
-                    comparison_available=False,
-                    comparison_reason=("NO_PREVIOUS_PREDICTION" if prediction else "NO_CURRENT_PREDICTION"),
+                    comparison_available=comparison.available,
+                    comparison_reason=comparison.reason or "AVAILABLE",
+                    comparison=comparison,
                     alert_id=alert.alert_id if alert else None,
                     alert_status=alert.status if alert else None,
                     evidence_count=alert_row[1] if alert_row else 0,
