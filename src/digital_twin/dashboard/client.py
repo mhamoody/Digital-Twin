@@ -11,6 +11,10 @@ import httpx
 class DashboardApiError(RuntimeError):
     """A safe, displayable dashboard/API boundary failure."""
 
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+
 
 class DashboardApiClient:
     def __init__(
@@ -34,6 +38,24 @@ class DashboardApiClient:
         }
         self.timeout_seconds = timeout_seconds
         self.transport = transport
+
+    def support_cases(self, presentation_id: str, *, limit: int = 200, offset: int = 0) -> dict[str, Any]:
+        return self._request(
+            "GET",
+            f"/api/v1/presentations/{presentation_id}/support-cases",
+            params={"limit": limit, "offset": offset},
+        )
+
+    def support_case(self, case_id: str) -> dict[str, Any]:
+        return self._request("GET", f"/api/v1/support-cases/{case_id}")
+
+    def create_support_case(self, presentation_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return self._request(
+            "POST", f"/api/v1/presentations/{presentation_id}/support-cases", json=payload
+        )
+
+    def support_action(self, case_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return self._request("POST", f"/api/v1/support-cases/{case_id}/actions", json=payload)
 
     def readiness(self) -> dict[str, Any]:
         return self._request("GET", "/health/ready", authenticated=False)
@@ -156,11 +178,9 @@ class DashboardApiClient:
                 )
             else:
                 message = "The instructor API returned an error. Try Refresh data."
-            raise DashboardApiError(message) from error
+            raise DashboardApiError(message, error.response.status_code) from error
         except (httpx.RequestError, ValueError) as error:
-            raise DashboardApiError(
-                "The instructor API is unavailable. Check its status."
-            ) from error
+            raise DashboardApiError("The instructor API is unavailable. Check its status.") from error
         if not isinstance(payload, dict):
             raise DashboardApiError("The instructor API returned an invalid response.")
         return payload

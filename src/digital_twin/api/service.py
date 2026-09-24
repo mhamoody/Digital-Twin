@@ -572,8 +572,7 @@ class ApiService:
             evidence_count=evidence_count,
         )
 
-    @staticmethod
-    def _learner_items(session: Session, enrolments: list[Enrolment]) -> list[LearnerListItem]:
+    def _learner_items(self, session: Session, enrolments: list[Enrolment]) -> list[LearnerListItem]:
         if not enrolments:
             return []
         presentation_id = enrolments[0].presentation_id

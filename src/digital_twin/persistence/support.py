@@ -25,7 +25,13 @@ ACTION_ADAPTER = TypeAdapter(SupportActionRequest)
 
 
 def view(model, row):
-    return model(**{name: getattr(row, name) for name in model.model_fields})
+    values = {}
+    for name in model.model_fields:
+        value = getattr(row, name)
+        if isinstance(value, datetime) and value.tzinfo is None:
+            value = value.replace(tzinfo=UTC)
+        values[name] = value
+    return model(**values)
 
 
 class SupportStore:
