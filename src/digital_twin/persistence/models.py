@@ -12,9 +12,11 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     ForeignKeyConstraint,
+    Index,
     Integer,
     String,
     Text,
+    text,
     UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -436,6 +438,68 @@ class AlertReview(Base):
     note: Mapped[str | None] = mapped_column(Text)
     reviewed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     record_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+
+
+ACTIVE_SUPPORT_SQL = "status IN ('new_concern','reviewed','ongoing')"
+
+
+class SupportCase(Base):
+    __tablename__ = "support_case"
+    __table_args__ = (
+        ForeignKeyConstraint(["presentation_id", "learner_id"],
+                             ["core.enrolment.presentation_id", "core.enrolment.learner_id"], ondelete="RESTRICT"),
+        CheckConstraint("status IN ('new_concern','reviewed','ongoing','resolved','dismissed')", name="ck_support_status"),
+        CheckConstraint("version >= 1", name="ck_support_version"),
+        CheckConstraint(f"data_origin IN ({ORIGINS})", name="ck_support_origin"),
+        CheckConstraint("(status IN ('resolved','dismissed') AND closed_at IS NOT NULL) OR (status IN ('new_concern','reviewed','ongoing') AND closed_at IS NULL)", name="ck_support_closed"),
+        Index("uq_support_active", "presentation_id", "learner_id", "data_origin", unique=True, sqlite_where=text(ACTIVE_SUPPORT_SQL), postgresql_where=text(ACTIVE_SUPPORT_SQL)),
+        {"schema": "analytics"},
+    )
+    case_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    presentation_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    learner_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    data_origin: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    last_action_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    follow_up_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_by: Mapped[str] = mapped_column(String(128), nullable=False)
+    created_by_role: Mapped[str] = mapped_column(String(32), nullable=False)
+
+
+class SupportAction(Base):
+    __tablename__ = "support_action"
+    __table_args__ = (UniqueConstraint("case_id", "idempotency_key", name="uq_support_action_retry"),
+                      UniqueConstraint("creation_key", name="uq_support_creation_retry"),
+                      CheckConstraint("resulting_version >= 1", name="ck_support_action_version"),
+                      {"schema": "audit"})
+    action_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    case_id: Mapped[str] = mapped_column(ForeignKey("analytics.support_case.case_id", ondelete="RESTRICT"), nullable=False)
+    action_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    actor_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    actor_role: Mapped[str] = mapped_column(String(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    request_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    creation_key: Mapped[str | None] = mapped_column(String(64))
+    resulting_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    note: Mapped[str | None] = mapped_column(Text)
+    previous_status: Mapped[str | None] = mapped_column(String(32))
+    new_status: Mapped[str | None] = mapped_column(String(32))
+    previous_follow_up_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    new_follow_up_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    linked_alert_id: Mapped[str | None] = mapped_column(ForeignKey("analytics.alert.alert_id", ondelete="RESTRICT"))
+
+
+class SupportCaseAlert(Base):
+    __tablename__ = "support_case_alert"
+    __table_args__ = (UniqueConstraint("alert_id", name="uq_support_alert"), {"schema": "analytics"})
+    case_id: Mapped[str] = mapped_column(ForeignKey("analytics.support_case.case_id", ondelete="RESTRICT"), primary_key=True)
+    alert_id: Mapped[str] = mapped_column(ForeignKey("analytics.alert.alert_id", ondelete="RESTRICT"), primary_key=True)
+    linked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    link_reason: Mapped[str] = mapped_column(String(64), nullable=False)
 
 
 class PersistenceEvent(Base):
