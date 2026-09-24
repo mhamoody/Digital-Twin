@@ -229,12 +229,12 @@ def render_case(client, detail, now):
     choices += list(TRANSITIONS.get(case['status'], ()))
     version_key = 'support_form_version:' + case['case_id']
     displayed_version = st.session_state.get(version_key, case['version'])
+    # Keep the action selector outside the form so changing it reruns the page
+    # and updates the action-specific controls before submission.
+    display_to_key = {ACTION_DISPLAY_LABELS.get(v, v): v for v in choices}
+    selected_label = st.selectbox('Instructor action', list(display_to_key), key='support-action-' + case['case_id'])
+    kind = display_to_key[selected_label]
     with st.form('case-form-' + case['case_id'], clear_on_submit=True):
-        # The widget exposes presentation labels only; all branching and payload
-        # construction use the canonical internal action key.
-        display_to_key = {ACTION_DISPLAY_LABELS.get(v, v): v for v in choices}
-        selected_label = st.selectbox('Instructor action', list(display_to_key))
-        kind = display_to_key[selected_label]
         note = None
         if kind == 'add_note':
             note = st.text_area('Instructor note', max_chars=4000)
