@@ -291,8 +291,10 @@ def create_app(*, database_url: str | None = None, engine: Engine | None = None)
         return schema
 
     from digital_twin.workspace.api import router as workspace_router
+    from digital_twin.api.routers.support import router as support_router
 
     app.include_router(workspace_router)
+    app.include_router(support_router)
     app.openapi = phase4_openapi
     return app
 

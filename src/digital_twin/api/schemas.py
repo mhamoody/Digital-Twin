@@ -45,10 +45,21 @@ class PresentationOverview(ApiContract):
     active_quarantine_count: int = Field(default=0, ge=0)
 
 
+class TemporalComparison(ApiContract):
+    available: bool = False
+    reason: str | None = "NO_CURRENT_PREDICTION"
+    previous_checkpoint: int | None = None
+    current_checkpoint: int | None = None
+    previous_value: float | None = None
+    current_value: float | None = None
+    delta: float | None = None
+
+
 class LearnerListItem(ApiContract):
     learner_id: str
     presentation_id: str
     data_origin: str
+    state_id: str | None = None
     latest_checkpoint_week: int | None = Field(default=None, ge=1)
     latest_cutoff_course_day: int | None = None
     completeness: float | None = Field(default=None, ge=0, le=1)
@@ -58,6 +69,12 @@ class LearnerListItem(ApiContract):
     probability_change: float | None = Field(default=None, ge=-1, le=1)
     risk_band: str | None = None
     model_version: str | None = None
+    prediction_id: str | None = None
+    prediction_state_id: str | None = None
+    assessment_status: Literal["assessed", "not_assessed"] = "not_assessed"
+    comparison_available: bool = False
+    comparison_reason: str = "NO_PREVIOUS_PREDICTION"
+    comparison: "TemporalComparison" = Field(default_factory=lambda: TemporalComparison())
     alert_id: str | None = None
     alert_status: str | None = None
     evidence_count: int = Field(default=0, ge=0)

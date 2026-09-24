@@ -44,6 +44,7 @@ from .schemas import (
     PresentationOverview,
     ReviewHistoryItem,
 )
+from .comparison import DEFAULT_CHECKPOINTS, compare_predictions
 
 
 class ResourceNotFound(LookupError):
@@ -54,10 +55,18 @@ class ReviewConflict(RuntimeError):
     pass
 
 
+def select_bound_prediction(state, predictions):
+    """Return only a prediction whose state identity equals the displayed state."""
+    if state is None:
+        return None
+    return next((value for value in predictions if value[0].state_id == state.state_id), None)
+
+
 class ApiService:
-    def __init__(self, engine: Engine):
+    def __init__(self, engine: Engine, checkpoint_schedules: dict[str, tuple[int, ...]] | None = None):
         self.engine = engine
         self.store = TwinStore(engine)
+        self.checkpoint_schedules = checkpoint_schedules if checkpoint_schedules is not None else DEFAULT_CHECKPOINTS
 
     def readiness(self) -> tuple[str, str]:
         table_names = set(inspect(self.engine).get_table_names())
@@ -563,8 +572,7 @@ class ApiService:
             evidence_count=evidence_count,
         )
 
-    @staticmethod
-    def _learner_items(session: Session, enrolments: list[Enrolment]) -> list[LearnerListItem]:
+    def _learner_items(self, session: Session, enrolments: list[Enrolment]) -> list[LearnerListItem]:
         if not enrolments:
             return []
         presentation_id = enrolments[0].presentation_id
@@ -604,6 +612,7 @@ class ApiService:
         predictions_by_learner: dict[str, list[tuple[PredictionRecord, ModelVersion]]] = (
             defaultdict(list)
         )
+        predictions_by_state: dict[str, tuple[PredictionRecord, ModelVersion]] = {}
         seen_checkpoint: set[tuple[str, int]] = set()
         for prediction, state, model in prediction_rows:
             checkpoint_key = (state.learner_id, state.checkpoint_week)
@@ -611,6 +620,7 @@ class ApiService:
                 continue
             seen_checkpoint.add(checkpoint_key)
             predictions_by_learner[state.learner_id].append((prediction, model))
+            predictions_by_state[state.state_id] = (prediction, model)
 
         latest_prediction_ids = [
             values[0][0].prediction_id for values in predictions_by_learner.values() if values
@@ -654,18 +664,23 @@ class ApiService:
         for enrolment in enrolments:
             state = latest_states.get(enrolment.learner_id)
             learner_predictions = predictions_by_learner.get(enrolment.learner_id, [])
-            latest = learner_predictions[0] if learner_predictions else None
-            previous = learner_predictions[1] if len(learner_predictions) > 1 else None
+            # Bind the displayed prediction to the exact displayed state. An older
+            # prediction is not a valid substitute when the newest state is unassessed.
+            latest = select_bound_prediction(state, learner_predictions)
+            previous = None
             prediction = latest[0] if latest else None
             model = latest[1] if latest else None
-            previous_probability = previous[0].display_probability if previous else None
+            comparison = compare_predictions(
+                enrolment, state, latest,
+                {candidate.checkpoint_week: candidate for candidate in state_rows
+                 if candidate.learner_id == enrolment.learner_id},
+                predictions_by_state,
+                self.checkpoint_schedules.get(enrolment.presentation_id),
+            )
+            previous_probability = comparison.previous_value if comparison.available else None
             probability_change = None
-            if (
-                prediction is not None
-                and prediction.display_probability is not None
-                and previous_probability is not None
-            ):
-                probability_change = prediction.display_probability - previous_probability
+            if comparison.available:
+                probability_change = comparison.delta
             alert_row = alerts_by_prediction.get(prediction.prediction_id) if prediction else None
             alert = alert_row[0] if alert_row else None
             state_features = summary_features.get(state.state_id, {}) if state else {}
@@ -674,6 +689,7 @@ class ApiService:
                     learner_id=enrolment.learner_id,
                     presentation_id=enrolment.presentation_id,
                     data_origin=enrolment.data_origin,
+                    state_id=state.state_id if state else None,
                     latest_checkpoint_week=state.checkpoint_week if state else None,
                     latest_cutoff_course_day=state.cutoff_course_day if state else None,
                     completeness=state.completeness if state else None,
@@ -683,6 +699,12 @@ class ApiService:
                     probability_change=probability_change,
                     risk_band=prediction.risk_band if prediction else None,
                     model_version=model.model_version if model else None,
+                    prediction_id=prediction.prediction_id if prediction else None,
+                    prediction_state_id=prediction.state_id if prediction else None,
+                    assessment_status="assessed" if prediction else "not_assessed",
+                    comparison_available=comparison.available,
+                    comparison_reason=comparison.reason or "AVAILABLE",
+                    comparison=comparison,
                     alert_id=alert.alert_id if alert else None,
                     alert_status=alert.status if alert else None,
                     evidence_count=alert_row[1] if alert_row else 0,

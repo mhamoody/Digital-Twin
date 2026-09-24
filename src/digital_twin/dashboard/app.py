@@ -23,6 +23,7 @@ from digital_twin.dashboard.auth import (  # noqa: E402
     InstructorAccount,
     authenticate,
     load_accounts,
+    development_account_from_env,
 )
 from digital_twin.dashboard.client import DashboardApiClient, DashboardApiError  # noqa: E402
 from digital_twin.dashboard.view_model import (  # noqa: E402
@@ -1145,15 +1146,53 @@ def run_current_workspace():
     from digital_twin.dashboard.workspace_ui import render_workspace
     st.set_page_config(page_title="Course digital twin", page_icon="◉", layout="wide", initial_sidebar_state="auto")
     auth_file = os.environ.get("DIGITAL_TWIN_AUTH_FILE")
-    if not auth_file:
-        st.error("Instructor login is required. Configure DIGITAL_TWIN_AUTH_FILE before opening the workspace.")
-        st.stop()
-    account = require_pilot_login(auth_file)
+    development_mode = False
+    if auth_file:
+        account = require_pilot_login(auth_file)
+    else:
+        try:
+            account = development_account_from_env()
+        except AccountConfigurationError as error:
+            st.error(str(error))
+            st.stop()
+        development_mode = account is not None
+        if account is None:
+            st.error("Instructor login is required. Configure DIGITAL_TWIN_AUTH_FILE before opening the workspace.")
+            st.stop()
     if account is None:
         st.stop()
+    if development_mode:
+        st.sidebar.caption("Development authentication")
+        st.sidebar.caption(f"Identity: {account.reviewer_id}")
     client = WorkspaceClient(base_url=os.environ.get("DIGITAL_TWIN_API_URL", "http://127.0.0.1:8000"),
                              instructor_id=account.reviewer_id, instructor_role=account.role)
-    render_workspace(client, account)
+    mode = st.sidebar.radio(
+        "Workspace", ["Student support", "Course operations"],
+        index=0, key="workspace_mode",
+        help="Student support uses the Batch 2 support workflow; Course operations keeps the existing workspace.",
+    )
+    if mode == "Course operations":
+        render_workspace(client, account)
+        return
+    from digital_twin.dashboard.client import DashboardApiClient
+    from digital_twin.dashboard.support_ui import render_workspace as render_support_workspace
+    support_client = DashboardApiClient(
+        base_url=os.environ.get("DIGITAL_TWIN_API_URL", "http://127.0.0.1:8000"),
+        instructor_id=account.reviewer_id,
+        instructor_role=account.role,
+    )
+    presentation_id = st.session_state.get("support_presentation_id")
+    if presentation_id not in account.allowed_presentations:
+        presentation_id = account.allowed_presentations[0]
+    presentation_id = st.sidebar.selectbox(
+        "Course", account.allowed_presentations,
+        index=account.allowed_presentations.index(presentation_id),
+        format_func=format_presentation, key="support_presentation_id",
+    )
+    st.markdown('<div class="eyebrow">Course digital twin · instructor pilot</div>', unsafe_allow_html=True)
+    st.title("Student-support workspace")
+    st.caption("Identify learners who may need support, inspect the evidence, and record a human decision.")
+    render_support_workspace(support_client, presentation_id, st.session_state.get("dashboard_page", "Overview"))
 
 
 run_current_workspace()
