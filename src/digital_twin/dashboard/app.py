@@ -23,6 +23,7 @@ from digital_twin.dashboard.auth import (  # noqa: E402
     InstructorAccount,
     authenticate,
     load_accounts,
+    development_account_from_env,
 )
 from digital_twin.dashboard.client import DashboardApiClient, DashboardApiError  # noqa: E402
 from digital_twin.dashboard.view_model import (  # noqa: E402
@@ -1145,12 +1146,24 @@ def run_current_workspace():
     from digital_twin.dashboard.workspace_ui import render_workspace
     st.set_page_config(page_title="Course digital twin", page_icon="◉", layout="wide", initial_sidebar_state="auto")
     auth_file = os.environ.get("DIGITAL_TWIN_AUTH_FILE")
-    if not auth_file:
-        st.error("Instructor login is required. Configure DIGITAL_TWIN_AUTH_FILE before opening the workspace.")
-        st.stop()
-    account = require_pilot_login(auth_file)
+    development_mode = False
+    if auth_file:
+        account = require_pilot_login(auth_file)
+    else:
+        try:
+            account = development_account_from_env()
+        except AccountConfigurationError as error:
+            st.error(str(error))
+            st.stop()
+        development_mode = account is not None
+        if account is None:
+            st.error("Instructor login is required. Configure DIGITAL_TWIN_AUTH_FILE before opening the workspace.")
+            st.stop()
     if account is None:
         st.stop()
+    if development_mode:
+        st.sidebar.caption("Development authentication")
+        st.sidebar.caption(f"Identity: {account.reviewer_id}")
     client = WorkspaceClient(base_url=os.environ.get("DIGITAL_TWIN_API_URL", "http://127.0.0.1:8000"),
                              instructor_id=account.reviewer_id, instructor_role=account.role)
     mode = st.sidebar.radio(

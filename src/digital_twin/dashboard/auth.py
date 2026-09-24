@@ -12,11 +12,13 @@ import hashlib
 import json
 import re
 import secrets
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
 USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9._-]{3,64}$")
 ALLOWED_ROLES = {"instructor", "supervisor"}
+DEVELOPMENT_IDENTITY_PATTERN = re.compile(r"^(instructor|supervisor):[A-Za-z0-9._-]{1,96}$")
 SCRYPT_N = 2**14
 SCRYPT_R = 8
 SCRYPT_P = 1
@@ -36,6 +38,30 @@ class InstructorAccount:
     allowed_presentations: tuple[str, ...]
     salt: bytes
     password_hash: bytes
+
+
+def development_account_from_env() -> InstructorAccount | None:
+    """Build an explicit, local-only dashboard identity when enabled."""
+    if os.environ.get("DIGITAL_TWIN_DEVELOPMENT_AUTH") != "1":
+        return None
+    identity = os.environ.get("DIGITAL_TWIN_DASHBOARD_ID", "").strip()
+    role = os.environ.get("DIGITAL_TWIN_DASHBOARD_ROLE", "").strip().lower()
+    presentation = os.environ.get("DIGITAL_TWIN_PRESENTATION_ID", "").strip()
+    if role not in ALLOWED_ROLES or not DEVELOPMENT_IDENTITY_PATTERN.fullmatch(identity):
+        raise AccountConfigurationError("Development dashboard identity or role is invalid.")
+    if not identity.startswith(f"{role}:"):
+        raise AccountConfigurationError("Development dashboard identity does not match its role.")
+    if not presentation:
+        raise AccountConfigurationError("Development dashboard presentation is not configured.")
+    return InstructorAccount(
+        username="development",
+        display_name="Development authentication",
+        role=role,
+        reviewer_id=identity,
+        allowed_presentations=(presentation,),
+        salt=b"",
+        password_hash=b"",
+    )
 
 
 def normalize_username(username: str) -> str:
