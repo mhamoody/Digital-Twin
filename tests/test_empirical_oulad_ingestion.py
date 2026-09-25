@@ -2,6 +2,9 @@ import json
 from pathlib import Path
 
 import pytest
+from datetime import UTC, datetime
+from digital_twin.schemas import DataOrigin
+from digital_twin.state import build_weekly_states
 
 from scripts.ingest_oulad_empirical import validate_prepared
 
@@ -39,3 +42,31 @@ def test_empirical_path_isolated_from_replay_and_research_models():
     assert "DataOrigin.EMPIRICAL" in text
     assert "prediction_state_id" not in text  # predictor contract binds state_id directly
     assert 'CHECKPOINTS = (3, 5, 8, 10)' in text
+
+
+def test_weekly_builder_excludes_future_observation_at_checkpoint():
+    enrolments = [{"presentation_id":"oulad:AAA:2013J", "learner_id":"oulad:1",
+                   "registration_day":"0", "registration_missing_reason":"observed",
+                   "unregistration_day":"", "unregistration_missing_reason":"not_applicable",
+                   "previous_attempts":"0", "studied_credits":"60", "source_record_id":"enrolment:1"}]
+    activities = [{"learner_id":"oulad:1", "course_day":"5", "click_count":"2",
+                   "activity_group":"content", "source_record_id":"obs-before"},
+                  {"learner_id":"oulad:1", "course_day":"30", "click_count":"99",
+                   "activity_group":"content", "source_record_id":"obs-after"}]
+    states = build_weekly_states(enrolments=enrolments, activities=activities,
+        assessments=[], assessment_observations=[], checkpoints=(3, 5),
+        built_at=datetime.now(UTC), data_origin=DataOrigin.EMPIRICAL,
+        feature_set_version="oulad-demo-features-v1", is_fresh=True)
+    early, late = states
+    early_clicks = next(f.value for f in early.features if f.name == "clicks_cumulative")
+    late_clicks = next(f.value for f in late.features if f.name == "clicks_cumulative")
+    assert early_clicks == 2
+    assert late_clicks == 101
+
+
+def test_prediction_contract_binds_state_and_support_is_separate():
+    source = Path(__file__).parents[1] / "scripts" / "ingest_oulad_empirical.py"
+    text = source.read_text(encoding="utf-8")
+    assert "predictions=[predict_demo_risk(s,now) for s in states]" in text
+    assert "create_demo_alert" in text
+    assert "SupportCase" not in text and "SupportAction" not in text
