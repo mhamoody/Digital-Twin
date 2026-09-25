@@ -21,7 +21,7 @@ def test_manifest_validation_accepts_verified_empirical_fixture(tmp_path: Path):
 
 def test_manifest_validation_rejects_replay_or_mismatch(tmp_path: Path):
     (tmp_path / "manifest.json").write_text(json.dumps({"module": "AAA", "presentation": "2013J", "presentation_id": "moodle-replay:AAA:2030A", "data_origin": "replayed", "outputs": {}}))
-    with pytest.raises(ValueError, match="invalid presentation or origin"):
+    with pytest.raises(ValueError, match="invalid presentation identity"):
         validate_prepared(tmp_path)
 
 
@@ -29,3 +29,13 @@ def test_manifest_validation_rejects_missing_artifact(tmp_path: Path):
     (tmp_path / "manifest.json").write_text(json.dumps({"module": "AAA", "presentation": "2013J", "presentation_id": "oulad:AAA:2013J", "data_origin": "empirical", "outputs": {}}))
     with pytest.raises(ValueError, match="missing prepared artifact"):
         validate_prepared(tmp_path)
+
+
+def test_empirical_path_isolated_from_replay_and_research_models():
+    source = Path(__file__).parents[1] / "scripts" / "ingest_oulad_empirical.py"
+    text = source.read_text(encoding="utf-8")
+    assert "moodle-replay" not in text
+    assert "qwen" not in text.lower()
+    assert "DataOrigin.EMPIRICAL" in text
+    assert "prediction_state_id" not in text  # predictor contract binds state_id directly
+    assert 'CHECKPOINTS = (3, 5, 8, 10)' in text

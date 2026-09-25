@@ -22,9 +22,12 @@ def validate_prepared(directory: Path) -> dict:
     manifest_path = directory / "manifest.json"
     if not manifest_path.is_file(): raise ValueError("manifest.json is required")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if manifest.get("module") != "AAA" or manifest.get("presentation") != "2013J":
-        raise ValueError("prepared dataset must be AAA/2013J")
-    if manifest.get("presentation_id") != "oulad:AAA:2013J" or manifest.get("data_origin") != "empirical":
+    module = manifest.get("module")
+    presentation = manifest.get("presentation")
+    expected_id = f"oulad:{module}:{presentation}"
+    if not module or not presentation or manifest.get("presentation_id") != expected_id:
+        raise ValueError("prepared dataset has invalid presentation identity")
+    if manifest.get("data_origin") != "empirical":
         raise ValueError("prepared dataset has invalid presentation or origin")
     for name, info in manifest.get("outputs", {}).items():
         path = directory / name
@@ -43,6 +46,10 @@ def ingest(database_url: str, prepared_dir: Path) -> dict:
     now = datetime.now(UTC)
     engine = create_twin_engine(database_url)
     presentation = next(rows(prepared_dir / "course_presentations.csv"))
+    if presentation["presentation_id"] != manifest["presentation_id"]:
+        raise ValueError("course presentation does not match manifest")
+    if presentation["module_code"] != manifest["module"] or presentation["presentation_code"] != manifest["presentation"]:
+        raise ValueError("course presentation codes do not match manifest")
     enrolments = list(rows(prepared_dir / "enrolments.csv"))
     source_id = manifest["source_id"]
     observations = []
