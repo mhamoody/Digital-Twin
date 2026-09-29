@@ -247,7 +247,12 @@ def _output(result: dict[str, Any] | None) -> dict[str, Any]:
 
 
 def _course_name(course: dict[str, Any]) -> str:
-    return course.get("title") or course["presentation_id"]
+    name = course.get("title") or course["presentation_id"]
+    if course.get("data_origin") == "synthetic":
+        updated = course["presentation_id"].endswith(":v2")
+        version = "updated demo v2" if updated else "original demo"
+        return f"{name} · {version}"
+    return name
 
 
 def render_workspace(client: WorkspaceClient, account: Any) -> None:
