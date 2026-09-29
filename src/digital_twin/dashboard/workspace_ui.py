@@ -17,7 +17,10 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from digital_twin.workspace.contracts import CoursePolicy
 from digital_twin.workspace.errors import describe_failure
+from digital_twin.workspace.features import assessment_category
+from digital_twin.workspace.policy import LEARNING_MODE_LABELS, preset_policy
 from digital_twin.workspace.tracing import safe_attempts
 
 from .client import DashboardApiError
@@ -60,7 +63,7 @@ ACTION_LABELS = {
 
 WORKSPACE_CSS = """
 <style>
- .block-container {max-width:1440px;padding-top:1.8rem;padding-bottom:3rem;}
+ .block-container {max-width:1440px;padding-top:4rem;padding-bottom:3rem;}
  h1,h2,h3,h4,p,li,label {overflow-wrap:anywhere;}
  [data-testid="stMarkdownContainer"] {min-width:0;}
  .dt-kicker {font-size:.78rem;font-weight:700;letter-spacing:.06em;
@@ -83,7 +86,7 @@ WORKSPACE_CSS = """
  [data-testid="stButton"] p {white-space:normal;}
  :focus-visible {outline:3px solid #a85a2d!important;outline-offset:3px;}
  @media(max-width:850px) {
-   .block-container {padding:1.2rem .9rem 2rem;}
+   .block-container {padding:4rem .9rem 2rem;}
    [data-testid="stHorizontalBlock"] {flex-wrap:wrap!important;gap:1rem!important;}
    [data-testid="stHorizontalBlock"]>[data-testid="stColumn"] {
      width:100%!important;flex:1 1 100%!important;min-width:0!important;}
@@ -105,7 +108,7 @@ def label(value: Any) -> str:
 def model_label(version: str | None) -> str:
     if not version:
         return "No model result"
-    if version in {"rules-baseline-v2", "simple-rules-v1"}:
+    if version in {"rules-baseline-v3", "rules-baseline-v2", "simple-rules-v1"}:
         return f"Temporary rules baseline · {version}"
     return f"Risk model · {version}"
 
@@ -351,7 +354,9 @@ def render_overview(
         for item in workspace.get("items", [])
         if item.get("risk_score") is not None and item.get("model_version")
     }
-    if versions and versions.issubset({"rules-baseline-v2", "simple-rules-v1"}):
+    if versions and versions.issubset(
+        {"rules-baseline-v3", "rules-baseline-v2", "simple-rules-v1"}
+    ):
         st.warning(
             "The visible results use the temporary rules baseline. "
             "Run Qwen analysis to inspect the LLM's contribution. "
@@ -930,6 +935,7 @@ def render_profile(
         return
     st.subheader(detail.get("display_name") or learner_id)
     st.caption(f"Learner ID: {learner_id} · selected checkpoint: week {week}")
+    st.caption(course_expectations(policy))
     snapshot = detail.get("snapshot") or {}
     analysis = detail.get("analysis") or {}
     previous = detail.get("previous_analysis") or {}
@@ -1167,8 +1173,116 @@ def render_claims(output: dict[str, Any], snapshot: dict[str, Any]) -> None:
         )
 
 
+def academic_grade_rows(detail: dict[str, Any]) -> list[dict[str, Any]]:
+    """Keep practice and unknown classifications visible without calling them graded work."""
+    cutoff = (detail.get("snapshot") or {}).get("cutoff_day")
+    definitions = {
+        row["assessment_id"]: row for row in detail.get("assessments", []) if "assessment_id" in row
+    }
+    categories = {
+        "assessed": "Assessed work",
+        "practice": "Practice / formative",
+        "unclassified": "Unclassified",
+    }
+    rows = []
+    for event in detail.get("events", []):
+        if event.get("event_type") != "assessment_grade":
+            continue
+        if cutoff is not None and (
+            event.get("available_day", cutoff + 1) > cutoff
+            or event.get("course_day", cutoff + 1) > cutoff
+        ):
+            continue
+        payload = event.get("payload", {})
+        score, maximum = payload.get("score"), payload.get("max_score")
+        if score is None or not maximum or float(maximum) <= 0:
+            continue
+        assessment_id = payload.get("assessment_id", "Assessment")
+        definition = definitions.get(assessment_id, {})
+        available = definition.get("available_day")
+        if (
+            not isinstance(available, int)
+            or isinstance(available, bool)
+            or (cutoff is not None and available > cutoff)
+        ):
+            definition = {}
+        rows.append(
+            {
+                "Published course day": event.get("available_day", event.get("course_day")),
+                "Grade (%)": 100 * float(score) / float(maximum),
+                "Assessment": assessment_id,
+                "Evidence type": categories[assessment_category(definition)],
+            }
+        )
+    return rows
+
+
+def render_resource_progress(snapshot: dict[str, Any]) -> None:
+    features = snapshot.get("features", {})
+    if not any("resource" in name or name == "completion_percent" for name in features):
+        return
+    st.markdown("#### Required learning resources")
+    verified = (
+        snapshot.get("feature_version") == "rich-features-v3"
+        and snapshot.get("course_context", {}).get("evidence_semantics", {}).get("completion_basis")
+        == "required_resources_due_by_checkpoint"
+    )
+    if not verified:
+        st.info(
+            "Historical completion data does not distinguish required, optional and not-yet-due "
+            "resources. It is not used as required-work evidence by the current predictor."
+        )
+        return
+    expected, completed = (
+        features.get("resources_expected", {}),
+        features.get("resources_completed", {}),
+    )
+    if expected.get("status") in {"observed", "structural_zero"} and completed.get("status") in {
+        "observed",
+        "structural_zero",
+    }:
+        if expected.get("value") == 0:
+            st.info("No required learning resources are due yet. Completion is not a concern.")
+        else:
+            st.write(
+                f"**{completed['value']} of {expected['value']} required resources completed** "
+                "· due by this checkpoint"
+            )
+    else:
+        st.info(
+            "Required-resource completion is unavailable: expectations or completion evidence "
+            "are incomplete. Unknown does not mean the student failed to complete the work."
+        )
+    _frame(
+        [
+            {
+                "Resource context": title,
+                "Value": fact_value(features[key]),
+                "Availability": label(features[key].get("status")),
+            }
+            for key, title in (
+                ("completion_percent", "Required resources due so far · completed (%)"),
+                ("optional_resources_available", "Optional resources · excluded from requirement"),
+                ("required_resources_not_due", "Required resources · not yet due"),
+                (
+                    "resources_expectation_unknown",
+                    "Resources with unknown expectation / release metadata",
+                ),
+            )
+            if key in features
+        ]
+    )
+    st.caption("Optional and future-due resources do not lower required completion.")
+
+
 def render_academic_progress(detail: dict[str, Any]) -> None:
-    features = (detail.get("snapshot") or {}).get("features", {})
+    snapshot = detail.get("snapshot") or {}
+    features = snapshot.get("features", {})
+    verified_grades = (
+        snapshot.get("feature_version") == "rich-features-v3"
+        and snapshot.get("course_context", {}).get("evidence_semantics", {}).get("grade_basis")
+        == "graded_assessments_only"
+    )
     academic = [
         {
             "Academic evidence": label(name),
@@ -1177,7 +1291,8 @@ def render_academic_progress(detail: dict[str, Any]) -> None:
             "Window": fact.get("window", ""),
         }
         for name, fact in features.items()
-        if any(
+        if not name.startswith("practice_")
+        and any(
             word in name.lower()
             for word in (
                 "grade",
@@ -1213,21 +1328,13 @@ def render_academic_progress(detail: dict[str, Any]) -> None:
         )
     ]
     events = detail.get("events", [])
-    grade_rows = []
-    for event in events:
-        if event.get("event_type") != "assessment_grade":
-            continue
-        payload = event.get("payload", {})
-        score, maximum = payload.get("score"), payload.get("max_score")
-        if score is not None and maximum and float(maximum) > 0:
-            grade_rows.append(
-                {
-                    "Published course day": event.get("available_day", event.get("course_day")),
-                    "Grade (%)": 100 * float(score) / float(maximum),
-                    "Assessment": payload.get("assessment_id", "Assessment"),
-                }
-            )
+    grade_rows = academic_grade_rows(detail)
     st.markdown("#### Grades and assessment progress")
+    if snapshot.get("feature_version") == "rich-features-v2":
+        st.info(
+            "Historical grade summaries may mix assessed and practice work. The current predictor "
+            "excludes those ambiguous latest-grade and trend fields; saved results stay unchanged."
+        )
     if grade_rows:
         grade_chart = (
             alt.Chart(pd.DataFrame(grade_rows))
@@ -1241,10 +1348,20 @@ def render_academic_progress(detail: dict[str, Any]) -> None:
                 y=alt.Y(
                     "Grade (%):Q",
                     scale=alt.Scale(domain=[0, 100], nice=False),
-                    title="Assessment grade (%)",
+                    title="Grade (%)",
                 ),
+                color=alt.Color(
+                    "Evidence type:N",
+                    scale=alt.Scale(
+                        domain=["Assessed work", "Practice / formative", "Unclassified"],
+                        range=["#267769", "#b57b29", "#797f89"],
+                    ),
+                    legend=alt.Legend(orient="bottom"),
+                ),
+                shape=alt.Shape("Evidence type:N", legend=None),
                 tooltip=[
                     "Assessment:N",
+                    "Evidence type:N",
                     "Published course day:Q",
                     alt.Tooltip("Grade (%):Q", format=".1f"),
                 ],
@@ -1253,13 +1370,32 @@ def render_academic_progress(detail: dict[str, Any]) -> None:
         )
         st.altair_chart(grade_chart, use_container_width=True)
         st.caption(
-            "Each dot is a published assessment grade. The grade scale is a percentage "
-            "of available marks; it is separate from the risk-score scale."
+            "Each dot is a published grade, categorized only from definitions available at this "
+            "checkpoint. Practice and unclassified work are not assessed-grade concerns. "
+            "All dots use the same 0–100% marks scale, not the risk-score scale."
+        )
+    if verified_grades:
+        st.caption(
+            "Assessed-grade summaries include positive-weight, non-practice assessments only."
         )
     if academic:
         _frame(academic)
     else:
         st.info("This source has not supplied academic features at this checkpoint.")
+    practice = [
+        {
+            "Practice evidence": label(name.removeprefix("practice_")),
+            "Value": fact_value(fact),
+            "Availability": label(fact.get("status")),
+        }
+        for name, fact in features.items()
+        if name.startswith("practice_")
+    ]
+    if practice:
+        st.markdown("#### Practice and formative work")
+        st.caption("Useful learning context, kept separate from assessed-grade risk evidence.")
+        _frame(practice)
+    render_resource_progress(snapshot)
     st.markdown("#### Engagement and attendance")
     if activity:
         _frame(activity)
@@ -1614,24 +1750,90 @@ def parse_break_ranges(text: str) -> list[tuple[int, int]]:
     return ranges
 
 
+def course_expectations(policy: dict[str, Any]) -> str:
+    """Describe saved settings without claiming that an older result used them."""
+    mode = LEARNING_MODE_LABELS.get(policy.get("learning_mode", "custom"), "Custom expectations")
+    prefix = f"Active course expectations · {mode} · policy {policy.get('version', 1)}. "
+    if policy.get("inactivity_monitoring_enabled", True) is False:
+        return (
+            prefix
+            + "Login inactivity is excluded from risk assessment; academic evidence still applies."
+        )
+    basis = "teaching days" if policy.get("day_basis") == "teaching" else "calendar days"
+    return (
+        prefix + f"Inactivity warning: {policy.get('inactivity_warning_days', 7)} {basis}; "
+        f"escalation: {policy.get('inactivity_high_days', 14)} {basis}."
+    )
+
+
 def render_settings(client: WorkspaceClient, course_id: str, policy: dict[str, Any]) -> None:
     st.subheader("Course settings")
     st.write(
-        "Set the amount of inactivity that is concerning in this course. A fortnightly "
-        "course can use longer thresholds than a course expecting daily participation."
+        "Choose expectations that match how you teach. Start with a preset, adjust it, "
+        "then save. A course taught mainly offline need not treat quiet LMS days as risk."
     )
+    st.info(course_expectations(policy))
     st.caption(
         f"Current policy revision: {policy.get('version', 1)}. Historical predictions "
         "retain their original policy. Changed settings require a new analysis."
     )
-    with st.form(f"workspace_policy_{course_id}_{policy.get('version', 1)}"):
+    current = CoursePolicy.model_validate(policy)
+    prefix = f"workspace_policy_{course_id}_{current.version}"
+    field_defaults = {
+        "inactivity_warning_days": current.inactivity_warning_days,
+        "inactivity_high_days": current.inactivity_high_days,
+        "inactivity_monitoring_enabled": current.inactivity_monitoring_enabled,
+        "learning_mode": current.learning_mode,
+    }
+    for field, value in field_defaults.items():
+        st.session_state.setdefault(f"{prefix}_{field}", value)
+    chosen_preset = st.selectbox(
+        "Teaching-style starting point",
+        list(LEARNING_MODE_LABELS),
+        index=list(LEARNING_MODE_LABELS).index(current.learning_mode),
+        format_func=LEARNING_MODE_LABELS.get,
+        key=f"{prefix}_preset",
+    )
+    if st.button("Use preset as starting point", key=f"{prefix}_apply"):
+        # Update widgets before rendering them; this is a draft, never an API write.
+        try:
+            draft = preset_policy(
+                chosen_preset,
+                current.model_copy(
+                    update={
+                        field: st.session_state[f"{prefix}_{field}"] for field in field_defaults
+                    }
+                ),
+            )
+        except ValueError:
+            st.error("Correct the inactivity thresholds before using this starting point.")
+        else:
+            for field in field_defaults:
+                st.session_state[f"{prefix}_{field}"] = getattr(draft, field)
+            st.info("Preset copied into the form. Review the values and save to apply them.")
+    st.caption(
+        "Starting points: regular online 3/7 days; weekly 7/14; fortnightly 14/28. "
+        "Milestone-based and mainly offline turn inactivity monitoring off. "
+        "These are editable examples, not validated cutoffs for your course."
+    )
+    with st.form(prefix):
+        monitor = st.checkbox(
+            "Use login inactivity in risk assessment",
+            key=f"{prefix}_inactivity_monitoring_enabled",
+            help="Turn off when logins are not expected. Other academic evidence "
+            "and data-quality checks remain active.",
+        )
+        st.caption(
+            "When unchecked, the inactivity thresholds below are retained but not used. "
+            "Few logins are not treated as concern; frequent logins are not treated as protection."
+        )
         left, right = st.columns(2)
         with left:
             warning = st.number_input(
                 "Inactivity warning after",
                 min_value=1,
                 max_value=120,
-                value=int(policy.get("inactivity_warning_days", 7)),
+                key=f"{prefix}_inactivity_warning_days",
                 step=1,
                 help="Number of eligible days since last observed activity.",
             )
@@ -1640,7 +1842,7 @@ def render_settings(client: WorkspaceClient, course_id: str, policy: dict[str, A
                 "Escalated inactivity after",
                 min_value=2,
                 max_value=180,
-                value=int(policy.get("inactivity_high_days", 14)),
+                key=f"{prefix}_inactivity_high_days",
                 step=1,
             )
         basis = st.radio(
@@ -1691,6 +1893,8 @@ def render_settings(client: WorkspaceClient, course_id: str, policy: dict[str, A
                 raise ValueError("Select at least one teaching weekday.")
             payload = {
                 "version": policy.get("version", 1),
+                "learning_mode": st.session_state[f"{prefix}_learning_mode"],
+                "inactivity_monitoring_enabled": monitor,
                 "inactivity_warning_days": int(warning),
                 "inactivity_high_days": int(high),
                 "day_basis": basis,
@@ -1699,6 +1903,19 @@ def render_settings(client: WorkspaceClient, course_id: str, policy: dict[str, A
                 "require_academic_corroboration": corroborate,
                 "low_grade_percent": float(grade),
             }
+            # A preset is only a starting point; the saved numbers are authoritative.
+            selected_mode = payload["learning_mode"]
+            expected = preset_policy(selected_mode, current)
+            if selected_mode != "custom" and any(
+                payload[field] != getattr(expected, field)
+                for field in (
+                    "inactivity_monitoring_enabled",
+                    "inactivity_warning_days",
+                    "inactivity_high_days",
+                )
+            ):
+                payload["learning_mode"] = "custom"
+            payload = CoursePolicy.model_validate(payload).model_dump(mode="json")
             client.save_policy(course_id, payload)
         except (DashboardApiError, ValueError) as error:
             _show_error(error)

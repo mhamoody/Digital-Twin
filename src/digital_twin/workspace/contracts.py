@@ -23,6 +23,10 @@ class Contract(BaseModel):
 
 class CoursePolicy(Contract):
     version: int = Field(default=1, ge=1)
+    learning_mode: Literal[
+        "custom", "regular_online", "weekly", "fortnightly", "milestone", "mainly_offline"
+    ] = "custom"
+    inactivity_monitoring_enabled: bool = Field(default=True, strict=True)
     inactivity_warning_days: int = Field(default=7, ge=1, le=120)
     inactivity_high_days: int = Field(default=14, ge=2, le=180)
     day_basis: Literal["calendar", "teaching"] = "calendar"

@@ -31,7 +31,7 @@ from .output_contract import (
     safe_validation_details,
 )
 
-PROMPT_VERSION = "course-risk-qwen-v3.2"
+PROMPT_VERSION = "course-risk-qwen-v3.3"
 APPROVED_MODELS = {"qwen2.5:7b"}
 ABSTENTION_REASONS = {
     "STALE_STATE",
@@ -65,6 +65,9 @@ RECHECK_SYSTEM = (
     "Do not force a lower score or add a concern merely to pass. "
     "If you select no concern, the only supported scored action is no_action and only at low risk. "
     "No_action cannot accompany other actions. Claims/actions must be distinct. "
+    "When inactivity_monitoring_enabled is false, do not infer concern or reassurance from "
+    "login activity. Practice results and unverified resource expectations are not core "
+    "academic evidence; do not infer them from missing fields. "
     "Do not contact students, use outside knowledge, invent citations, or add output fields."
 )
 
@@ -146,6 +149,63 @@ SIGNED_FEATURES = {
     "last_activity_day",
     "forum_sentiment",
 }
+
+# These activity proxies must not quietly influence a judgment when the instructor
+# says LMS participation is not expected. Required work/attendance remain separate
+# academic evidence, not login expectations.
+LOG_ACTIVITY_FEATURES = {
+    "days_since_last_activity",
+    "days_since_last_activity_calendar",
+    "last_activity_day",
+    "clicks_last_7",
+    "clicks_last_14",
+    "clicks_cumulative",
+    "active_days_last_7",
+    "active_days_last_14",
+    "activity_change_last_7",
+    "resource_views_last_7",
+    "learning_minutes_last_7",
+    "study_minutes_last_7",
+    "forum_posts_last_7",
+    "forum_posts_last_14",
+}
+PRACTICE_MIXED_FEATURES = {"quiz_attempts", "quiz_average", "quiz_average_percent"}
+GRADE_SEMANTIC_FEATURES = {
+    "latest_grade_percent",
+    "grade_change_points",
+    "grade_trend",
+    "grade_change",
+    "grades_available",
+    "graded_assessments",
+    "pending_grade_count",
+}
+COMPLETION_SEMANTIC_FEATURES = {
+    "completion_percent",
+    "completion_rate",
+    "resources_expected",
+    "resources_completed",
+}
+
+
+def _excluded_features(snapshot: LearnerSnapshot, policy: CoursePolicy) -> set[str]:
+    """Do not reinterpret archived rich-v2 facts as the new academic definitions.
+
+    The OULAD legacy adapter has its own feature version and unchanged definitions.
+    A v3 marker is trusted only together with the v3 producer version; arbitrary
+    source prose cannot promote v2 practice/mixed facts into assessment evidence.
+    """
+    excluded = set(PRACTICE_MIXED_FEATURES)
+    if not policy.inactivity_monitoring_enabled:
+        excluded.update(LOG_ACTIVITY_FEATURES)
+    if snapshot.feature_version.startswith("rich-features-"):
+        semantics = snapshot.course_context.get("evidence_semantics")
+        semantics = semantics if isinstance(semantics, dict) else {}
+        v3 = snapshot.feature_version == "rich-features-v3"
+        if not v3 or semantics.get("grade_basis") != "graded_assessments_only":
+            excluded.update(GRADE_SEMANTIC_FEATURES)
+        if not v3 or semantics.get("completion_basis") != "required_resources_due_by_checkpoint":
+            excluded.update(COMPLETION_SEMANTIC_FEATURES)
+    return excluded
 
 
 class ModelRuntimeError(RuntimeError):
@@ -397,9 +457,12 @@ def _number(snapshot: LearnerSnapshot, *names: str) -> tuple[float, str] | None:
     return None
 
 
-def _safe_features(snapshot: LearnerSnapshot) -> tuple[dict, dict[str, str]]:
+def _safe_features(
+    snapshot: LearnerSnapshot, policy: CoursePolicy | None = None
+) -> tuple[dict, dict[str, str]]:
     safe = {}
     alias_to_id = {}
+    excluded = _excluded_features(snapshot, policy or CoursePolicy())
     for name in sorted(NUMERIC_FEATURES & snapshot.features.keys()):
         fact = snapshot.features[name]
         if fact.value is not None and (
@@ -420,6 +483,8 @@ def _safe_features(snapshot: LearnerSnapshot) -> tuple[dict, dict[str, str]]:
                 raise ModelRuntimeError("MODEL_INPUT_INVALID")
             if name == "active_days_last_14" and value > 14:
                 raise ModelRuntimeError("MODEL_INPUT_INVALID")
+        if name in excluded:
+            continue
         alias = f"E{len(alias_to_id) + 1:03d}"
         alias_to_id[alias] = fact.evidence_id
         safe[name] = {
@@ -469,10 +534,24 @@ def _context(snapshot: LearnerSnapshot) -> dict:
         if numbers.get("available_day", 0) <= snapshot.cutoff_day:
             upcoming.append(numbers)
     result["upcoming_assessments"] = upcoming
+    # Only fixed producer semantics enter the prompt, never free source descriptions.
+    if snapshot.feature_version == "rich-features-v3":
+        semantics = snapshot.course_context.get("evidence_semantics")
+        if isinstance(semantics, dict):
+            result["evidence_semantics"] = {
+                key: expected
+                for key, expected in (
+                    ("grade_basis", "graded_assessments_only"),
+                    ("completion_basis", "required_resources_due_by_checkpoint"),
+                )
+                if semantics.get(key) == expected
+            }
     return result
 
 
 def _inactivity(snapshot: LearnerSnapshot, policy: CoursePolicy) -> tuple[float, str] | None:
+    if not policy.inactivity_monitoring_enabled:
+        return None
     if policy.day_basis == "calendar":
         return _number(snapshot, "days_since_last_activity_calendar", "days_since_last_activity")
     last = _number(snapshot, "last_activity_day")
@@ -510,25 +589,34 @@ CLAIM_MEANINGS = {
     "INACTIVITY_GAP": "Inactivity reaches this course's warning threshold under its day basis.",
     "MISSED_ASSESSMENT": "At least one assessment already due is missing.",
     "LOW_GRADE": "Observed aggregate grade is below the course low-grade threshold.",
-    "LOW_LATEST_GRADE": "Latest published grade is below the course low-grade threshold.",
-    "DECLINING_GRADES": "Observed grade change is at most minus 10 percentage points.",
+    "LOW_LATEST_GRADE": (
+        "Latest published graded-assessment result is below the course low-grade threshold."
+    ),
+    "DECLINING_GRADES": "Observed graded-assessment change is at most minus 10 percentage points.",
     "LATE_SUBMISSIONS": "At least one submission was late.",
-    "LOW_COMPLETION": "Completion is below 50 percent when resources were expected.",
+    "LOW_COMPLETION": (
+        "Fewer than 50 percent of required resources due by this checkpoint are completed."
+    ),
     "LOW_ATTENDANCE": "Observed attendance is below 50 percent.",
     "RECENT_ACTIVITY": "Some activity was observed; this does not establish academic success.",
     "ASSESSMENTS_ON_TRACK": "Assessments were due and none are recorded missing.",
     "GRADE_ON_TRACK": "Aggregate grade meets the course low-grade threshold.",
-    "IMPROVING_GRADES": "Observed grade change is at least plus 10 percentage points.",
+    "IMPROVING_GRADES": "Observed graded-assessment change is at least plus 10 percentage points.",
 }
 
 
 def eligible_claims(snapshot: LearnerSnapshot, policy: CoursePolicy) -> dict[str, list[str]]:
     """Each eligible code is proven by the cited typed feature and course policy."""
     claims = {}
+    excluded = _excluded_features(snapshot, policy)
+
+    def number(*names):
+        return _number(snapshot, *(name for name in names if name not in excluded))
+
     inactive = _inactivity(snapshot, policy)
     if inactive and inactive[0] >= policy.inactivity_warning_days:
         claims["INACTIVITY_GAP"] = [inactive[1]]
-    active = _number(snapshot, "active_days_last_7", "active_days_last_14", "clicks_last_7")
+    active = number("active_days_last_7", "active_days_last_14", "clicks_last_7")
     if active and active[0] > 0:
         claims["RECENT_ACTIVITY"] = [active[1]]
     missed = _number(snapshot, "assessments_missed", "overdue_assessments", "missed_assessments")
@@ -549,10 +637,10 @@ def eligible_claims(snapshot: LearnerSnapshot, policy: CoursePolicy) -> dict[str
         claims["LOW_GRADE" if grade[0] < policy.low_grade_percent else "GRADE_ON_TRACK"] = [
             grade[1]
         ]
-    latest = _number(snapshot, "latest_grade_percent")
+    latest = number("latest_grade_percent")
     if latest and latest[0] < policy.low_grade_percent:
         claims["LOW_LATEST_GRADE"] = [latest[1]]
-    trend = _number(snapshot, "grade_change_points", "grade_trend", "grade_change")
+    trend = number("grade_change_points", "grade_trend", "grade_change")
     if trend and trend[0] <= -10:
         claims["DECLINING_GRADES"] = [trend[1]]
     elif trend and trend[0] >= 10:
@@ -566,8 +654,8 @@ def eligible_claims(snapshot: LearnerSnapshot, policy: CoursePolicy) -> dict[str
     attendance_percent = _number(snapshot, "attendance_rate_percent")
     if attendance_percent and attendance_percent[0] < 50:
         claims["LOW_ATTENDANCE"] = [attendance_percent[1]]
-    completed = _number(snapshot, "completion_percent")
-    expected = _number(snapshot, "resources_expected")
+    completed = number("completion_percent")
+    expected = number("resources_expected")
     if completed and expected and expected[0] > 0 and completed[0] < 50:
         claims["LOW_COMPLETION"] = [completed[1], expected[1]]
     return claims
@@ -722,7 +810,7 @@ def parse_output(
 
 
 def build_prompt(snapshot: LearnerSnapshot, policy: CoursePolicy) -> tuple[str, str, dict, dict]:
-    features, aliases = _safe_features(snapshot)
+    features, aliases = _safe_features(snapshot, policy)
     reverse = {value: key for key, value in aliases.items()}
     eligible = eligible_claims(snapshot, policy)
     permitted = [
@@ -749,6 +837,9 @@ def build_prompt(snapshot: LearnerSnapshot, policy: CoursePolicy) -> tuple[str, 
             if key in snapshot.coverage
         },
         "features": features,
+        "excluded_feature_names": sorted(
+            _excluded_features(snapshot, policy) & snapshot.features.keys()
+        ),
         "permitted_claims": permitted,
         "claim_semantics": {
             code: {
@@ -797,9 +888,16 @@ def build_prompt(snapshot: LearnerSnapshot, policy: CoursePolicy) -> tuple[str, 
         "A score >=.35 requires a concern claim. When require_academic_corroboration is true, high "
         "requires an academic concern claim as well. INACTIVITY_GAP follows the instructor's "
         "warning threshold and day_basis, not a universal seven-day rule. "
+        "When inactivity_monitoring_enabled is false, login frequency and time online "
+        "are excluded from risk assessment in either direction; use the remaining academic "
+        "evidence, not assumptions about offline study. Learning mode is a schedule setting, "
+        "not evidence that this learner is doing well or poorly. "
         "If academic corroboration is disabled, high risk based only on INACTIVITY_GAP still "
         "requires inactivity_under_current_policy.days >= inactivity_high_days. "
         "Unknown/not-applicable features are not zero or failures. "
+        "Excluded features have no bearing on this assessment. Practice scores are not "
+        "graded-assessment results. Completion concerns require known required resources "
+        "whose deadlines have passed, not all released or optional resources. "
         "For insufficient or conflicting evidence you cannot responsibly score, return "
         '{"decision":"abstain","reason":"INSUFFICIENT_CONFIDENCE"} or use reason '
         "CONFLICTING_EVIDENCE. An abstention has no score, claims or actions fields. "
@@ -941,7 +1039,7 @@ def _metadata(
     return {
         "output": output.model_dump(mode="json"),
         "model_version": model_version,
-        "prompt_version": PROMPT_VERSION if model_version != "rules-baseline-v2" else None,
+        "prompt_version": None if model_version.startswith("rules-baseline-") else PROMPT_VERSION,
         "model_digest": model_digest,
         "input_hash": input_hash
         or digest(
@@ -975,7 +1073,7 @@ def analyze(
     snapshot: LearnerSnapshot, policy: CoursePolicy, client: OllamaClient | None = None
 ) -> dict:
     started = time.perf_counter()
-    _safe_features(snapshot)
+    _safe_features(snapshot, policy)
     runtime_client = client or OllamaClient()
     reason = quality_reason(snapshot, policy)
     if reason:
@@ -1089,7 +1187,7 @@ def analyze(
 
 def predict_rules(snapshot: LearnerSnapshot, policy: CoursePolicy) -> dict:
     """Explicit, uncalibrated comparison baseline. Never an LLM outage fallback."""
-    _safe_features(snapshot)
+    _safe_features(snapshot, policy)
     reason = quality_reason(snapshot, policy)
     if reason:
         output = _abstain(reason)
@@ -1115,7 +1213,7 @@ def predict_rules(snapshot: LearnerSnapshot, policy: CoursePolicy) -> dict:
         )
         validate_output(output, snapshot, policy)
     result = _metadata(
-        snapshot, policy, model_version="rules-baseline-v2", output=output, latency=0
+        snapshot, policy, model_version="rules-baseline-v3", output=output, latency=0
     )
     result["inference_performed"] = False
     return result

@@ -13,7 +13,7 @@ from typing import Any
 
 from digital_twin.workspace.contracts import CaseUpdate, CoursePolicy, digest
 
-GENERATOR_VERSION = "synthetic-education-v1"
+GENERATOR_VERSION = "synthetic-education-v2"
 SCENARIOS = (
     "steady_success",
     "active_but_low_grades",
@@ -102,7 +102,7 @@ def _rng(seed: int, *parts: object) -> random.Random:
 
 def _course(profile: tuple, weeks: int, start: datetime) -> dict[str, Any]:
     code, title, cadence, inactivity_days, expected_days = profile
-    presentation_id = f"synthetic:{code}:2026A"
+    presentation_id = f"synthetic:{code}:2026A:v2"
     course = {
         "presentation_id": presentation_id,
         "code": code,
@@ -131,6 +131,11 @@ def _course(profile: tuple, weeks: int, start: datetime) -> dict[str, Any]:
     }
     for week in range(1, weeks + 1):
         topic = TOPICS[code][(week - 1) % len(TOPICS[code])]
+        # A project resource is preparation for its next milestone, not an
+        # obligation merely because the file is visible in the LMS.
+        due_week = min(weeks, week + week % 2) if cadence == "project" else week
+        while due_week in course["calendar"]["break_weeks"] and due_week < weeks:
+            due_week += 1
         for kind in ("reading", "worked_example", "practice"):
             resource_id = f"{presentation_id}:resource:w{week}:{kind}"
             course["resources"].append(
@@ -142,6 +147,8 @@ def _course(profile: tuple, weeks: int, start: datetime) -> dict[str, Any]:
                     "available_at": _iso(start),
                     "available_day": 0,
                     "week": week,
+                    "required": kind == "reading" and week not in course["calendar"]["break_weeks"],
+                    "due_day": due_week * 7 - 1,
                     "uri": f"local-resource:{resource_id}",
                     "approved": True,
                     "content": (
@@ -176,6 +183,7 @@ def _course(profile: tuple, weeks: int, start: datetime) -> dict[str, Any]:
                 "assessment_id": f"{presentation_id}:assessment:{ordinal:03d}",
                 "title": f"Week {week} {kind.replace('_', ' ')}",
                 "kind": kind,
+                "purpose": "summative" if weight > 0 else "practice",
                 "week": week,
                 "topic_ids": [f"{code}:topic:{week}"],
                 "available_at": _iso(start),
@@ -222,7 +230,7 @@ def _learner_events(course: dict, enrolment: dict, scenario: str, seed: int) -> 
     events: list[dict] = []
 
     def emit(kind: str, occurred: datetime, payload: dict, available: datetime | None = None):
-        event_id = f"{enrolment['learner_id']}:{course['code']}:e{len(events):05d}"
+        event_id = f"{enrolment['learner_id']}:{course['code']}:v2:e{len(events):05d}"
         events.append(
             {
                 "event_id": event_id,

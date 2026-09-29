@@ -346,7 +346,7 @@ def evaluate(
             readiness = {"status": "configuration_error"}
         if readiness.get("status") != "ready":
             client = None
-    models = [("rules-baseline-v2", predict_rules)]
+    models = [("rules-baseline-v3", predict_rules)]
     if client is not None:
         models.append(
             (client.config.model, lambda snapshot, policy: analyze(snapshot, policy, client))
@@ -407,7 +407,7 @@ def evaluate(
                         if row["attempt_metadata"]
                         else "pre_inference_abstention"
                     )
-                elif model == "rules-baseline-v2":
+                elif model == "rules-baseline-v3":
                     row["outcome"] = "baseline_validated"
                 else:
                     row["outcome"] = (

@@ -13,6 +13,12 @@ from digital_twin.workspace.contracts import (
     digest,
 )
 
+FEATURE_VERSION = "rich-features-v3"
+EVIDENCE_SEMANTICS = {
+    "grade_basis": "graded_assessments_only",
+    "completion_basis": "required_resources_due_by_checkpoint",
+}
+
 ACTIVITY_FEATURES = {
     "clicks_last_7",
     "active_days_last_7",
@@ -33,7 +39,39 @@ GRADE_FEATURES = {
     "grade_weight_observed_percent",
     "quiz_average_percent",
     "pending_grade_count",
+    "practice_grade_count",
+    "practice_average_percent",
+    "practice_latest_grade_percent",
+    "unclassified_grade_count",
 }
+
+
+def _course_day(value: Any) -> int | None:
+    """Unknown/mistyped schedule metadata is not an implicit zero-day deadline."""
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+
+def _is_practice(definition: dict) -> bool:
+    return definition.get("purpose") in {"practice", "formative"} or str(
+        definition.get("kind", "")
+    ).startswith("practice")
+
+
+def _is_graded(definition: dict) -> bool:
+    weight = definition.get("weight")
+    return (
+        isinstance(weight, (int, float))
+        and not isinstance(weight, bool)
+        and weight > 0
+        and not _is_practice(definition)
+    )
+
+
+def assessment_category(definition: dict) -> str:
+    """Shared display/aggregation semantics; unknown weight is not assessed work."""
+    if _is_practice(definition):
+        return "practice"
+    return "assessed" if _is_graded(definition) else "unclassified"
 
 
 def teaching_days_between(
@@ -107,7 +145,34 @@ def build_snapshot(
         for event in grouped["assessment_grade"]
         if event["payload"]["assessment_id"] in definitions
     }
-    grade_events = sorted(grades.values(), key=lambda e: (e["available_day"], e["event_id"]))
+    ordered_grades = sorted(grades.values(), key=lambda e: (e["available_day"], e["event_id"]))
+    grade_events = [
+        event
+        for event in ordered_grades
+        if _is_graded(definitions[event["payload"]["assessment_id"]])
+    ]
+    practice_grades = [
+        event
+        for event in ordered_grades
+        if _is_practice(definitions[event["payload"]["assessment_id"]])
+    ]
+    unclassified_grades = [
+        event
+        for event in ordered_grades
+        if assessment_category(definitions[event["payload"]["assessment_id"]]) == "unclassified"
+    ]
+    # Resource release and obligation are different facts. A released optional
+    # reading, or required work due next month, is not a missed obligation today.
+    visible_resources = [
+        resource
+        for resource in course["resources"]
+        if (day := _course_day(resource.get("available_day"))) is not None and day <= cutoff
+    ]
+    unknown_release_resources = [
+        resource
+        for resource in course["resources"]
+        if _course_day(resource.get("available_day")) is None
+    ]
     activity = grouped["activity"]
     recent = [event for event in activity if event["course_day"] > cutoff - 7]
     previous = [event for event in activity if cutoff - 14 < event["course_day"] <= cutoff - 7]
@@ -115,13 +180,14 @@ def build_snapshot(
     facts: dict[str, EvidenceFact] = {}
     identity = digest(
         {
+            "feature_version": FEATURE_VERSION,
             "course": course["presentation_id"],
             "learner": enrolment["learner_id"],
             "week": checkpoint_week,
             "policy": policy.model_dump(mode="json"),
             "events": eligible,
             "assessments": definitions,
-            "resources": course["resources"],
+            "resources": visible_resources + unknown_release_resources,
             "calendar": course["calendar"],
         }
     )[:24]
@@ -138,6 +204,15 @@ def build_snapshot(
     ):
         sources = sources or []
         available_days = [int(event["available_day"]) for event in sources]
+        known_definitions = {
+            **definitions,
+            **{resource["resource_id"]: resource for resource in visible_resources},
+        }
+        available_days.extend(
+            known_definitions[key]["available_day"]
+            for key in (definition_ids or [])
+            if key in known_definitions
+        )
         facts[name] = EvidenceFact(
             evidence_id=f"synthetic:ev:{identity}:{name}",
             value=value,
@@ -207,24 +282,66 @@ def build_snapshot(
             unit="teaching days",
         )
 
+    unknown_expectations = unknown_release_resources + [
+        resource
+        for resource in visible_resources
+        if not isinstance(resource.get("required"), bool)
+        or (resource["required"] and _course_day(resource.get("due_day")) is None)
+    ]
     expected_resources = {
         resource["resource_id"]
-        for resource in course["resources"]
-        if resource["week"] <= checkpoint_week
-        and resource["available_day"] <= cutoff
-        and resource["week"] not in course["calendar"]["break_weeks"]
+        for resource in visible_resources
+        if resource.get("required") is True
+        and (day := _course_day(resource.get("due_day"))) is not None
+        and day <= cutoff
     }
+    optional_resources = [
+        resource["resource_id"]
+        for resource in visible_resources
+        if resource.get("required") is False
+    ]
+    not_due_resources = [
+        resource["resource_id"]
+        for resource in visible_resources
+        if resource.get("required") is True
+        and (day := _course_day(resource.get("due_day"))) is not None
+        and day > cutoff
+    ]
     completed = {event["payload"]["resource_id"] for event in grouped["resource_completed"]}
-    fact("resources_completed", len(completed & expected_resources), grouped["resource_completed"])
-    fact("resources_expected", len(expected_resources), definition_ids=sorted(expected_resources))
+    completion_events = [
+        event
+        for event in grouped["resource_completed"]
+        if event["payload"]["resource_id"] in expected_resources
+    ]
+    fact("optional_resources_available", len(optional_resources), definition_ids=optional_resources)
+    fact("required_resources_not_due", len(not_due_resources), definition_ids=not_due_resources)
+    fact("resources_expectation_unknown", len(unknown_expectations))
+    completion_status = "source_missing" if unknown_expectations else None
+    fact(
+        "resources_completed",
+        None if unknown_expectations else len(completed & expected_resources),
+        completion_events,
+        status=completion_status,
+        definition_ids=sorted(expected_resources),
+        window="required resources due by checkpoint",
+    )
+    fact(
+        "resources_expected",
+        None if unknown_expectations else len(expected_resources),
+        status=completion_status,
+        definition_ids=sorted(expected_resources),
+        window="required resources due by checkpoint",
+    )
     fact(
         "completion_percent",
         round(100 * len(completed & expected_resources) / len(expected_resources), 1)
-        if expected_resources
+        if expected_resources and not unknown_expectations
         else None,
-        grouped["resource_completed"],
+        completion_events,
         unit="percent",
         definition_ids=sorted(expected_resources),
+        status=completion_status,
+        window="required resources due by checkpoint",
     )
     due_submissions = [submitted[key] for key in due if key in submitted]
     missed = [key for key in due if key not in submitted]
@@ -255,6 +372,24 @@ def build_snapshot(
     ]
     observed_weight = sum(weight for _event, weight in weighted)
     fact("grades_available", len(grade_events), grade_events)
+    fact("practice_grade_count", len(practice_grades), practice_grades)
+    fact("unclassified_grade_count", len(unclassified_grades), unclassified_grades)
+    fact(
+        "practice_average_percent",
+        round(sum(grade_percent(event) for event in practice_grades) / len(practice_grades), 1)
+        if practice_grades
+        else None,
+        practice_grades,
+        unit="percent",
+        window="published practice/formative results",
+    )
+    fact(
+        "practice_latest_grade_percent",
+        grade_percent(practice_grades[-1]) if practice_grades else None,
+        practice_grades[-1:],
+        unit="percent",
+        window="latest published practice/formative result",
+    )
     fact(
         "weighted_grade_percent",
         round(sum(grade_percent(event) * weight for event, weight in weighted) / observed_weight, 1)
@@ -278,7 +413,7 @@ def build_snapshot(
         round(change, 1) if len(grade_events) >= 4 else None,
         grade_events[-4:],
         unit="percentage points",
-        window="latest 2 minus preceding 2 published grades",
+        window="latest 2 minus preceding 2 published graded-assessment results",
     )
     fact(
         "low_grade_count",
@@ -287,13 +422,15 @@ def build_snapshot(
     )
     fact("grade_weight_observed_percent", round(observed_weight, 2), grade_events, unit="percent")
     pending = [
-        event for key, event in submitted.items() if key not in grades and key in definitions
+        event
+        for key, event in submitted.items()
+        if key not in grades and key in definitions and _is_graded(definitions[key])
     ]
     fact("pending_grade_count", len(pending), pending)
     quizzes = [
         event
         for event in grade_events
-        if definitions[event["payload"]["assessment_id"]]["kind"] in {"quiz", "practice_quiz"}
+        if definitions[event["payload"]["assessment_id"]]["kind"] == "quiz"
     ]
     fact(
         "quiz_average_percent",
@@ -377,12 +514,12 @@ def build_snapshot(
     }
     relevant_resources = [
         resource
-        for resource in course["resources"]
-        if resource["available_day"] <= cutoff
-        and (resource["week"] == checkpoint_week or weak_topics.intersection(resource["topic_ids"]))
+        for resource in visible_resources
+        if resource["week"] == checkpoint_week or weak_topics.intersection(resource["topic_ids"])
     ]
     context = {
         "course_title": course["title"],
+        "evidence_semantics": dict(EVIDENCE_SEMANTICS),
         "course_start_date": course["start_date"],
         "course_week": checkpoint_week,
         "weeks_total": course["weeks"],
@@ -406,6 +543,7 @@ def build_snapshot(
         checkpoint_week=checkpoint_week,
         cutoff_day=cutoff,
         data_origin="synthetic",
+        feature_version=FEATURE_VERSION,
         built_at=(
             datetime.fromisoformat(course["start_date"]).replace(tzinfo=UTC)
             + timedelta(days=cutoff, hours=23, minutes=59)
@@ -444,7 +582,8 @@ def degrade_snapshot(snapshot: LearnerSnapshot, mode: str) -> LearnerSnapshot:
             "Unknown degradation; use missing_grades, partial_activity or stale_activity"
         )
     for name in names:
-        payload["features"][name].update(value=None, status=status, source_ids=[])
+        if name in payload["features"]:
+            payload["features"][name].update(value=None, status=status, source_ids=[])
     identity = digest({"base_state": snapshot.state_id, "mode": mode})[:24]
     payload["state_id"] = f"synthetic:state:{identity}"
     for name, feature in payload["features"].items():

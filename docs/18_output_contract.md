@@ -1,6 +1,11 @@
 # Output contract v3: prevent contradictions and make failures inspectable
 
-September 21 follow-up: `course-risk-qwen-v3.2` adds evidence-first generation,
+September 29 local implementation: `course-risk-qwen-v3.3` adds explicit course
+expectations and verified academic-evidence semantics. Its wire response shape
+is unchanged. Live Qwen acceptance of this new prompt is still pending; see
+[the upgrade checkpoint](20_dashboard_upgrade_progress.md) for validation status.
+
+September 21 follow-up: `course-risk-qwen-v3.2` added evidence-first generation,
 exact claim/evidence decoder alternatives, and explicit missingness guidance.
 See [the direct live evaluation](19_live_model_validation.md) for measured results
 and remaining limitations; the original v3.0 checks below are historical.
@@ -28,7 +33,7 @@ on Lobot; simulated unit tests cannot supply that finding.
 
 ## What the model now returns
 
-Qwen2.5:7B remains the predictor. Prompt `course-risk-qwen-v3.2` asks for exactly
+Qwen2.5:7B remains the predictor. Prompt `course-risk-qwen-v3.3` asks for exactly
 one of two independent object shapes. The same schema is supplied in the prompt
 and to Ollama's structured decoder.
 
@@ -56,6 +61,44 @@ student-facing schema. For an assessment the server derives the display band fro
 the model's **unchanged** score: `<0.35` low, `[0.35,0.65)` medium, `>=0.65` high.
 The model no longer generates this duplicate deterministic label. It still
 chooses the score, grounded claims, actions and whether to abstain.
+
+## Course expectations and academic evidence (v3.3)
+
+`course_policy.learning_mode` records the instructor's selected teaching style;
+`inactivity_monitoring_enabled` explicitly controls whether login inactivity is
+relevant. Existing policies default to custom expectations with monitoring on.
+Preset values are editable starting points, not empirically validated thresholds.
+Saving a change creates a new policy revision; old predictions remain historical.
+
+When monitoring is off, login/activity-count/time features are withheld from the
+model. `INACTIVITY_GAP` and `RECENT_ACTIVITY` cannot be cited, including in an
+otherwise well-formed reply. Disabling monitoring does **not** prove success or
+waive freshness and essential-data coverage checks. A missing/partial expected
+stream remains a data-quality problem; explicitly unsupported sources are a
+different state.
+
+New `rich-features-v3` snapshots carry producer-controlled evidence semantics:
+
+- `grade_basis=graded_assessments_only`: latest grade, trend and grade count use
+  positive-weight non-practice assessments. Practice/formative grades are shown
+  separately in the interface, not used as assessed-grade concerns.
+- `completion_basis=required_resources_due_by_checkpoint`: completion concerns
+  require explicit required status, known release metadata and a due date at or
+  before the checkpoint. Optional and future-due resources are not obligations.
+  Unknown metadata produces unavailable completion, not a fabricated zero.
+
+Archived rich-v2 summaries are not relabelled as v3. Their ambiguous latest-grade,
+trend and completion fields are withheld from new inference. The weighted grade
+and other still-supported evidence remain available. The independent validator
+uses the same eligible evidence boundary as the prompt/decoder.
+
+The revised synthetic generator uses `synthetic-education-v2`, new course and
+event IDs, and explicit requirement/practice metadata. No empirical records or
+existing course histories are overwritten. `rules-baseline-v3` is a separately
+versioned comparison model, never a replacement for failed Qwen inference.
+
+The September 21 live results concern v3.2 only; passing local v3.3 contract tests
+does not establish new model accuracy or live reliability.
 
 The decoder now offers complete permitted claim objects, not a cross-product of
 claim codes and every possible evidence ID. A two-feature claim cannot omit one

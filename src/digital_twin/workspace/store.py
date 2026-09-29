@@ -843,6 +843,13 @@ class Store(SchedulingMixin):
                     for r in course.payload.get("resources", [])
                     if r.get("available_day", 0) <= week * 7 - 1
                 ],
+                "assessments": [
+                    a
+                    for a in course.payload.get("assessments", [])
+                    if isinstance(a.get("available_day"), int)
+                    and not isinstance(a.get("available_day"), bool)
+                    and a["available_day"] <= week * 7 - 1
+                ],
                 "events": [e.payload for e in events],
             }
 
