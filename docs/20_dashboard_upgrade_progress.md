@@ -4,11 +4,12 @@
 
 - Approved: all ten items in the instructor's dashboard-upgrade plan.
 - **Phases 1 and 2 complete, including hosted API/model and visual gates.
-  Phase 3 started (2026-09-30): analysis controls, responsive polish and demo guide.**
+  Phase 3 deployed (2026-09-30); live API/model preservation passed.
+  Hosted visual gate awaits sign-in after dashboard source reload.**
 - New user instruction: each phase follows build → local test → deploy → verify
   the real dashboard/model before proceeding. Phase 2 may start after Phase 1
   passes its hosted gate. Preserve this sequence at future interruptions.
-- Deployed on Lobot: `fcc275a` (Phase 2 implementation). See the hosted evidence below.
+- Deployed on Lobot: `b8039b8` (Phase 3 UI implementation). See evidence below.
 - Baseline source commit: `e725db5`, branch `agent/align-strong-llm`.
 - Deployment integration base: `51b7e9b` (fast-forwarded newer team work without
   overwriting Phase 1 or unrelated local edits). Combined local run: 333 passed
@@ -34,9 +35,9 @@
 | 5 | Actionable overview, direct student opening, practical filters and sorting | 2 | Hosted gate passed |
 | 6 | Compact student summary, clear score comparison, evidence-first profile | 2 | Hosted gate passed |
 | 7 | Easier support recording, explicit planned/completed, action versus evidence dates | 2 | Hosted gate passed |
-| 8 | Clear refresh/queue/retry controls and compact analysis status | 3 | In progress |
-| 9 | Desktop/tablet/mobile polish and locally scrollable wide tables | 3 | In progress |
-| 10 | Demonstration of quiet/high-grade, practice, extension, missing-feed and support cases | 3 | In progress |
+| 8 | Clear refresh/queue/retry controls and compact analysis status | 3 | Deployed; hosted UI pending |
+| 9 | Desktop/tablet/mobile polish and locally scrollable wide tables | 3 | Deployed; local visual gate passed |
+| 10 | Demonstration of quiet/high-grade, practice, extension, missing-feed and support cases | 3 | Guide deployed; hosted UI pending |
 
 ## Phase 1 design decisions
 
@@ -308,6 +309,18 @@ settings, not the production database.
   Baseline: 18,204 saved analyses, 242 support events, 1 triage record/event.
   Exact old-row preservation, auth/config equality and integrity passed before
   deployment; 11 additional actual Qwen inferences were saved after backup.
-- Next: push only scoped dashboard/docs files, pull on Lobot, rerun the
-  dashboard (prefer existing Streamlit session; no service restart), and verify
-  hosted UI plus continuing actual model results before marking Phase 3 complete.
+- Pushed and deployed `b8039b8`. No service restart: API PID 55179, dashboard
+  55180, worker 55181 unchanged. Source reload reset the instructor session;
+  the user has been asked to sign in again for the hosted visual gate.
+- Post-deployment read-only comparison preserves every original protected row,
+  including all 18,204 prior analyses and 242 support events. Auth/config unchanged;
+  SQLite integrity OK. Actual Qwen inferences since backup increased from 11 to 57;
+  latest was validated, v3.3. Worker/model are healthy. This is operational
+  verification, not completion of the queue or an accuracy claim.
+- Updated ED220 demo increased from 105 to 128 validated records during checks,
+  with zero failures at that point; its remaining work is queued/running. Original
+  CS110 has 7 existing failures: this rollout did not retry/reset/hide them.
+  These are point-in-time reads, not a frozen cross-course snapshot.
+- Evidence: `artifacts/dashboard-upgrade-phase3/hosted-preservation-before.json`
+  and `hosted-preservation-after.json`. Remaining gate:
+  `tests/lobot_phase3_ui_gate.py` after sign-in; no deployment or data writes needed.
