@@ -1168,8 +1168,9 @@ def run_current_workspace():
                              instructor_id=account.reviewer_id, instructor_role=account.role)
     mode = st.sidebar.radio(
         "Workspace", ["Student support", "Course operations"],
-        index=0, key="workspace_mode",
-        help="Student support uses the Batch 2 support workflow; Course operations keeps the existing workspace.",
+        index=1, key="workspace_mode",
+        help="Course operations contains the Qwen model, course settings and current "
+        "instructor tools. Student support keeps the earlier, separate support-case workflow.",
     )
     if mode == "Course operations":
         render_workspace(client, account)
@@ -1181,12 +1182,25 @@ def run_current_workspace():
         instructor_id=account.reviewer_id,
         instructor_role=account.role,
     )
+    from digital_twin.dashboard.routing import legacy_support_courses
+    try:
+        support_presentations = legacy_support_courses(support_client, account.allowed_presentations)
+    except DashboardApiError as error:
+        st.error(str(error))
+        return
+    st.sidebar.caption(
+        "Earlier support workflow. Its case history is separate from Course operations."
+    )
+    if not support_presentations:
+        st.info("No legacy support courses are assigned. Open Course operations for the current workspace.")
+        return
     presentation_id = st.session_state.get("support_presentation_id")
-    if presentation_id not in account.allowed_presentations:
-        presentation_id = account.allowed_presentations[0]
+    if presentation_id not in support_presentations:
+        presentation_id = support_presentations[0]
+        st.session_state["support_presentation_id"] = presentation_id
     presentation_id = st.sidebar.selectbox(
-        "Course", account.allowed_presentations,
-        index=account.allowed_presentations.index(presentation_id),
+        "Course", support_presentations,
+        index=support_presentations.index(presentation_id),
         format_func=format_presentation, key="support_presentation_id",
     )
     st.markdown('<div class="eyebrow">Course digital twin · instructor pilot</div>', unsafe_allow_html=True)

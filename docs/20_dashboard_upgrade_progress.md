@@ -3,7 +3,7 @@
 ## Resume here
 
 - Approved: all ten items in the instructor's dashboard-upgrade plan.
-- **Phase 1 deployed and hosted gate passed (2026-09-29); Phase 2 implementation is next.**
+- **Phase 1 hosted gate passed; Phase 2 local gate passed, deployment next (2026-09-29).**
 - New user instruction: each phase follows build → local test → deploy → verify
   the real dashboard/model before proceeding. Phase 2 may start after Phase 1
   passes its hosted gate. Preserve this sequence at future interruptions.
@@ -29,11 +29,11 @@
 |---|---|---|---|
 | 1 | Teaching-style presets, explicit inactivity monitoring control, visible policy | 1 | Hosted gate passed |
 | 2 | Required/optional/due resource semantics; assessed versus practice grades | 1 | Hosted gate passed |
-| 3 | Quick manual flag, watchlist and instructor priority separate from model score | 2 | Implementation started |
-| 4 | Name + ID / ID-only privacy view, with authorized name mapping only | 2 | Implementation started |
-| 5 | Actionable overview, direct student opening, practical filters and sorting | 2 | Implementation started |
-| 6 | Compact student summary, clear score comparison, evidence-first profile | 2 | Implementation started |
-| 7 | Easier support recording, explicit planned/completed, action versus evidence dates | 2 | Implementation started |
+| 3 | Quick manual flag, watchlist and instructor priority separate from model score | 2 | Local gate passed |
+| 4 | Name + ID / ID-only privacy view, with authorized name mapping only | 2 | Local gate passed |
+| 5 | Actionable overview, direct student opening, practical filters and sorting | 2 | Local gate passed |
+| 6 | Compact student summary, clear score comparison, evidence-first profile | 2 | Local gate passed |
+| 7 | Easier support recording, explicit planned/completed, action versus evidence dates | 2 | Local gate passed |
 | 8 | Clear refresh/queue/retry controls and compact analysis status | 3 | Not started |
 | 9 | Desktop/tablet/mobile polish and locally scrollable wide tables | 3 | Not started |
 | 10 | Demonstration of quiet/high-grade, practice, extension, missing-feed and support cases | 3 | Not started |
@@ -194,13 +194,45 @@ settings, not the production database.
   courses have automatic analysis enabled. The version change will cause bounded
   background catch-up. This does not mean all checkpoints are already reanalyzed.
 
+## Phase 2 implementation and local gate
+
+- Manual flags, course-shared watchlist, priority and notes are saved in separate
+  versioned triage/audit tables, never as model inputs or altered scores. Writes
+  require authorized course membership, optimistic version checks and idempotency
+  keys. Removing a flag retains its audit history. A watchlist need not open a case.
+- Name + ID uses only the existing authorized roster mapping. ID-only API views
+  remove known display-name fields and disable name searches/sorting; free-text
+  notes may still identify a person, so this is not anonymization or a new access role.
+- Overview counts drill down into server-side filters. Sorting/filtering happens
+  before pagination. Active cases include new, reviewed and ongoing. Direct row
+  selection opens a profile; returning preserves filters and page.
+- Current instructor records are explicitly separate from historical model
+  evidence. The API retains cutoff-filtered `case` and adds `current_case`.
+  Later actions can cite an earlier checkpoint; new events reference the current
+  snapshot revision. A stale UI reference conflicts instead of silently rebinding.
+- Planned actions are completed/cancelled by an appended linked record, not by
+  rewriting the original. Action day, evidence week/cutoff and recorded time are
+  separate. Known calendars prevent future actions being marked completed. Without
+  a verified calendar, course-day input is explicitly manual. Follow-up counts use
+  a labeled current-calendar or checkpoint reference, never an invented date.
+- The rich Course operations workspace becomes the default. Earlier Student
+  support remains available with its separate histories, showing only courses
+  actually present in that authorized legacy API; service/auth errors still surface.
+- Migration `20260929_0007` adds `audit.workspace_triage` and
+  `audit.workspace_triage_event`. SQLite pilot initialization creates these
+  additively; PostgreSQL uses Alembic. No source/model/history rows are rewritten.
+- Local gate: **337 tests + 6 subtests passed**, including existing support-workflow
+  regressions. Changed workspace code passes lint and `git diff --check`.
+  Isolated browser gate passed flag/watchlist, privacy and later-action scenarios;
+  1440px desktop and 390px mobile, no document overflow or UI exceptions.
+- New validation: `tests/test_workspace_instructor_phase2.py`,
+  `tests/unit/test_workspace_phase2_ui.py`, `tests/unit/test_workspace_routing.py`,
+  `tests/check_dashboard_phase2_browser.py`. Screenshot evidence is under
+  `artifacts/dashboard-upgrade-phase2/`. These are local/ignored as established.
+
 ## Next handoff
 
-1. Implement Phase 2 items 3–7. Keep
-   manual triage separate from model evidence/scores; authorized names must have
-   an ID-only display option. Support-case filters must include all active states.
-2. Distinguish action time, evidence checkpoint and record creation time. Keep
-   historical evidence cutoff-safe while permitting later instructor actions.
-   Bind new support records to the current snapshot revision, not any old row.
-3. Locally test, deploy and verify Phase 2 before Phase 3. Preserve the unrelated
+1. Back up, deploy and verify Phase 2's real dashboard/API/model before Phase 3.
+   Preserve existing data, controls, log files, accounts and remote untracked team work.
+2. Preserve the unrelated
    edits listed at the top. Do not repeat the completed Phase 1 investigation.

@@ -60,6 +60,43 @@ ACTION_LABELS = {
     "follow_up": "Follow up",
     "note": "Record note",
 }
+PRIORITY_LABELS = {"low": "Low", "normal": "Normal", "high": "High", "urgent": "Urgent"}
+ROSTER_SORTS = {
+    "attention": "Needs attention first",
+    "priority": "Instructor priority first",
+    "risk_desc": "Risk score: highest first",
+    "risk_asc": "Risk score: lowest first",
+    "follow_up": "Follow-up: earliest first",
+    "name": "Student name",
+    "learner_id": "Learner ID",
+}
+
+
+def identity_mode() -> str:
+    return st.session_state.get("workspace_privacy", "name_id")
+
+
+def student_label(item: dict[str, Any], *, privacy: str | None = None) -> str:
+    """Use only the authorized server mapping; never fabricate an identity."""
+    learner_id = str(item.get("learner_id", "Unknown ID"))
+    name = item.get("display_name")
+    if (privacy or identity_mode()) == "id_only" or not name or name == learner_id:
+        return learner_id
+    return f"{name} · {learner_id}"
+
+
+def triage_label(triage: dict[str, Any] | None) -> str:
+    triage = triage or {}
+    parts = [
+        text
+        for key, text in (("flagged", "Flagged"), ("watchlisted", "On watchlist"))
+        if triage.get(key)
+    ]
+    priority = triage.get("priority", "normal")
+    if priority != "normal":
+        parts.append(f"{PRIORITY_LABELS.get(priority, priority)} priority")
+    return " · ".join(parts) or "No manual flag · normal priority"
+
 
 WORKSPACE_CSS = """
 <style>
@@ -228,6 +265,49 @@ def _clear_profile() -> None:
     st.session_state["workspace_profile"] = None
 
 
+def _open_profile(page: str, learner_id: str) -> None:
+    st.session_state["workspace_return_page"] = page
+    _navigate(page, learner_id)
+
+
+def _change_identity() -> None:
+    # A name typed in a search box must not remain visible after switching to ID only.
+    for key in list(st.session_state):
+        if key.startswith("workspace_search_") or key.startswith("workspace_lookup_"):
+            st.session_state[key] = ""
+        elif key.startswith("workspace_filter_") and isinstance(st.session_state[key], dict):
+            st.session_state[key] = st.session_state[key] | {"search": ""}
+
+
+def _filter_roster(course_id: str, week: int, page: str, filters: dict[str, Any]) -> None:
+    scope = f"{course_id}_{week}_{page == 'Support cases'}"
+    saved = roster_defaults(page == "Support cases") | filters
+    st.session_state[f"workspace_filter_{scope}"] = saved
+    st.session_state[f"workspace_offset_{scope}"] = 0
+    for field, value in saved.items():
+        st.session_state[f"workspace_{field}_{scope}"] = value
+    _navigate(page)
+
+
+def roster_defaults(cases_only: bool = False) -> dict[str, Any]:
+    return {
+        "search": "",
+        "risk": "",
+        "status": "",
+        "attention": "",
+        "priority": "",
+        "due": False,
+        "active": cases_only,
+        "sort": "attention",
+    }
+
+
+def _open_selected_row(key: str, learners: list[str], page: str) -> None:
+    selection = st.session_state.get(key, {}).get("selection", {}).get("rows", [])
+    if selection and 0 <= selection[0] < len(learners):
+        _open_profile(page, learners[selection[0]])
+
+
 def _show_error(error: Exception) -> None:
     st.error(str(error))
     st.caption(
@@ -291,6 +371,16 @@ def render_workspace(client: WorkspaceClient, account: Any) -> None:
             key=f"workspace_week_{course_id}",
         )
         st.caption(f"Evidence available through course day {week * 7 - 1}.")
+        st.radio(
+            "Student identity display",
+            ["name_id", "id_only"],
+            format_func=lambda value: "Name + ID" if value == "name_id" else "ID only",
+            key="workspace_privacy",
+            horizontal=True,
+            on_change=_change_identity,
+            help="Names come only from your authorized course roster. "
+            "ID only also limits search to IDs; free-text notes may still identify a student.",
+        )
         if st.button("Refresh workspace", use_container_width=True):
             st.rerun()
         if st.button("Sign out", use_container_width=True):
@@ -326,7 +416,9 @@ def render_workspace(client: WorkspaceClient, account: Any) -> None:
     if flash := st.session_state.pop("workspace_flash", None):
         st.success(flash)
     try:
-        workspace = client.workspace(course_id, week=week)
+        workspace = client.workspace(
+            course_id, week=week, privacy=identity_mode(), support_scope="current"
+        )
     except DashboardApiError as error:
         _show_error(error)
         return
@@ -336,7 +428,14 @@ def render_workspace(client: WorkspaceClient, account: Any) -> None:
     )
     learner_id = st.session_state.get("workspace_profile")
     if learner_id:
-        st.button("← Back to student list", on_click=_navigate, args=("Students", None))
+        return_page = st.session_state.get("workspace_return_page", "Students")
+        st.button(
+            "← Back to support cases"
+            if return_page == "Support cases"
+            else "← Back to student list",
+            on_click=_navigate,
+            args=(return_page, None),
+        )
         render_profile(client, course_id, week, learner_id, workspace.get("policy", {}))
         return
     if page == "Overview":
@@ -375,31 +474,74 @@ def render_overview(
             + " · ".join(f"{label(name)}: {count}" for name, count in model_counts.items())
         )
     total = int(summary.get("enrolled", 0))
-    render_cards(
-        [
-            ("Enrolled students", str(total), "Entire course roster at this checkpoint."),
-            (
-                "Needs review",
-                str(summary.get("needs_review", 0)),
-                "New concerns, unreviewed high attention, or follow-ups now due.",
-            ),
-            (
-                "High attention",
-                str(summary.get("high_attention", 0)),
-                "Current risk score falls in the high-attention band.",
-            ),
-            (
-                "Insufficient evidence",
-                str(summary.get("insufficient_data", 0)),
-                "An assessment cannot be supported by the available information.",
-            ),
-            (
-                "Ongoing support",
-                str(summary.get("ongoing", 0)),
-                "Open cases where support or follow-up is still needed.",
-            ),
-        ]
-    )
+    cards = [
+        ("Enrolled students", total, "Entire checkpoint roster.", "Students", {}),
+        (
+            "Needs review",
+            summary.get("needs_review", 0),
+            "Unreviewed concerns or follow-ups due.",
+            "Students",
+            {"attention": "needs_review"},
+        ),
+        (
+            "High attention",
+            summary.get("high_attention", 0),
+            "Model high-attention band.",
+            "Students",
+            {"risk": "high"},
+        ),
+        (
+            "Insufficient evidence",
+            summary.get("insufficient_data", 0),
+            "Evidence does not support an assessment.",
+            "Students",
+            {"attention": "insufficient_data"},
+        ),
+        (
+            "Active support cases",
+            summary.get("active_cases", summary.get("ongoing", 0)),
+            "New, reviewed and ongoing cases.",
+            "Support cases",
+            {"active": True},
+        ),
+    ]
+    for column, (title, count, description, page, filters) in zip(
+        st.columns(5), cards, strict=True
+    ):
+        with column, st.container(border=True):
+            st.metric(title, count)
+            st.caption(description)
+            st.button(
+                f"View {title.lower()}",
+                key=f"workspace_card_{title}",
+                on_click=_filter_roster,
+                args=(course_id, week, page, filters),
+                use_container_width=True,
+            )
+    manual_cards = [
+        ("Flagged", "flagged", {"attention": "flagged"}),
+        ("Watchlist", "watchlist", {"attention": "watchlist"}),
+        ("Follow-ups due", "due", {"due": True}),
+    ]
+    for column, (title, count_key, filters) in zip(st.columns(3), manual_cards, strict=True):
+        with column:
+            st.button(
+                f"{title} · {summary.get(count_key, 0)}",
+                use_container_width=True,
+                on_click=_filter_roster,
+                args=(course_id, week, "Students", filters),
+            )
+    st.caption("Manual flags, watchlists and instructor priority never change model scores.")
+    if workspace.get("as_of_day") is not None:
+        basis = (
+            "current course calendar"
+            if workspace.get("current_course_day") is not None
+            else "selected checkpoint; no current course calendar"
+        )
+        st.caption(
+            "Current support records · follow-ups checked through course day "
+            f"{workspace['as_of_day']} ({basis})."
+        )
     st.caption(
         "These counts overlap: a high-attention student may also need review or have "
         "an ongoing case. They are not categories to add together."
@@ -446,19 +588,42 @@ def render_overview(
             _frame([{"Change": key, "Students": value} for key, value in counts.items()])
     st.subheader("Review a student")
     items = workspace.get("items", [])
+    lookup = st.text_input(
+        "Find a student to open",
+        placeholder="Learner ID only" if identity_mode() == "id_only" else "Name or learner ID",
+        key=f"workspace_lookup_{course_id}_{week}",
+    )
+    if lookup:
+        try:
+            items = client.workspace(
+                course_id,
+                week=week,
+                query=lookup,
+                limit=25,
+                privacy=identity_mode(),
+                support_scope="current",
+            ).get("items", [])
+        except DashboardApiError as error:
+            _show_error(error)
+            items = []
+    elif int(workspace.get("total", len(items))) > len(items):
+        st.caption(
+            "Showing the first students in review order. "
+            "Search the full authorized course roster above."
+        )
     if items:
         options = {item["learner_id"]: item for item in items}
         selected = st.selectbox(
             "Choose a student",
             list(options),
             format_func=lambda key: (
-                f"{options[key].get('display_name') or key} · "
+                f"{student_label(options[key])} · "
                 f"{SUPPORT_LABELS.get(options[key].get('risk_band'), 'Not assessed')}"
             ),
             key=f"workspace_overview_pick_{course_id}_{week}",
         )
         st.button(
-            "Open this student", type="primary", on_click=_navigate, args=("Students", selected)
+            "Open this student", type="primary", on_click=_open_profile, args=("Students", selected)
         )
     else:
         st.info("There are no student records at this checkpoint.")
@@ -471,19 +636,25 @@ def render_roster(
 ) -> None:
     st.subheader("Support cases" if cases_only else "Students")
     scope = f"{course_id}_{week}_{cases_only}"
-    saved_filters = st.session_state.get(
-        f"workspace_filter_{scope}", ("", "", "ongoing" if cases_only else "")
-    )
+    defaults = roster_defaults(cases_only)
+    saved_filters = st.session_state.get(f"workspace_filter_{scope}", defaults)
+    if not isinstance(saved_filters, dict):
+        saved_filters = dict(zip(("search", "risk", "status"), saved_filters, strict=False))
+    saved_filters = defaults | saved_filters
     # Widget keys are discarded by Streamlit when their page is not rendered.
     # The separate filter snapshot lets Back restore the instructor's list.
-    for name, value in zip(("search", "risk", "status"), saved_filters, strict=True):
+    for name, value in saved_filters.items():
         widget_key = f"workspace_{name}_{scope}"
         if widget_key not in st.session_state:
             st.session_state[widget_key] = value
+    if identity_mode() == "id_only" and st.session_state[f"workspace_sort_{scope}"] == "name":
+        st.session_state[f"workspace_sort_{scope}"] = "learner_id"
     search, level, status = st.columns([1.5, 1, 1])
     with search:
         query = st.text_input(
-            "Find student", placeholder="Name or learner ID", key=f"workspace_search_{scope}"
+            "Find student",
+            placeholder="Learner ID only" if identity_mode() == "id_only" else "Name or learner ID",
+            key=f"workspace_search_{scope}",
         )
     with level:
         risk = st.selectbox(
@@ -499,7 +670,54 @@ def render_roster(
             format_func=lambda key: label(key) if key else "All statuses",
             key=f"workspace_status_{scope}",
         )
-    fingerprint = (query, risk, case_status)
+    attention_col, priority_col, order_col = st.columns(3)
+    attention_labels = {
+        "": "All students",
+        "needs_review": "Needs review",
+        "flagged": "Manually flagged",
+        "watchlist": "On the course watchlist",
+        "insufficient_data": "Insufficient evidence",
+    }
+    with attention_col:
+        attention = st.selectbox(
+            "Review filter",
+            list(attention_labels),
+            format_func=attention_labels.get,
+            key=f"workspace_attention_{scope}",
+        )
+    with priority_col:
+        priority = st.selectbox(
+            "Instructor priority",
+            ["", *PRIORITY_LABELS],
+            format_func=lambda value: PRIORITY_LABELS.get(value, "All priorities"),
+            key=f"workspace_priority_{scope}",
+        )
+    with order_col:
+        order = st.selectbox(
+            "Sort students",
+            [value for value in ROSTER_SORTS if value != "name" or identity_mode() != "id_only"],
+            format_func=ROSTER_SORTS.get,
+            key=f"workspace_sort_{scope}",
+        )
+    due_col, active_col = st.columns(2)
+    with due_col:
+        due = st.checkbox("Follow-ups due only", key=f"workspace_due_{scope}")
+    with active_col:
+        active = st.checkbox(
+            "Active support cases only",
+            key=f"workspace_active_{scope}",
+            help="Includes new, reviewed and ongoing cases. Uncheck to include closed cases.",
+        )
+    fingerprint = {
+        "search": query,
+        "risk": risk,
+        "status": case_status,
+        "attention": attention,
+        "priority": priority,
+        "sort": order,
+        "due": due,
+        "active": active,
+    }
     previous_filter = st.session_state.get(f"workspace_filter_{scope}")
     if previous_filter != fingerprint:
         st.session_state[f"workspace_filter_{scope}"] = fingerprint
@@ -512,6 +730,16 @@ def render_roster(
             query=query,
             risk=risk,
             status=case_status,
+            needs_review=attention == "needs_review",
+            flagged=attention == "flagged",
+            watchlist=attention == "watchlist",
+            insufficient_data=attention == "insufficient_data",
+            priority=priority,
+            due=due,
+            active_cases=active,
+            sort=order,
+            privacy=identity_mode(),
+            support_scope="current",
             offset=offset,
             limit=25,
         )
@@ -520,41 +748,55 @@ def render_roster(
         return
     items = page.get("items", [])
     total = int(page.get("total", len(items)))
+    if offset and offset >= total:
+        st.session_state[f"workspace_offset_{scope}"] = max(0, ((total - 1) // 25) * 25)
+        st.rerun()
     st.caption(
         f"{total} matching student(s). Showing {offset + 1 if items else 0}–{offset + len(items)}."
     )
     if not items:
-        st.info(
-            "No students match these filters. Choose All levels / All statuses or clear the search."
-        )
+        st.info("No students match these filters. Clear a filter or the search to widen the list.")
     else:
-        _frame(
-            [
-                {
-                    "Student": item.get("display_name") or item["learner_id"],
-                    "Learner ID": item["learner_id"],
-                    "Support level": SUPPORT_LABELS.get(item.get("risk_band"), "Not assessed"),
-                    "Risk score": points(item.get("risk_score")),
-                    "Previous → current": comparison(
-                        item.get("risk_score"),
-                        item.get("previous_score"),
-                        comparable=item.get("comparable", False),
-                    ),
-                    "Analysis": label(item.get("analysis_status", "not_run")),
-                    "Model": model_label(item.get("model_version")),
-                    "Case": label(item.get("case_status"))
-                    if item.get("case_status")
-                    else "No case",
-                    "Follow-up due": f"Course day {item['follow_up_day']}"
-                    if item.get("follow_up_day") is not None
-                    else "Not scheduled",
-                }
-                for item in items
-            ]
+        rows = [
+            {
+                "Student": student_label(item),
+                "Instructor triage": triage_label(item.get("triage")),
+                "Support level": SUPPORT_LABELS.get(item.get("risk_band"), "Not assessed"),
+                "Risk score": points(item.get("risk_score")),
+                "Previous → current": comparison(
+                    item.get("risk_score"),
+                    item.get("previous_score"),
+                    comparable=item.get("comparable", False),
+                ),
+                "Analysis": label(item.get("analysis_status", "not_run")),
+                "Model": model_label(item.get("model_version")),
+                "Case": label(item.get("case_status")) if item.get("case_status") else "No case",
+                "Follow-up due": f"Course day {item['follow_up_day']}"
+                if item.get("follow_up_day") is not None
+                else "Not scheduled",
+            }
+            for item in items
+        ]
+        filter_json = json.dumps(fingerprint, sort_keys=True).encode()
+        filter_id = hashlib.sha256(filter_json).hexdigest()[:12]
+        table_key = f"workspace_roster_table_{scope}_{offset}_{filter_id}_{identity_mode()}"
+        st.dataframe(
+            pd.DataFrame(rows),
+            hide_index=True,
+            use_container_width=True,
+            selection_mode="single-row",
+            key=table_key,
+            on_select=lambda: _open_selected_row(
+                table_key,
+                [item["learner_id"] for item in items],
+                "Support cases" if cases_only else "Students",
+            ),
         )
-        choices = {
-            item["learner_id"]: item.get("display_name") or item["learner_id"] for item in items
-        }
+        st.caption(
+            "Select a row to open the student. Filters and page are kept when you go back. "
+            "Swipe or scroll for more columns."
+        )
+        choices = {item["learner_id"]: student_label(item) for item in items}
         selected = st.selectbox(
             "Student to open",
             list(choices),
@@ -562,7 +804,10 @@ def render_roster(
             key=f"workspace_roster_pick_{scope}_{offset}",
         )
         st.button(
-            "Open student profile", type="primary", on_click=_navigate, args=("Students", selected)
+            "Open student profile",
+            type="primary",
+            on_click=_open_profile,
+            args=("Support cases" if cases_only else "Students", selected),
         )
     previous, following = st.columns(2)
     with previous:
@@ -934,11 +1179,11 @@ def render_profile(
     client: WorkspaceClient, course_id: str, week: int, learner_id: str, policy: dict[str, Any]
 ) -> None:
     try:
-        detail = client.learner(course_id, learner_id, week=week)
+        detail = client.learner(course_id, learner_id, week=week, privacy=identity_mode())
     except DashboardApiError as error:
         _show_error(error)
         return
-    st.subheader(detail.get("display_name") or learner_id)
+    st.subheader(student_label(detail | {"learner_id": learner_id}))
     st.caption(f"Learner ID: {learner_id} · selected checkpoint: week {week}")
     st.caption(course_expectations(policy))
     snapshot = detail.get("snapshot") or {}
@@ -962,7 +1207,7 @@ def render_profile(
         detail.get("comparable", comparable_results(analysis, previous)),
         detail.get("previous_week"),
     )
-    case = detail.get("case") or {}
+    case = detail.get("current_case", detail.get("case")) or {}
     render_cards(
         [
             (
@@ -977,12 +1222,13 @@ def render_profile(
                 change_detail,
             ),
             (
-                "Case status",
+                "Current case status",
                 label(case.get("status")) if case else "No case",
                 "Support history continues across checkpoints.",
             ),
         ]
     )
+    render_triage(client, course_id, learner_id, detail.get("triage") or {})
     st.write(f"**Analysis status:** {label(state_status)}")
     if state_status in {"queued", "running"}:
         st.info("Analysis is in progress. Refresh the workspace to check the result.")
@@ -1011,18 +1257,24 @@ def render_profile(
             )
         for limitation in analysis.get("data_limitations", []):
             st.caption(f"Evidence limitation: {limitation}")
-        st.caption(
-            f"Result model: {analysis.get('model_version', 'Not recorded')} "
-            f"· policy revision {analysis.get('policy_version', 'Not recorded')} "
-            f"· generated {timestamp(analysis.get('generated_at'))}"
-        )
-        render_validation_provenance(analysis)
+        with st.expander("Result version and validation details"):
+            st.caption(
+                f"Result model: {analysis.get('model_version', 'Not recorded')} "
+                f"· policy revision {analysis.get('policy_version', 'Not recorded')} "
+                f"· generated {timestamp(analysis.get('generated_at'))}"
+            )
+            render_validation_provenance(analysis)
     if snapshot and snapshot.get("is_fresh") is False:
         st.warning("The selected snapshot is marked stale. Confirm its evidence before acting.")
     tabs = st.tabs(
         ["Evidence and recommendations", "Academic progress", "Risk history", "Support history"]
     )
     with tabs[0]:
+        st.caption(
+            f"Historical evidence checkpoint: week {week}, through course day {week * 7 - 1}. "
+            "Current instructor triage and support records above do not alter this evidence."
+        )
+        render_evidence_summary(snapshot)
         if current_valid:
             render_claims(output, snapshot)
         elif output:
@@ -1075,6 +1327,109 @@ def render_profile(
         render_risk_history(detail.get("history", []))
     with tabs[3]:
         render_case(client, course_id, week, learner_id, detail)
+
+
+def render_evidence_summary(snapshot: dict[str, Any]) -> None:
+    features = snapshot.get("features", {})
+    candidates = [
+        ("Assessed grades", "weighted_grade_percent"),
+        ("Missed assessed work", "assessments_missed"),
+        ("Required completion (%)", "completion_percent"),
+    ]
+    # Show missingness explicitly. A missing fact must never become zero or success.
+    for column, (title, name) in zip(st.columns(3), candidates, strict=True):
+        with column:
+            fact = features.get(name) or {"value": None, "status": "not_available"}
+            if (
+                name == "completion_percent"
+                and snapshot.get("feature_version") != "rich-features-v3"
+            ):
+                fact = {"value": None, "status": "unverified_required_metadata"}
+            st.metric(title, fact_value(fact))
+            st.caption(label(fact.get("status", "not_available")))
+    if snapshot.get("feature_version") not in {None, "rich-features-v3"}:
+        st.caption(
+            "Historical feature definitions: inspect the academic evidence before treating "
+            "grades as assessed or resources as required."
+        )
+
+
+def _save_triage(
+    client: WorkspaceClient,
+    course_id: str,
+    learner_id: str,
+    triage: dict[str, Any],
+    **changes: Any,
+) -> None:
+    payload = {
+        "expected_version": triage.get("version", 0),
+        "flagged": bool(triage.get("flagged", False)),
+        "watchlisted": bool(triage.get("watchlisted", False)),
+        "priority": triage.get("priority", "normal"),
+        "note": triage.get("note", ""),
+    } | changes
+    try:
+        client.save_triage(
+            course_id,
+            learner_id,
+            payload,
+            idempotency_key=mutation_key(f"triage_{course_id}_{learner_id}", payload),
+        )
+    except DashboardApiError as error:
+        _show_error(error)
+    else:
+        st.session_state["workspace_flash"] = (
+            "Instructor triage saved. The model score and evidence are unchanged."
+        )
+        st.rerun()
+
+
+def render_triage(
+    client: WorkspaceClient, course_id: str, learner_id: str, triage: dict[str, Any]
+) -> None:
+    st.caption(f"Instructor triage · {triage_label(triage)} · separate from the model score")
+    flag, watch, priority = st.columns([1, 1, 2])
+    with flag:
+        if st.button(
+            "Remove manual flag" if triage.get("flagged") else "Flag for review",
+            use_container_width=True,
+        ):
+            _save_triage(
+                client, course_id, learner_id, triage, flagged=not triage.get("flagged", False)
+            )
+    with watch:
+        if st.button(
+            "Remove from watchlist" if triage.get("watchlisted") else "Add to watchlist",
+            use_container_width=True,
+        ):
+            _save_triage(
+                client,
+                course_id,
+                learner_id,
+                triage,
+                watchlisted=not triage.get("watchlisted", False),
+            )
+    with priority, st.expander("Set priority / instructor note"):
+        with st.form(f"workspace_triage_{course_id}_{learner_id}_{triage.get('version', 0)}"):
+            current = triage.get("priority", "normal")
+            selected = st.selectbox(
+                "Manual priority",
+                list(PRIORITY_LABELS),
+                index=list(PRIORITY_LABELS).index(current) if current in PRIORITY_LABELS else 1,
+                format_func=PRIORITY_LABELS.get,
+            )
+            note = st.text_area(
+                "Instructor triage note", value=triage.get("note", ""), max_chars=2000
+            )
+            st.caption(
+                "Shared with authorized course instructors. "
+                "This is not model evidence or a support action."
+            )
+            submitted = st.form_submit_button("Save instructor priority")
+        if submitted:
+            _save_triage(
+                client, course_id, learner_id, triage, priority=selected, note=note.strip()
+            )
 
 
 def render_validation_provenance(analysis: dict[str, Any]) -> None:
@@ -1524,12 +1879,15 @@ def render_risk_history(rows: list[dict[str, Any]]) -> None:
 def render_case(
     client: WorkspaceClient, course_id: str, week: int, learner_id: str, detail: dict[str, Any]
 ) -> None:
-    case = detail.get("case") or {}
+    case = detail.get("current_case", detail.get("case")) or {}
     cutoff = week * 7 - 1
+    today = detail.get("current_course_day")
+    default_day = today if isinstance(today, int) and 0 <= today <= 36500 else cutoff
     st.markdown("#### Instructor support record")
     st.caption(
         "This record belongs to the student and course, so it stays available across "
-        "checkpoints. Planned actions are distinct from completed contact or support."
+        "checkpoints. This is the current support history, even when viewing an earlier "
+        "evidence checkpoint. Planned actions are not completed contact or support."
     )
     history = case.get("events", [])
     completed_actions = [
@@ -1596,6 +1954,10 @@ def render_case(
             [
                 {
                     "Action date": f"Course day {event.get('occurred_day', '?')}",
+                    "Evidence used": "Week "
+                    + str(event.get("evidence_checkpoint_week", event.get("checkpoint_week", "?"))),
+                    "Recorded at": timestamp(event.get("recorded_at")),
+                    "Updates planned entry": event.get("resolves_event_id") or "New entry",
                     "Action": ACTION_LABELS.get(event.get("action"), label(event.get("action"))),
                     "Action state": label(event.get("action_state")),
                     "Case status": label(event.get("status", event.get("new_status"))),
@@ -1616,11 +1978,30 @@ def render_case(
             "No instructor actions have been recorded. A manual concern can be opened "
             "even when the model has not raised an alert."
         )
+    if detail.get("triage_history"):
+        with st.expander("Instructor flag and priority history"):
+            _frame(
+                [
+                    {
+                        "Revision": event.get("version"),
+                        "Triage": triage_label(event),
+                        "Instructor note": event.get("note", ""),
+                        "Recorded at": timestamp(event.get("recorded_at")),
+                        "Recorded by": event.get("actor"),
+                    }
+                    for event in detail["triage_history"]
+                ]
+            )
     if case.get("follow_up_day") is not None:
         due = case["follow_up_day"]
-        st.write(
-            f"**Next follow-up:** course day {due}"
-            + (" · due at this checkpoint" if due <= cutoff else "")
+        st.write(f"**Next follow-up:** course day {due}" + (" · due" if due <= default_day else ""))
+        st.caption(
+            f"Follow-up check uses course day {default_day}: "
+            + (
+                "current course calendar."
+                if today is not None
+                else "selected checkpoint; no verified current calendar."
+            )
         )
     resources = {
         str(item.get("resource_id", item.get("id"))): item
@@ -1640,14 +2021,42 @@ def render_case(
                     st.link_button("Open resource", url)
                 st.caption(resource.get("topic", ""))
     scope = f"{course_id}_{learner_id}_{case.get('version', 0)}"
-    with st.form(f"workspace_case_{scope}"):
+    resolved = {e.get("resolves_event_id") for e in history if e.get("resolves_event_id")}
+    plans = {
+        e["id"]: e
+        for e in history
+        if e.get("action_state") == "planned" and e.get("id") not in resolved
+    }
+    plan_id = st.selectbox(
+        "Record a new entry or update a planned action",
+        ["", *plans],
+        format_func=lambda value: (
+            "New entry"
+            if not value
+            else (
+                f"Planned {ACTION_LABELS.get(plans[value].get('action'), 'action')} "
+                f"· day {plans[value]['occurred_day']}"
+            )
+        ),
+        key=f"workspace_plan_{scope}",
+    )
+    plan = plans.get(plan_id) or {}
+    with st.form(f"workspace_case_{scope}_{plan_id}"):
         st.markdown("#### Add an action, follow-up or manual concern")
         action_col, state_col = st.columns(2)
         with action_col:
-            action = st.selectbox("Action type", list(ACTION_LABELS), format_func=ACTION_LABELS.get)
+            action = st.selectbox(
+                "Action type",
+                list(ACTION_LABELS),
+                format_func=ACTION_LABELS.get,
+                index=list(ACTION_LABELS).index(plan.get("action", "contact")),
+                disabled=bool(plan_id),
+            )
         with state_col:
             action_state = st.selectbox(
-                "Action state", ["completed", "planned", "cancelled"], format_func=label
+                "Action state",
+                ["completed", "cancelled"] if plan_id else ["completed", "planned", "cancelled"],
+                format_func=label,
             )
         note = st.text_area(
             "Note and observed outcome",
@@ -1672,7 +2081,12 @@ def render_case(
         day_col, follow_col = st.columns(2)
         with day_col:
             occurred = st.number_input(
-                "Action date · course day", min_value=0, max_value=420, value=cutoff, step=1
+                "Action date · course day",
+                min_value=0,
+                max_value=36500,
+                value=default_day,
+                step=1,
+                help="When the action happened (or is planned), not the evidence cutoff.",
             )
         with follow_col:
             follow_enabled = st.checkbox(
@@ -1681,8 +2095,8 @@ def render_case(
             follow_day = st.number_input(
                 "Follow-up due · course day",
                 min_value=0,
-                max_value=420,
-                value=min(420, max(cutoff + 7, int(case.get("follow_up_day") or 0))),
+                max_value=36500,
+                value=min(36500, max(default_day + 7, int(case.get("follow_up_day") or 0))),
                 step=1,
             )
         selected_resources = st.multiselect(
@@ -1695,6 +2109,11 @@ def render_case(
             "Explicit action dates keep later follow-ups separate from earlier evidence. "
             "Notes are saved only when you press Save support record."
         )
+        if today is None:
+            st.caption(
+                "No verified course calendar is available. Confirm the action's course day "
+                "yourself; the default is the evidence cutoff, not today's date."
+            )
         submitted = st.form_submit_button("Save support record", type="primary")
     if submitted:
         if not case and not note.strip():
@@ -1703,10 +2122,9 @@ def render_case(
         if follow_enabled and follow_day < occurred:
             st.error("The follow-up date must be on or after the action date.")
             return
-        if occurred > cutoff:
+        if action_state == "completed" and today is not None and occurred > today:
             st.error(
-                "The action date cannot be after the selected checkpoint. "
-                "Use the follow-up date to plan future work."
+                "A completed action cannot be in the future. Choose Planned for a future action."
             )
             return
         payload = {
@@ -1719,6 +2137,8 @@ def render_case(
             "follow_up_day": int(follow_day) if follow_enabled else None,
             "resource_ids": selected_resources,
             "checkpoint_week": week,
+            "expected_state_id": (detail.get("snapshot") or {}).get("state_id"),
+            "resolves_event_id": plan_id or None,
         }
         try:
             client.save_case(

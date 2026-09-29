@@ -28,6 +28,17 @@ class WorkspaceClient(DashboardApiClient):
         status: str = "",
         offset: int = 0,
         limit: int = 50,
+        privacy: str = "name_id",
+        needs_review: bool = False,
+        due: bool = False,
+        watchlist: bool = False,
+        flagged: bool = False,
+        insufficient_data: bool = False,
+        priority: str = "",
+        active_cases: bool = False,
+        sort: str = "attention",
+        support_scope: str = "checkpoint",
+        as_of_day: int | None = None,
     ) -> dict[str, Any]:
         return self._request(
             "GET",
@@ -39,14 +50,42 @@ class WorkspaceClient(DashboardApiClient):
                 "status": status,
                 "offset": offset,
                 "limit": limit,
+                "privacy": privacy,
+                "needs_review": needs_review,
+                "due": due,
+                "watchlist": watchlist,
+                "flagged": flagged,
+                "insufficient_data": insufficient_data,
+                "priority": priority,
+                "active_cases": active_cases,
+                "sort": sort,
+                "support_scope": support_scope,
+                **({"as_of_day": as_of_day} if as_of_day is not None else {}),
             },
         )
 
-    def learner(self, presentation_id: str, learner_id: str, *, week: int) -> dict[str, Any]:
+    def learner(
+        self, presentation_id: str, learner_id: str, *, week: int, privacy: str = "name_id"
+    ) -> dict[str, Any]:
         return self._request(
             "GET",
             f"{_course_path(presentation_id)}/learners/{quote(learner_id, safe=':')}",
-            params={"week": week},
+            params={"week": week, "privacy": privacy},
+        )
+
+    def save_triage(
+        self,
+        presentation_id: str,
+        learner_id: str,
+        payload: dict[str, Any],
+        *,
+        idempotency_key: str,
+    ) -> dict[str, Any]:
+        return self._request(
+            "POST",
+            f"{_course_path(presentation_id)}/learners/{quote(learner_id, safe=':')}/triage",
+            headers={**self.headers, "Idempotency-Key": idempotency_key},
+            json=payload,
         )
 
     def save_policy(self, presentation_id: str, policy: dict[str, Any]) -> dict[str, Any]:

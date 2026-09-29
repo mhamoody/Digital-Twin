@@ -166,6 +166,49 @@ class CaseEvent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class Triage(Base):
+    """Current manual triage; independent of support-case and model state."""
+
+    __tablename__ = "workspace_triage"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["course_id", "learner_id"],
+            ["core.workspace_enrolment.course_id", "core.workspace_enrolment.learner_id"],
+        ),
+        CheckConstraint("version >= 1", name="ck_workspace_triage_version"),
+        {"schema": "audit"},
+    )
+    course_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    learner_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    version: Mapped[int] = mapped_column(Integer)
+    payload: Mapped[dict] = mapped_column(JSON)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class TriageEvent(Base):
+    """Append-only history of manual changes, including removed flags/watchlists."""
+
+    __tablename__ = "workspace_triage_event"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["course_id", "learner_id"],
+            ["audit.workspace_triage.course_id", "audit.workspace_triage.learner_id"],
+        ),
+        UniqueConstraint("actor", "request_key", name="uq_workspace_triage_request"),
+        UniqueConstraint("course_id", "learner_id", "version", name="uq_workspace_triage_revision"),
+        {"schema": "audit"},
+    )
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    course_id: Mapped[str] = mapped_column(String(128))
+    learner_id: Mapped[str] = mapped_column(String(128))
+    version: Mapped[int] = mapped_column(Integer)
+    actor: Mapped[str] = mapped_column(String(128))
+    request_key: Mapped[str] = mapped_column(String(128))
+    request_hash: Mapped[str] = mapped_column(String(64))
+    payload: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class SnapshotHead(Base):
     """Current immutable revision of each learner-week, without deleting older evidence."""
 

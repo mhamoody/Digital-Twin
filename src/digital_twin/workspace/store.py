@@ -10,9 +10,18 @@ from sqlalchemy import and_, func, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .contracts import CaseUpdate, CoursePolicy, LearnerSnapshot, ModelOutput, digest
+from .contracts import CaseUpdate, CoursePolicy, LearnerSnapshot, ModelOutput, TriageUpdate, digest
 from .controls import save_control
 from .errors import describe_failure
+from .instructor import (
+    ACTIVE_CASE_STATUSES,
+    PRIORITIES,
+    current_course_day,
+    historical_case_event,
+    identity_view,
+    sort_workspace,
+    triage_payload,
+)
 from .models import (
     Analysis,
     AnalysisAttempt,
@@ -27,6 +36,8 @@ from .models import (
     Snapshot,
     SnapshotHead,
     SupportCase,
+    Triage,
+    TriageEvent,
 )
 from .scheduling import MAX_ATTEMPTS, SchedulingMixin, register_heads
 from .tracing import persist_traces, safe_attempts
@@ -532,12 +543,42 @@ class Store(SchedulingMixin):
         status: str = "",
         offset: int = 0,
         limit: int = 50,
+        *,
+        privacy: str = "name_id",
+        needs_review: bool = False,
+        due: bool = False,
+        watchlist: bool = False,
+        flagged: bool = False,
+        insufficient_data: bool = False,
+        priority: str = "",
+        active_cases: bool = False,
+        sort: str = "attention",
+        support_scope: str = "checkpoint",
+        as_of_day: int | None = None,
     ) -> dict:
+        if privacy not in {"name_id", "id_only"}:
+            raise ValueError("Unknown identity display mode.")
+        if support_scope not in {"checkpoint", "current"}:
+            raise ValueError("Unknown support history scope.")
+        if priority and priority not in PRIORITIES:
+            raise ValueError("Unknown instructor priority.")
         policy = self.get_policy(course_id)
         with Session(self.engine) as session:
             course = session.get(Course, course_id)
             if course is None:
                 raise LookupError("Course not found")
+            today = current_course_day(course.payload)
+            review_day = as_of_day
+            day_basis = "explicit"
+            if review_day is None:
+                review_day = (
+                    today if support_scope == "current" and today is not None else week * 7 - 1
+                )
+                day_basis = (
+                    "current_calendar"
+                    if support_scope == "current" and today is not None
+                    else "checkpoint"
+                )
             enrolments = session.scalars(
                 select(Enrolment).where(Enrolment.course_id == course_id)
             ).all()
@@ -589,14 +630,19 @@ class Store(SchedulingMixin):
                     select(SupportCase).where(SupportCase.course_id == course_id)
                 )
             }
+            triages = {
+                row.learner_id: row
+                for row in session.scalars(select(Triage).where(Triage.course_id == course_id))
+            }
             latest_case_events = {}
             for case_event in session.scalars(
                 select(CaseEvent)
                 .join(SupportCase, CaseEvent.case_id == SupportCase.id)
-                .where(SupportCase.course_id == course_id, CaseEvent.occurred_day <= week * 7 - 1)
+                .where(SupportCase.course_id == course_id)
                 .order_by(CaseEvent.created_at)
             ):
-                latest_case_events[case_event.case_id] = case_event
+                if support_scope == "current" or historical_case_event(case_event, week * 7 - 1):
+                    latest_case_events[case_event.case_id] = case_event
             items = []
             for enrol in enrolments:
                 ep = enrol.payload
@@ -629,12 +675,29 @@ class Store(SchedulingMixin):
                 )
                 case = cases.get(enrol.learner_id)
                 latest_event = latest_case_events.get(case.id) if case else None
-                case_status = latest_event.payload["status"] if latest_event else None
-                followup = latest_event.payload.get("follow_up_day") if latest_event else None
+                case_status = (
+                    case.status
+                    if case and support_scope == "current"
+                    else latest_event.payload["status"]
+                    if latest_event
+                    else None
+                )
+                followup = (
+                    case.follow_up_day
+                    if case and support_scope == "current"
+                    else latest_event.payload.get("follow_up_day")
+                    if latest_event
+                    else None
+                )
+                triage = triage_payload(triages.get(enrol.learner_id))
+                active_case = case_status in ACTIVE_CASE_STATUSES
+                is_due = bool(active_case and followup is not None and followup <= review_day)
                 items.append(
                     {
                         "learner_id": enrol.learner_id,
-                        "display_name": ep.get("display_name", enrol.learner_id),
+                        "display_name": (ep.get("display_name") or enrol.learner_id)
+                        if privacy == "name_id"
+                        else enrol.learner_id,
                         "checkpoint_week": week,
                         "state_id": state.id if state else None,
                         "risk_score": out.get("risk_score") if usable else None,
@@ -649,16 +712,17 @@ class Store(SchedulingMixin):
                         "case_status": case_status,
                         "case_version": case.version if case else 0,
                         "follow_up_day": followup,
+                        "active_case": active_case,
+                        "due": is_due,
+                        "triage": triage,
                         "is_fresh": state.payload["is_fresh"] if state else False,
                         "comparable": bool(compatible and usable),
                         "reason": out.get("abstention_reason")
                         or (job.error_code if job and job.status == "failed" else ""),
-                        "needs_review": case_status == "new"
-                        or (
-                            followup is not None
-                            and followup <= cutoff
-                            and case_status in {"ongoing", "reviewed"}
-                        )
+                        "needs_review": triage["flagged"]
+                        or triage["priority"] in {"high", "urgent"}
+                        or case_status == "new"
+                        or is_due
                         or (
                             usable
                             and out.get("risk_band") == "high"
@@ -683,6 +747,14 @@ class Store(SchedulingMixin):
                 "high_attention": sum(x["risk_band"] == "high" for x in items),
                 "insufficient_data": sum(x["analysis_status"] == "abstained" for x in items),
                 "ongoing": sum(x["case_status"] == "ongoing" for x in items),
+                "active_cases": sum(x["active_case"] for x in items),
+                "due": sum(x["due"] for x in items),
+                "watchlist": sum(x["triage"]["watchlisted"] for x in items),
+                "flagged": sum(x["triage"]["flagged"] for x in items),
+                "priority": sum(x["triage"]["priority"] in {"high", "urgent"} for x in items),
+                "priority_counts": {
+                    p: sum(x["triage"]["priority"] == p for x in items) for p in PRIORITIES
+                },
                 "not_run": sum(x["analysis_status"] in {"not_run", "outdated"} for x in items),
                 "queued": sum(x["analysis_status"] in {"queued", "running"} for x in items),
                 "failed": sum(x["analysis_status"] == "failed" for x in items),
@@ -700,27 +772,43 @@ class Store(SchedulingMixin):
                     or (risk == "unavailable" and x["risk_band"] is None)
                 )
                 and (not status or x["case_status"] == status or x["analysis_status"] == status)
+                and (not needs_review or x["needs_review"])
+                and (not due or x["due"])
+                and (not watchlist or x["triage"]["watchlisted"])
+                and (not flagged or x["triage"]["flagged"])
+                and (not insufficient_data or x["analysis_status"] == "abstained")
+                and (not priority or x["triage"]["priority"] == priority)
+                and (not active_cases or x["active_case"])
             ]
-            filtered.sort(
-                key=lambda x: (not x["needs_review"], -(x["risk_score"] or 0), x["learner_id"])
+            sort_workspace(filtered, sort, privacy)
+            return identity_view(
+                {
+                    "course": course.payload,
+                    "policy": payload(policy),
+                    "summary": summary,
+                    "model_counts": dict(Counter(x["model_version"] or "not_run" for x in items)),
+                    "distribution": {
+                        k: distribution[k] for k in ("high", "medium", "low", "unavailable")
+                    },
+                    "movement": {
+                        k: movement[k]
+                        for k in ("increased", "stable", "decreased", "not_comparable")
+                    },
+                    "items": filtered[offset : offset + limit],
+                    "total": len(filtered),
+                    "week": week,
+                    "privacy": privacy,
+                    "support_scope": support_scope,
+                    "as_of_day": review_day,
+                    "as_of_day_basis": day_basis,
+                    "current_course_day": today,
+                },
+                privacy,
             )
-            return {
-                "course": course.payload,
-                "policy": payload(policy),
-                "summary": summary,
-                "model_counts": dict(Counter(x["model_version"] or "not_run" for x in items)),
-                "distribution": {
-                    k: distribution[k] for k in ("high", "medium", "low", "unavailable")
-                },
-                "movement": {
-                    k: movement[k] for k in ("increased", "stable", "decreased", "not_comparable")
-                },
-                "items": filtered[offset : offset + limit],
-                "total": len(filtered),
-                "week": week,
-            }
 
-    def learner(self, course_id: str, learner_id: str, week: int) -> dict:
+    def learner(
+        self, course_id: str, learner_id: str, week: int, *, privacy: str = "name_id"
+    ) -> dict:
         current_policy = self.get_policy(course_id)
         with Session(self.engine) as session:
             enrol = session.get(Enrolment, (course_id, learner_id))
@@ -814,44 +902,140 @@ class Store(SchedulingMixin):
                 and analysis_status not in {"queued", "running", "failed"}
             ):
                 analysis_status = "outdated"
+            triage = self.get_triage(course_id, learner_id)
+            return identity_view(
+                {
+                    "learner_id": learner_id,
+                    "display_name": enrol.payload.get("display_name") or learner_id,
+                    "privacy": privacy,
+                    "current_course_day": current_course_day(course.payload),
+                    "analysis_status": analysis_status,
+                    "job_error": latest_job.error_code if latest_job else None,
+                    "job_error_detail": describe_failure(latest_job.error_code)
+                    if latest_job and latest_job.error_code
+                    else None,
+                    "comparable": self._comparison(
+                        current_a.payload if current_a else None, prev_a.payload if prev_a else None
+                    )
+                    and analysis_status == "validated"
+                    and bool(current and current.payload["is_fresh"]),
+                    "previous_week": past[-1].week if past else None,
+                    "current_policy_version": current_policy.version,
+                    "snapshot": current.payload if current else None,
+                    "analysis": current_a.payload if current_a else None,
+                    "baseline_analysis": baseline_a.payload if baseline_a else None,
+                    "previous_analysis": prev_a.payload if prev_a else None,
+                    "history": history,
+                    "snapshot_history": [
+                        {"checkpoint_week": s.week, "features": s.payload["features"]}
+                        for s in states
+                    ],
+                    "case": self.get_case(course_id, learner_id, week * 7 - 1),
+                    "current_case": self.get_case(course_id, learner_id),
+                    "triage": triage["triage"],
+                    "triage_history": triage["triage_history"],
+                    "resources": [
+                        r
+                        for r in course.payload.get("resources", [])
+                        if r.get("available_day", 0) <= week * 7 - 1
+                    ],
+                    "assessments": [
+                        a
+                        for a in course.payload.get("assessments", [])
+                        if isinstance(a.get("available_day"), int)
+                        and not isinstance(a.get("available_day"), bool)
+                        and a["available_day"] <= week * 7 - 1
+                    ],
+                    "events": [e.payload for e in events],
+                },
+                privacy,
+            )
+
+    def get_triage(self, course_id: str, learner_id: str):
+        with Session(self.engine) as session:
+            if session.get(Enrolment, (course_id, learner_id)) is None:
+                raise LookupError("Learner not found in this course")
+            row = session.get(Triage, (course_id, learner_id))
+            history = session.scalars(
+                select(TriageEvent)
+                .where(TriageEvent.course_id == course_id, TriageEvent.learner_id == learner_id)
+                .order_by(TriageEvent.version)
+            ).all()
             return {
-                "learner_id": learner_id,
-                "display_name": enrol.payload.get("display_name", learner_id),
-                "analysis_status": analysis_status,
-                "job_error": latest_job.error_code if latest_job else None,
-                "job_error_detail": describe_failure(latest_job.error_code)
-                if latest_job and latest_job.error_code
-                else None,
-                "comparable": self._comparison(
-                    current_a.payload if current_a else None, prev_a.payload if prev_a else None
-                )
-                and analysis_status == "validated"
-                and bool(current and current.payload["is_fresh"]),
-                "previous_week": past[-1].week if past else None,
-                "current_policy_version": current_policy.version,
-                "snapshot": current.payload if current else None,
-                "analysis": current_a.payload if current_a else None,
-                "baseline_analysis": baseline_a.payload if baseline_a else None,
-                "previous_analysis": prev_a.payload if prev_a else None,
-                "history": history,
-                "snapshot_history": [
-                    {"checkpoint_week": s.week, "features": s.payload["features"]} for s in states
+                "triage": triage_payload(row),
+                "triage_history": [
+                    {
+                        **e.payload,
+                        "id": e.id,
+                        "version": e.version,
+                        "actor": e.actor,
+                        "recorded_at": e.created_at.isoformat(),
+                    }
+                    for e in history
                 ],
-                "case": self.get_case(course_id, learner_id, week * 7 - 1),
-                "resources": [
-                    r
-                    for r in course.payload.get("resources", [])
-                    if r.get("available_day", 0) <= week * 7 - 1
-                ],
-                "assessments": [
-                    a
-                    for a in course.payload.get("assessments", [])
-                    if isinstance(a.get("available_day"), int)
-                    and not isinstance(a.get("available_day"), bool)
-                    and a["available_day"] <= week * 7 - 1
-                ],
-                "events": [e.payload for e in events],
             }
+
+    def update_triage(self, course_id, learner_id, change: TriageUpdate, actor, request_key):
+        fingerprint = digest([course_id, learner_id, payload(change)])
+        values = change.model_dump(exclude={"expected_version"})
+        try:
+            with Session(self.engine) as session, session.begin():
+                if session.get(Enrolment, (course_id, learner_id)) is None:
+                    raise LookupError("Learner not found in this course")
+                repeated = session.scalar(
+                    select(TriageEvent).where(
+                        TriageEvent.actor == actor, TriageEvent.request_key == request_key
+                    )
+                )
+                if repeated:
+                    if repeated.request_hash != fingerprint:
+                        raise Conflict("This request key was used for a different triage decision.")
+                    return self.get_triage(course_id, learner_id)
+                row = session.get(Triage, (course_id, learner_id))
+                revision = change.expected_version + 1
+                if row is None:
+                    if change.expected_version != 0:
+                        raise Conflict("Instructor triage changed. Refresh before saving.")
+                    session.add(
+                        Triage(
+                            course_id=course_id,
+                            learner_id=learner_id,
+                            version=revision,
+                            payload=values,
+                            updated_at=now(),
+                        )
+                    )
+                    session.flush()
+                else:
+                    result = session.execute(
+                        update(Triage)
+                        .where(
+                            Triage.course_id == course_id,
+                            Triage.learner_id == learner_id,
+                            Triage.version == change.expected_version,
+                        )
+                        .values(version=revision, payload=values, updated_at=now())
+                    )
+                    if result.rowcount != 1:
+                        raise Conflict("Another instructor changed triage. Refresh before saving.")
+                session.add(
+                    TriageEvent(
+                        id=uuid.uuid4().hex,
+                        course_id=course_id,
+                        learner_id=learner_id,
+                        version=revision,
+                        actor=actor,
+                        request_key=request_key,
+                        request_hash=fingerprint,
+                        payload=values,
+                        created_at=now(),
+                    )
+                )
+        except IntegrityError as error:
+            raise Conflict(
+                "Concurrent triage change. Refresh and retry with the same key."
+            ) from error
+        return self.get_triage(course_id, learner_id)
 
     def get_case(self, course_id: str, learner_id: str, cutoff: int | None = None):
         with Session(self.engine) as session:
@@ -863,9 +1047,9 @@ class Store(SchedulingMixin):
             if case is None:
                 return None
             query = select(CaseEvent).where(CaseEvent.case_id == case.id)
-            if cutoff is not None:
-                query = query.where(CaseEvent.occurred_day <= cutoff)
             events = session.scalars(query.order_by(CaseEvent.created_at)).all()
+            if cutoff is not None:
+                events = [e for e in events if historical_case_event(e, cutoff)]
             return {
                 "id": case.id,
                 "status": events[-1].payload["status"] if events else "not_started",
@@ -885,11 +1069,6 @@ class Store(SchedulingMixin):
     def update_case(
         self, course_id: str, learner_id: str, change: CaseUpdate, actor: str, request_key: str
     ):
-        if change.occurred_day > change.checkpoint_week * 7 - 1:
-            raise ValueError(
-                "Action date cannot be after the selected checkpoint. "
-                "Use a follow-up date for planned future work."
-            )
         if change.follow_up_day is not None and change.follow_up_day < change.occurred_day:
             raise ValueError("Follow-up cannot precede the recorded action.")
         fingerprint = digest([course_id, learner_id, payload(change)])
@@ -909,6 +1088,15 @@ class Store(SchedulingMixin):
                 course = session.get(Course, course_id)
                 if course is None or session.get(Enrolment, (course_id, learner_id)) is None:
                     raise LookupError("Learner not found in this course")
+                today = current_course_day(course.payload)
+                if (
+                    today is not None
+                    and change.action_state == "completed"
+                    and change.occurred_day > today
+                ):
+                    raise ValueError(
+                        "A completed action cannot be in the future. Record it as planned."
+                    )
                 resources = {
                     r["resource_id"]
                     for r in course.payload.get("resources", [])
@@ -918,6 +1106,35 @@ class Store(SchedulingMixin):
                     raise ValueError("Select approved resources available at the action date.")
                 case_id = digest([course_id, learner_id])
                 case = session.get(SupportCase, case_id)
+                head = session.get(SnapshotHead, (course_id, learner_id, change.checkpoint_week))
+                state = session.get(Snapshot, head.state_id) if head else None
+                if change.expected_state_id is not None and (
+                    state is None or state.id != change.expected_state_id
+                ):
+                    raise Conflict("Evidence revision changed. Reload the learner before saving.")
+                if change.resolves_event_id:
+                    planned = session.get(CaseEvent, change.resolves_event_id)
+                    if (
+                        planned is None
+                        or planned.case_id != case_id
+                        or planned.payload.get("action_state") != "planned"
+                    ):
+                        raise ValueError(
+                            "Select a planned action belonging to this learner and course."
+                        )
+                    if change.action_state not in {"completed", "cancelled"}:
+                        raise ValueError(
+                            "A planned action can be completed or cancelled, not replanned."
+                        )
+                    if change.action != planned.payload.get("action"):
+                        raise ValueError("Use the same action type as the selected plan.")
+                    previous_events = session.scalars(
+                        select(CaseEvent).where(CaseEvent.case_id == case_id)
+                    )
+                    if any(
+                        e.payload.get("resolves_event_id") == planned.id for e in previous_events
+                    ):
+                        raise Conflict("This planned action was already completed or cancelled.")
                 if case is None:
                     if change.expected_version != 0:
                         raise Conflict("Case version changed. Reload the learner.")
@@ -948,16 +1165,11 @@ class Store(SchedulingMixin):
                         raise Conflict(
                             "Another instructor changed this case. Reload before saving."
                         )
-                state = session.scalar(
-                    select(Snapshot).where(
-                        Snapshot.course_id == course_id,
-                        Snapshot.learner_id == learner_id,
-                        Snapshot.week == change.checkpoint_week,
-                    )
-                )
                 event_payload = {
                     **payload(change),
                     "state_id": state.id if state else None,
+                    "evidence_checkpoint_week": change.checkpoint_week,
+                    "evidence_cutoff_day": change.checkpoint_week * 7 - 1,
                     "interpretation": (
                         "Recorded instructor action; subsequent change is observational, "
                         "not proof of causation."

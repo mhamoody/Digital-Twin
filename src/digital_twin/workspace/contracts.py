@@ -163,7 +163,19 @@ class CaseUpdate(Contract):
     note: str = Field(default="", max_length=2000)
     action: Literal["note", "contact", "warning", "support", "resource", "follow_up"] = "note"
     action_state: Literal["planned", "completed", "cancelled"] = "completed"
-    occurred_day: int = Field(ge=0, le=420)
-    follow_up_day: int | None = Field(default=None, ge=0, le=420)
+    occurred_day: int = Field(ge=0, le=36500)
+    follow_up_day: int | None = Field(default=None, ge=0, le=36500)
     resource_ids: list[str] = Field(default_factory=list, max_length=20)
     checkpoint_week: int = Field(ge=1, le=60)
+    expected_state_id: str | None = Field(default=None, min_length=1, max_length=160)
+    resolves_event_id: str | None = Field(default=None, min_length=1, max_length=64)
+
+
+class TriageUpdate(Contract):
+    """Instructor judgement, deliberately excluded from model evidence and scores."""
+
+    expected_version: int = Field(ge=0)
+    flagged: bool = Field(default=False, strict=True)
+    watchlisted: bool = Field(default=False, strict=True)
+    priority: Literal["low", "normal", "high", "urgent"] = "normal"
+    note: str = Field(default="", max_length=2000)

@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from digital_twin.api.auth import authorize_course, require_instructor
 from digital_twin.api.schemas import InstructorIdentity
 
-from .contracts import CaseUpdate, Contract, CoursePolicy, digest
+from .contracts import CaseUpdate, Contract, CoursePolicy, TriageUpdate, digest
 from .scheduling import runtime_spec
 from .store import Conflict, Store
 
@@ -63,9 +63,42 @@ def workspace(
     status: str = "",
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=50, ge=1, le=200),
+    privacy: Literal["name_id", "id_only"] = "name_id",
+    needs_review: bool = False,
+    due: bool = False,
+    watchlist: bool = False,
+    flagged: bool = False,
+    insufficient_data: bool = False,
+    priority: Literal["", "low", "normal", "high", "urgent"] = "",
+    active_cases: bool = False,
+    sort: Literal[
+        "attention", "risk_desc", "risk_asc", "name", "learner_id", "follow_up", "priority"
+    ] = "attention",
+    support_scope: Literal["checkpoint", "current"] = "checkpoint",
+    as_of_day: int | None = Query(default=None, ge=0, le=36500),
 ):
     authorize_course(identity, course_id)
-    return checked(store.workspace, course_id, week, query, risk, status, offset, limit)
+    return checked(
+        store.workspace,
+        course_id,
+        week,
+        query,
+        risk,
+        status,
+        offset,
+        limit,
+        privacy=privacy,
+        needs_review=needs_review,
+        due=due,
+        watchlist=watchlist,
+        flagged=flagged,
+        insufficient_data=insufficient_data,
+        priority=priority,
+        active_cases=active_cases,
+        sort=sort,
+        support_scope=support_scope,
+        as_of_day=as_of_day,
+    )
 
 
 @router.get("/courses/{course_id}/learners/{learner_id}")
@@ -75,9 +108,25 @@ def learner(
     identity: Identity,
     store: Storage,
     week: int = Query(ge=1, le=60),
+    privacy: Literal["name_id", "id_only"] = "name_id",
 ):
     authorize_course(identity, course_id)
-    return checked(store.learner, course_id, learner_id, week)
+    return checked(store.learner, course_id, learner_id, week, privacy=privacy)
+
+
+@router.post("/courses/{course_id}/learners/{learner_id}/triage")
+def instructor_triage(
+    course_id: str,
+    learner_id: str,
+    change: TriageUpdate,
+    identity: Identity,
+    store: Storage,
+    idempotency_key: Annotated[str, Header(alias="Idempotency-Key", min_length=8, max_length=128)],
+):
+    authorize_course(identity, course_id)
+    return checked(
+        store.update_triage, course_id, learner_id, change, identity.reviewer_id, idempotency_key
+    )
 
 
 @router.post("/courses/{course_id}/policy")
