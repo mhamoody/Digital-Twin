@@ -15,14 +15,24 @@ def demo_examples(course: dict[str, Any]) -> list[dict[str, Any]]:
     if course.get("data_origin") != "synthetic" or course_id not in courses:
         return []
     weeks = course.get("checkpoints") or range(1, int(course.get("weeks", 0)) + 1)
+    practice_title, practice_check = (
+        ("Practice is not a summative grade",
+         "Open Academic progress. Practice/formative marks stay separate from "
+         "assessed grades; optional practice resources are not overdue required work.")
+        if course_id == "synthetic:DS210:2026A:v2"
+        else
+        ("Optional practice is not required work",
+         "Open Academic progress and compare required resources with optional practice. "
+         "Optional practice is not overdue required work. This course has no marked "
+         "practice quizzes; for that comparison use Applied Data Project, updated "
+         "demo v2, learner synthetic:learner:2:0001 at week 6.")
+    )
     examples = [
         ("Quiet activity, strong assessed grades", 3, 6,
          "Compare activity with published assessed grades and required work. "
          "If login monitoring is disabled, quiet activity must not become either "
          "a concern or reassurance. Other academic concerns can still apply."),
-        ("Practice is not a summative grade", 1, 6,
-         "Open Academic progress. Practice/formative marks stay separate from "
-         "assessed grades; optional practice resources are not overdue required work."),
+        (practice_title, 1, 6, practice_check),
         ("Approved extension", 6, 4,
          "Inspect the approved extension and the checkpoint cutoff. An extended "
          "assessment is not missed before its effective deadline. This does not "

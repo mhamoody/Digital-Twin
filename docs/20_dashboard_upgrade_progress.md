@@ -3,9 +3,8 @@
 ## Resume here
 
 - Approved: all ten items in the instructor's dashboard-upgrade plan.
-- **Phases 1 and 2 complete, including hosted API/model and visual gates.
-  Phase 3 deployed (2026-09-30); live API/model preservation passed.
-  Hosted visual gate awaits sign-in after dashboard source reload.**
+- **All three dashboard-upgrade phases complete (2026-09-30), including local
+  tests, deployment, hosted UI verification and actual model-operation checks.**
 - New user instruction: each phase follows build → local test → deploy → verify
   the real dashboard/model before proceeding. Phase 2 may start after Phase 1
   passes its hosted gate. Preserve this sequence at future interruptions.
@@ -35,9 +34,9 @@
 | 5 | Actionable overview, direct student opening, practical filters and sorting | 2 | Hosted gate passed |
 | 6 | Compact student summary, clear score comparison, evidence-first profile | 2 | Hosted gate passed |
 | 7 | Easier support recording, explicit planned/completed, action versus evidence dates | 2 | Hosted gate passed |
-| 8 | Clear refresh/queue/retry controls and compact analysis status | 3 | Deployed; hosted UI pending |
-| 9 | Desktop/tablet/mobile polish and locally scrollable wide tables | 3 | Deployed; local visual gate passed |
-| 10 | Demonstration of quiet/high-grade, practice, extension, missing-feed and support cases | 3 | Guide deployed; hosted UI pending |
+| 8 | Clear refresh/queue/retry controls and compact analysis status | 3 | Hosted gate passed |
+| 9 | Desktop/tablet/mobile polish and locally scrollable wide tables | 3 | Hosted gate passed |
+| 10 | Demonstration of quiet/high-grade, practice, extension, missing-feed and support cases | 3 | Guide and hosted navigation passed; missing-feed tests remain isolated |
 
 ## Phase 1 design decisions
 
@@ -279,9 +278,9 @@ settings, not the production database.
 
 ## Next handoff
 
-1. Phase 2 is finished. Continue Phase 3 from the plan above; do not repeat its
-   deployment or mutating acceptance script. The existing fictional flag/support
-   example should remain available for instructor inspection.
+1. All approved dashboard-upgrade phases are complete. Do not repeat deployment,
+   data import or mutating acceptance scripts. The existing fictional flag/support
+   example and scenario guide remain available for instructor inspection.
 2. Preserve the unrelated
    edits listed at the top. Do not repeat the completed Phase 1 investigation.
 
@@ -322,5 +321,31 @@ settings, not the production database.
   CS110 has 7 existing failures: this rollout did not retry/reset/hide them.
   These are point-in-time reads, not a frozen cross-course snapshot.
 - Evidence: `artifacts/dashboard-upgrade-phase3/hosted-preservation-before.json`
-  and `hosted-preservation-after.json`. Remaining gate:
-  `tests/lobot_phase3_ui_gate.py` after sign-in; no deployment or data writes needed.
+  and `hosted-preservation-after.json`.
+
+## Phase 3 final hosted gate — passed
+
+- After instructor sign-in, `tests/lobot_phase3_ui_gate.py` passed on the real
+  dashboard. Verified scenario selection opens the correct learner and earlier
+  week, final profile tab is reachable, Data health tables render, and the
+  all-weeks analysis panel is collapsed in Overview. No queue/model/data writes.
+- Desktop 1440px, tablet 768px and mobile 390px: document width equals viewport
+  width; no UI exceptions. Screenshots inspected: grade legend fully readable on
+  mobile, two-column tablet cards, local tab/table scrolling and full course-name
+  caption. Initial browser automation clicked before a rerun finished; waiting
+  for completion resolved it without changing application code or safeguards.
+- Evidence: `artifacts/dashboard-upgrade-phase3/hosted-ui-gate.json`,
+  `hosted-academic-1440.png`, `hosted-academic-768.png`, `hosted-academic-390.png`,
+  `hosted-analysis-controls.png`, and `hosted-preservation-final.json`.
+- Final read-only gate again preserved every prior protected row and all
+  accounts/configuration; SQLite integrity OK. **165 actual Qwen inferences**
+  saved since the Phase 3 backup; latest validated with prompt v3.3. Updated
+  ED220 demo reached **182/1,920 validated checkpoint records**, 1,737 queued,
+  1 running and 0 failed at the read. These are checkpoint records, not unique
+  students. Existing original-CS110 failures remain visible and unchanged.
+- No service restarts, extra inference requests, queue resets or pause changes
+  were needed. The user's analysis continued. This completes the upgrade gates,
+  not the background queue or a predictive-accuracy study.
+- Independent final review found a guide-copy mismatch: only DS210 has marked
+  practice quizzes. Corrected the guide to distinguish its practice marks from
+  CS110/ED220 optional practice resources; learner IDs and model inputs unchanged.
