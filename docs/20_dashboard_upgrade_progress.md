@@ -3,13 +3,12 @@
 ## Resume here
 
 - Approved: all ten items in the instructor's dashboard-upgrade plan.
-- **Phase 1 complete. Phase 2 deployed; live API/model verified, hosted visual check
-  awaiting instructor sign-in (2026-09-29). Do not start Phase 3 yet.**
+- **Phases 1 and 2 complete, including hosted API/model and visual gates.
+  Phase 3 started (2026-09-30): analysis controls, responsive polish and demo guide.**
 - New user instruction: each phase follows build → local test → deploy → verify
   the real dashboard/model before proceeding. Phase 2 may start after Phase 1
   passes its hosted gate. Preserve this sequence at future interruptions.
-- Deployed on Lobot: `366f798` (Phase 1 implementation `2acc2ab` plus distinct
-  original/updated synthetic course labels). See the hosted evidence below.
+- Deployed on Lobot: `fcc275a` (Phase 2 implementation). See the hosted evidence below.
 - Baseline source commit: `e725db5`, branch `agent/align-strong-llm`.
 - Deployment integration base: `51b7e9b` (fast-forwarded newer team work without
   overwriting Phase 1 or unrelated local edits). Combined local run: 333 passed
@@ -30,14 +29,14 @@
 |---|---|---|---|
 | 1 | Teaching-style presets, explicit inactivity monitoring control, visible policy | 1 | Hosted gate passed |
 | 2 | Required/optional/due resource semantics; assessed versus practice grades | 1 | Hosted gate passed |
-| 3 | Quick manual flag, watchlist and instructor priority separate from model score | 2 | Deployed; live API passed |
-| 4 | Name + ID / ID-only privacy view, with authorized name mapping only | 2 | Deployed; live API passed |
-| 5 | Actionable overview, direct student opening, practical filters and sorting | 2 | Deployed; hosted UI pending |
-| 6 | Compact student summary, clear score comparison, evidence-first profile | 2 | Deployed; hosted UI pending |
-| 7 | Easier support recording, explicit planned/completed, action versus evidence dates | 2 | Deployed; live API passed |
-| 8 | Clear refresh/queue/retry controls and compact analysis status | 3 | Not started |
-| 9 | Desktop/tablet/mobile polish and locally scrollable wide tables | 3 | Not started |
-| 10 | Demonstration of quiet/high-grade, practice, extension, missing-feed and support cases | 3 | Not started |
+| 3 | Quick manual flag, watchlist and instructor priority separate from model score | 2 | Hosted gate passed |
+| 4 | Name + ID / ID-only privacy view, with authorized name mapping only | 2 | Hosted gate passed |
+| 5 | Actionable overview, direct student opening, practical filters and sorting | 2 | Hosted gate passed |
+| 6 | Compact student summary, clear score comparison, evidence-first profile | 2 | Hosted gate passed |
+| 7 | Easier support recording, explicit planned/completed, action versus evidence dates | 2 | Hosted gate passed |
+| 8 | Clear refresh/queue/retry controls and compact analysis status | 3 | In progress |
+| 9 | Desktop/tablet/mobile polish and locally scrollable wide tables | 3 | In progress |
+| 10 | Demonstration of quiet/high-grade, practice, extension, missing-feed and support cases | 3 | In progress |
 
 ## Phase 1 design decisions
 
@@ -252,16 +251,63 @@ settings, not the production database.
 - At verification, **26 new actual Qwen inferences** had been saved since the
   final backup, using v3.3. Latest saved job was validated. This confirms resumed
   operation, not completion of the entire queue or measured predictive accuracy.
-- Evidence: `artifacts/dashboard-upgrade-phase2/hosted-api-gate.json` and
-  `hosted-preservation.json`. The dedicated dashboard browser is at login after
-  restart. User was asked to sign in; real hosted visual/interaction verification
-  remains outstanding. Local desktop/mobile visual checks are already complete.
+- Evidence: `artifacts/dashboard-upgrade-phase2/hosted-api-gate.json`,
+  `hosted-preservation.json` and `hosted-ui-gate.json`. After sign-in, the real
+  dashboard passed watchlist drill-down, saved flag/priority, ID-only profile,
+  Back with retained filters, current support history and legacy mode navigation.
+  Desktop and 390px mobile screenshots inspected; no document overflow or UI
+  exceptions. No further data writes were made during the visual gate.
+
+## Phase 3 plan
+
+- Keep the overview compact; put course-wide queue controls behind a clearly
+  named expander, with the full diagnostic view still available in Data health.
+- Distinguish refreshing saved results from requesting model work. State the
+  current scope (one student, selected week, or all weeks), reuse and retry rules.
+  Correct the misleading "remains queued" message when no jobs are queued.
+- Keep pause/retry/validation safeguards unchanged. Do not change model prompts,
+  scores, source data or policy revisions for presentation improvements.
+- Wrap long selected labels and provide local scrolling for tab strips and wide
+  tables. Verify 390px mobile, 768px tablet and desktop with real browser checks.
+- Add a synthetic-only scenario guide: where to inspect quiet/high-grade,
+  practice, extension, missing-feed and support examples, and what to verify.
+  Scenario design is not an observed result or model input; actual evidence and
+  current saved model output remain authoritative.
+- Test locally, then deploy and verify the hosted dashboard and actual model
+  operation. Preserve all source, model, support, triage and account records.
 
 ## Next handoff
 
-1. After sign-in, finish Phase 2's hosted visual/interaction gate. Check flag and
-   watchlist persistence, ID-only labels, overview drill-down/Back, support dates,
-   and preserved legacy mode. Do not repeat deployment, backups or the mutating
-   acceptance script. Do not start Phase 3 until this gate passes.
+1. Phase 2 is finished. Continue Phase 3 from the plan above; do not repeat its
+   deployment or mutating acceptance script. The existing fictional flag/support
+   example should remain available for instructor inspection.
 2. Preserve the unrelated
    edits listed at the top. Do not repeat the completed Phase 1 investigation.
+
+## Phase 3 local checkpoint
+
+- Implemented display-only scenario guide and cross-checkpoint navigation for
+  known updated synthetic courses. The authorized API confirms the learner
+  exists. Missing-feed checks remain isolated faults, not fictional failures
+  inserted into the complete cohort. See `docs/21_instructor_demo_guide.md`.
+- Overview's all-weeks analysis controls are collapsed by default. Refresh and
+  queue scope/reuse/retry are explained, empty catch-up is disabled, and another
+  busy course no longer implies this course has queued work. No scheduler,
+  inference, schema, prompt or validation changes.
+- Full selected course name remains readable below the selector. Tablet cards
+  use two columns; mobile tabs scroll locally and grade legends stack instead of
+  clipping. Data health separates manual-priority counts from model statuses.
+- Combined local regression: **341 tests plus 6 subtests passed**; changed Python
+  lint passed. Browser gate covers 1440px/768px/390px, scenario-to-week navigation,
+  reachable final tab, Data health tables and no document overflow/UI exceptions.
+  Evidence: `artifacts/dashboard-upgrade-phase3/` and
+  `tests/check_dashboard_phase3_browser.py` (ignored operator/test materials).
+- The instructor started a course analysis during this phase. Preserve it:
+  **do not stop the worker or model, reset the queue, change pauses, or reimport**.
+  Online consistent backup: `var/backups/dashboard-phase3-20260929T225117197916Z`.
+  Baseline: 18,204 saved analyses, 242 support events, 1 triage record/event.
+  Exact old-row preservation, auth/config equality and integrity passed before
+  deployment; 11 additional actual Qwen inferences were saved after backup.
+- Next: push only scoped dashboard/docs files, pull on Lobot, rerun the
+  dashboard (prefer existing Streamlit session; no service restart), and verify
+  hosted UI plus continuing actual model results before marking Phase 3 complete.

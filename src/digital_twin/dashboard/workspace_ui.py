@@ -24,6 +24,7 @@ from digital_twin.workspace.policy import LEARNING_MODE_LABELS, preset_policy
 from digital_twin.workspace.tracing import safe_attempts
 
 from .client import DashboardApiError
+from .demo_guide import demo_examples
 from .workspace_client import WorkspaceClient
 
 SUPPORT_LABELS = {
@@ -121,9 +122,15 @@ WORKSPACE_CSS = """
  [data-testid="stMetricLabel"] p {white-space:normal;}
  [data-testid="stDataFrame"], [data-testid="stCode"] {max-width:100%;overflow-x:auto;}
  [data-testid="stButton"] p {white-space:normal;}
+ [data-baseweb="select"] [data-baseweb="tag"],
+ [data-baseweb="select"] [data-testid="stMarkdownContainer"] {
+   white-space:normal;overflow-wrap:anywhere;}
+ [data-baseweb="tab-list"] {max-width:100%;overflow-x:auto;scrollbar-width:thin;}
+ [data-baseweb="tab"] {flex-shrink:0;white-space:nowrap;}
  :focus-visible {outline:3px solid #a85a2d!important;outline-offset:3px;}
  @media(max-width:850px) {
    .block-container {padding:4rem .9rem 2rem;}
+   .dt-cards {grid-template-columns:repeat(2,minmax(0,1fr));}
    [data-testid="stHorizontalBlock"] {flex-wrap:wrap!important;gap:1rem!important;}
    [data-testid="stHorizontalBlock"]>[data-testid="stColumn"] {
      width:100%!important;flex:1 1 100%!important;min-width:0!important;}
@@ -131,7 +138,7 @@ WORKSPACE_CSS = """
  }
  @media(max-width:430px) {
    .dt-cards {grid-template-columns:1fr 1fr;gap:.5rem;}
-   .dt-card {padding:.75rem;}.dt-card-value {font-size:1.55rem;}}
+   .dt-card {padding:.75rem;}.dt-card-value {font-size:1.35rem;}}
 </style>
 """
 
@@ -359,6 +366,7 @@ def render_workspace(client: WorkspaceClient, account: Any) -> None:
             format_func=lambda key: _course_name(by_id[key]),
             key="workspace_course",
         )
+        st.caption(_course_name(by_id[course_id]))
         weeks = sorted(by_id[course_id].get("checkpoints", []))
         if not weeks:
             st.info("This course has no prepared checkpoints.")
@@ -381,7 +389,10 @@ def render_workspace(client: WorkspaceClient, account: Any) -> None:
             help="Names come only from your authorized course roster. "
             "ID only also limits search to IDs; free-text notes may still identify a student.",
         )
-        if st.button("Refresh workspace", use_container_width=True):
+        if st.button(
+            "Refresh workspace", use_container_width=True,
+            help="Reload saved data and results. This does not import LMS data or rerun the model.",
+        ):
             st.rerun()
         if st.button("Sign out", use_container_width=True):
             st.session_state.clear()
@@ -392,6 +403,9 @@ def render_workspace(client: WorkspaceClient, account: Any) -> None:
     if st.session_state.get("workspace_context") != context:
         st.session_state["workspace_context"] = context
         st.session_state["workspace_profile"] = None
+    demo_target = st.session_state.pop("workspace_demo_target", None)
+    if demo_target and demo_target[:2] == (course_id, week):
+        _open_profile("Students", demo_target[2])
     course = by_id[course_id]
     st.markdown(
         '<div class="dt-kicker">Course digital twin · instructor workspace</div>',
@@ -627,8 +641,60 @@ def render_overview(
         )
     else:
         st.info("There are no student records at this checkpoint.")
+    render_demo_guide(client, workspace.get("course", {}))
     render_analysis_controls(client, course_id, week)
-    render_course_analysis(client, course_id)
+    with st.expander("Course analysis queue · all weeks", expanded=False):
+        render_course_analysis(client, course_id)
+
+
+def _open_demo(course_id: str, week: int, learner_id: str) -> None:
+    """Navigation only: no queue, record, policy or model-input changes."""
+    st.session_state[f"workspace_week_{course_id}"] = week
+    st.session_state.pop("workspace_context", None)
+    st.session_state["workspace_demo_target"] = (course_id, week, learner_id)
+    _open_profile("Students", learner_id)
+
+
+def render_demo_guide(client: WorkspaceClient, course: dict[str, Any]) -> None:
+    examples = demo_examples(course)
+    if not examples:
+        return
+    course_id = course["presentation_id"]
+    with st.expander("Synthetic scenario guide · what to inspect"):
+        st.caption(
+            "Fictional scenario design, not a model finding or accuracy claim. "
+            "This guide is not sent to the predictor. Open a record to inspect its "
+            "actual evidence and saved analysis; opening never queues or edits anything."
+        )
+        selected = st.selectbox(
+            "Demonstration example", range(len(examples)),
+            format_func=lambda index: examples[index]["title"],
+            key=f"workspace_demo_{course_id}",
+        )
+        example = examples[selected]
+        st.write(example["check"])
+        st.caption(f"Learner ID: {example['learner_id']} · week {example['week']}")
+        # Check the authorized API: a small or customized imported cohort may not
+        # include every generator example. Never invent a roster entry.
+        try:
+            client.learner(course_id, example["learner_id"], week=example["week"],
+                           privacy=identity_mode())
+        except DashboardApiError as error:
+            _show_error(error)
+        else:
+            st.button(
+                "Open demonstration record", key=f"workspace_demo_open_{course_id}",
+                on_click=_open_demo,
+                args=(course_id, example["week"], example["learner_id"]),
+            )
+        st.markdown("**Missing-feed check · separate controlled test**")
+        st.write(
+            "The main demo cohort has complete applicable feeds. Missing-feed variants "
+            "are tested separately: absent grades or activity remain unavailable, never "
+            "zero. If essential evidence is insufficient, the system abstains without "
+            "a risk score. Refresh does not create or repair missing source records."
+        )
+        st.caption("Operator walkthrough and test references: docs/21_instructor_demo_guide.md")
 
 
 def render_roster(
@@ -831,6 +897,12 @@ def render_analysis_controls(
             "Validated results appear after the worker finishes."
         )
         st.caption(
+            f"Scope: {'this student' if learner_id else 'all students in this course'}, "
+            f"week {week} only. Refresh workspace only reloads saved results; "
+            "queuing requests model work and reuses matching existing jobs/results. "
+            "It does not refresh the LMS source data."
+        )
+        st.caption(
             "Risk scores are currently uncalibrated 0–100 outputs, not probabilities of "
             "failure. Validation checks structure and cited evidence; it does not prove "
             "predictive accuracy."
@@ -880,7 +952,7 @@ def render_course_progress(client: WorkspaceClient, course_id: str) -> None:
         "a rules-baseline result does not mark a record as analyzed by the LLM."
     )
     st.caption(
-        "This analysis panel refreshes automatically every 10 seconds while it is open. "
+        "This analysis panel refreshes automatically every 10 seconds while this page is open. "
         "Student cards and profiles update when you choose Refresh workspace or navigate."
     )
     try:
@@ -951,7 +1023,14 @@ def render_course_progress(client: WorkspaceClient, course_id: str) -> None:
     if worker.get("is_processing_this_course") is True:
         st.caption("The worker is currently processing this course.")
     elif worker.get("processing_another_course") is True:
-        st.caption("The shared worker is processing another course. This course remains queued.")
+        st.caption(
+            "The shared worker is processing another course. "
+            + (
+                "This course has pending work waiting for the worker."
+                if queued + running + retries > 0
+                else "This course currently has no queued or running work."
+            )
+        )
     if resume_is_pending(course_control):
         st.info(
             "A resume request for this course has been recorded. The worker has not yet "
@@ -1003,11 +1082,19 @@ def render_course_progress(client: WorkspaceClient, course_id: str) -> None:
                     "a request does not confirm that processing has restarted."
                 )
                 st.rerun()
+    st.caption(
+        "Scope: every prepared week in this course. Analyze adds unassessed records; "
+        "matching completed and pending work is reused. Retry only requeues failed "
+        "records within the attempt limit. Neither button clears a protective pause."
+    )
     left, right = st.columns(2)
     with left:
         if st.button(
             "Analyze all unassessed checkpoints",
             type="primary",
+            disabled=total == 0 or int(summary.get("unassessed", 0)) == 0,
+            help="Queue missing current LLM assessments across all prepared weeks; "
+            "this does not import new LMS records or force reruns of completed results.",
             key=f"workspace_catchup_{course_id}",
         ):
             _queue_batch(client, course_id, "unassessed")
@@ -1015,6 +1102,8 @@ def render_course_progress(client: WorkspaceClient, course_id: str) -> None:
         if st.button(
             "Retry eligible failed analysis",
             disabled=failed == 0,
+            help="Check the failure details first. Repeated attempts cannot repair "
+            "missing source data, configuration or an invalid output contract.",
             key=f"workspace_retry_failed_{course_id}",
         ):
             _queue_batch(client, course_id, "retry_failed")
@@ -1716,7 +1805,7 @@ def render_academic_progress(detail: dict[str, Any]) -> None:
                         domain=["Assessed work", "Practice / formative", "Unclassified"],
                         range=["#267769", "#b57b29", "#797f89"],
                     ),
-                    legend=alt.Legend(orient="bottom"),
+                    legend=alt.Legend(orient="bottom", columns=1, labelLimit=0),
                 ),
                 shape=alt.Shape("Evidence type:N", legend=None),
                 tooltip=[
@@ -2366,7 +2455,16 @@ def render_health(client: WorkspaceClient, workspace: dict[str, Any]) -> None:
         "can exist before the LLM has analyzed it."
     )
     summary = workspace.get("summary", {})
-    _frame([{"Status": label(key), "Students": value} for key, value in summary.items()])
+    _frame([
+        {"Status": label(key), "Students": value}
+        for key, value in summary.items() if key != "priority_counts"
+    ])
+    if summary.get("priority_counts"):
+        st.caption("Instructor-set priority counts · separate from model support levels")
+        _frame([
+            {"Instructor priority": label(key), "Students": value}
+            for key, value in summary["priority_counts"].items()
+        ])
     try:
         runtime = client.model_status()
     except DashboardApiError as error:
