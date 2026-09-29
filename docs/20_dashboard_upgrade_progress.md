@@ -3,7 +3,8 @@
 ## Resume here
 
 - Approved: all ten items in the instructor's dashboard-upgrade plan.
-- **Phase 1 hosted gate passed; Phase 2 local gate passed, deployment next (2026-09-29).**
+- **Phase 1 complete. Phase 2 deployed; live API/model verified, hosted visual check
+  awaiting instructor sign-in (2026-09-29). Do not start Phase 3 yet.**
 - New user instruction: each phase follows build → local test → deploy → verify
   the real dashboard/model before proceeding. Phase 2 may start after Phase 1
   passes its hosted gate. Preserve this sequence at future interruptions.
@@ -29,11 +30,11 @@
 |---|---|---|---|
 | 1 | Teaching-style presets, explicit inactivity monitoring control, visible policy | 1 | Hosted gate passed |
 | 2 | Required/optional/due resource semantics; assessed versus practice grades | 1 | Hosted gate passed |
-| 3 | Quick manual flag, watchlist and instructor priority separate from model score | 2 | Local gate passed |
-| 4 | Name + ID / ID-only privacy view, with authorized name mapping only | 2 | Local gate passed |
-| 5 | Actionable overview, direct student opening, practical filters and sorting | 2 | Local gate passed |
-| 6 | Compact student summary, clear score comparison, evidence-first profile | 2 | Local gate passed |
-| 7 | Easier support recording, explicit planned/completed, action versus evidence dates | 2 | Local gate passed |
+| 3 | Quick manual flag, watchlist and instructor priority separate from model score | 2 | Deployed; live API passed |
+| 4 | Name + ID / ID-only privacy view, with authorized name mapping only | 2 | Deployed; live API passed |
+| 5 | Actionable overview, direct student opening, practical filters and sorting | 2 | Deployed; hosted UI pending |
+| 6 | Compact student summary, clear score comparison, evidence-first profile | 2 | Deployed; hosted UI pending |
+| 7 | Easier support recording, explicit planned/completed, action versus evidence dates | 2 | Deployed; live API passed |
 | 8 | Clear refresh/queue/retry controls and compact analysis status | 3 | Not started |
 | 9 | Desktop/tablet/mobile polish and locally scrollable wide tables | 3 | Not started |
 | 10 | Demonstration of quiet/high-grade, practice, extension, missing-feed and support cases | 3 | Not started |
@@ -230,9 +231,37 @@ settings, not the production database.
   `tests/check_dashboard_phase2_browser.py`. Screenshot evidence is under
   `artifacts/dashboard-upgrade-phase2/`. These are local/ignored as established.
 
+## Phase 2 hosted deployment checkpoint
+
+- Implementation `fcc275a` pushed to `agent/align-strong-llm` and deployed on Lobot.
+  Additive post-stop backup: `var/backups/dashboard-phase2-20260929T173912937545Z`.
+  SQLite initialization reports 41 application tables. API, dashboard and worker
+  restarted successfully; no dataset reimport, identity reset or log-backup pruning.
+- Signed live API gate passed triage save/retry, ID-only/search behavior, filters,
+  planned-to-completed audit, and later-action/earlier-evidence separation. The
+  selected immutable snapshot and its existing model results were unchanged.
+- Fictional demonstration left for inspection: **Foundations of Computing —
+  updated demo v2**, learner `synthetic:learner:1:0002`, evidence week **3**.
+  Flagged, watchlisted, high instructor priority; an ongoing case contains a
+  planned check-in on day 30 and completion recorded on day 32, both citing week 3
+  (evidence cutoff day 20). Notes explicitly label the demonstration. No real
+  student contact or automated message occurred. Its risk score was not edited.
+- Exact SQL comparisons preserved all original source rows, all **15,074** saved
+  assessments, all **240** prior workspace support events, automation settings
+  and legacy records. Account/config files are unchanged; SQLite integrity is OK.
+- At verification, **26 new actual Qwen inferences** had been saved since the
+  final backup, using v3.3. Latest saved job was validated. This confirms resumed
+  operation, not completion of the entire queue or measured predictive accuracy.
+- Evidence: `artifacts/dashboard-upgrade-phase2/hosted-api-gate.json` and
+  `hosted-preservation.json`. The dedicated dashboard browser is at login after
+  restart. User was asked to sign in; real hosted visual/interaction verification
+  remains outstanding. Local desktop/mobile visual checks are already complete.
+
 ## Next handoff
 
-1. Back up, deploy and verify Phase 2's real dashboard/API/model before Phase 3.
-   Preserve existing data, controls, log files, accounts and remote untracked team work.
+1. After sign-in, finish Phase 2's hosted visual/interaction gate. Check flag and
+   watchlist persistence, ID-only labels, overview drill-down/Back, support dates,
+   and preserved legacy mode. Do not repeat deployment, backups or the mutating
+   acceptance script. Do not start Phase 3 until this gate passes.
 2. Preserve the unrelated
    edits listed at the top. Do not repeat the completed Phase 1 investigation.
