@@ -3,11 +3,12 @@
 ## Resume here
 
 - Approved: all ten items in the instructor's dashboard-upgrade plan.
-- **Phase 1 is locally validated; deployment and real hosted verification now authorized.**
+- **Phase 1 deployed and hosted gate passed (2026-09-29); Phase 2 implementation is next.**
 - New user instruction: each phase follows build → local test → deploy → verify
   the real dashboard/model before proceeding. Phase 2 may start after Phase 1
   passes its hosted gate. Preserve this sequence at future interruptions.
-- No deployment, database mutation on Lobot, or Git push has been performed.
+- Deployed on Lobot: `366f798` (Phase 1 implementation `2acc2ab` plus distinct
+  original/updated synthetic course labels). See the hosted evidence below.
 - Baseline source commit: `e725db5`, branch `agent/align-strong-llm`.
 - Deployment integration base: `51b7e9b` (fast-forwarded newer team work without
   overwriting Phase 1 or unrelated local edits). Combined local run: 333 passed
@@ -26,13 +27,13 @@
 
 | Item | Deliverable | Phase | Status |
 |---|---|---|---|
-| 1 | Teaching-style presets, explicit inactivity monitoring control, visible policy | 1 | Locally complete |
-| 2 | Required/optional/due resource semantics; assessed versus practice grades | 1 | Locally complete |
-| 3 | Quick manual flag, watchlist and instructor priority separate from model score | 2 | Not started |
-| 4 | Name + ID / ID-only privacy view, with authorized name mapping only | 2 | Not started |
-| 5 | Actionable overview, direct student opening, practical filters and sorting | 2 | Not started |
-| 6 | Compact student summary, clear score comparison, evidence-first profile | 2 | Not started |
-| 7 | Easier support recording, explicit planned/completed, action versus evidence dates | 2 | Not started |
+| 1 | Teaching-style presets, explicit inactivity monitoring control, visible policy | 1 | Hosted gate passed |
+| 2 | Required/optional/due resource semantics; assessed versus practice grades | 1 | Hosted gate passed |
+| 3 | Quick manual flag, watchlist and instructor priority separate from model score | 2 | Implementation started |
+| 4 | Name + ID / ID-only privacy view, with authorized name mapping only | 2 | Implementation started |
+| 5 | Actionable overview, direct student opening, practical filters and sorting | 2 | Implementation started |
+| 6 | Compact student summary, clear score comparison, evidence-first profile | 2 | Implementation started |
+| 7 | Easier support recording, explicit planned/completed, action versus evidence dates | 2 | Implementation started |
 | 8 | Clear refresh/queue/retry controls and compact analysis status | 3 | Not started |
 | 9 | Desktop/tablet/mobile polish and locally scrollable wide tables | 3 | Not started |
 | 10 | Demonstration of quiet/high-grade, practice, extension, missing-feed and support cases | 3 | Not started |
@@ -77,22 +78,21 @@
    distinct from real Qwen inference.
 8. Show isolated screenshots/scenario results and list any unverified live checks.
 
-## Last completed step / next action
+## Local gate (completed before deployment)
 
 2026-09-29: resumed without restarting the investigation. Implementation now exists
 for policy presets and disabling inactivity, rich-features-v3 academic/resource
 semantics, synthetic-education-v2 IDs, prompt v3.3 and rules-baseline-v3, plus
 settings/profile/academic UI. Root also exposed checkpoint-available assessment
-definitions in Store.learner. Nothing has been deployed or committed.
+definitions in Store.learner.
 
 Final local gate (2026-09-29): **268 tests passed, plus 6 subtests**. Lint passes
 for changed production Python files and `git diff --check` reports no whitespace
 errors. Existing dependency deprecation warnings remain; they are not test failures.
 An independent read-only semantic review found no blocking issues.
 
-Real Qwen v3.3 inference is **NOT yet verified**. Historical v3.2 live results
-must not be reused as evidence for this new prompt. No Git commit, push, live
-database change, or deployment has been made during this phase.
+The subsequent hosted gate below verifies actual v3.3 inference. Historical v3.2
+results are not counted as evidence for this new prompt.
 
 ## What can now be reviewed
 
@@ -151,20 +151,56 @@ python -m streamlit run tests/preview_dashboard_phase1.py --server.address 127.0
 Open `http://127.0.0.1:18502`. Changes in this preview are temporary in-memory
 settings, not the production database.
 
+## Hosted gate — 2026-09-29
+
+- Backups are additive, private, and retained on Lobot. Final pre-deployment
+  backup: `var/backups/dashboard-phase1-20260929T093042754955Z`. Existing backups
+  were not pruned. Exact original-row comparisons and SQLite integrity passed.
+- Three v2 synthetic courses were added alongside the original four courses:
+  360 fictional learners, 48,517 events, 5,760 snapshots and 120 support events.
+  Original empirical/synthetic records, results and histories remain unchanged.
+  Only the three new course grants were added to Mohamed's account; existing
+  account identities, password hashes and deployment configuration are unchanged.
+- Hosted Qwen2.5:7b / prompt `course-risk-qwen-v3.3`: 11 isolated scenarios,
+  **9 validated assessments, 2 correct pre-inference abstentions, 0 final failures**.
+  One assessment required a bounded correction. These are contract/grounding
+  checks on synthetic scenarios, not measured predictive accuracy.
+- Three more learner/checkpoint assessments were queued through the signed API,
+  processed normally and read back as validated persisted results. A fourth
+  validated run confirmed the new saved offline policy. The initial standalone
+  smoke-runner authentication failure was fixed by loading the normal deployment
+  environment; no authentication or validation checks were weakened.
+- Real dashboard: preset remains a draft until Save; save/reload works; old
+  assessments become outdated after a policy change. CS110 updated demo now has
+  Mainly offline / policy 3 (login inactivity excluded). A same-value save during
+  verification created revision 2; no old policy or assessment was overwritten.
+- Academic view renders assessed/practice grades and required resources due by
+  the checkpoint separately. Desktop and 390px mobile checked, with no document
+  overflow or Streamlit exceptions. More mobile polish remains Phase 3 work.
+- Evidence (ignored operational artifacts):
+  `artifacts/dashboard-upgrade-phase1/hosted-live-results.json`,
+  `hosted-ui-settings.json`, `hosted-academic-desktop.png`, and
+  `hosted-academic-mobile.png`. Remote signed-API reports are under
+  `artifacts/dashboard-upgrade-phase1-20260929T093403Z/`.
+- Upstream team work introduced a default **Student support** mode backed by
+  legacy v1 support tables. This upgrade is under **Course operations** (rich
+  v2 workspace). Phase 2 must preserve both histories, not send v2 IDs into
+  legacy support tables or silently remove the upstream workflow.
+- Offline mode excludes login evidence, not real academic/resource concerns.
+  No claim is made that this always lowers a model score. Five old original-CS110
+  v3.2 failures predate this rollout; they are not new v3.3 failures.
+- Normal single-inference worker resumed after the gate (PID 55076); API and
+  dashboard remained running. Existing course controls are preserved; new v2
+  courses have automatic analysis enabled. The version change will cause bounded
+  background catch-up. This does not mean all checkpoints are already reanalyzed.
+
 ## Next handoff
 
-1. User approved deployment and hosted verification on 2026-09-29. Restore the
-   dedicated browser session, inspect remote Git changes, preserve live database,
-   auth and logs, deploy without mass reanalysis, and run a small hosted gate.
-   Then implement Phase 2 items 3–7; do not repeat completed investigation.
-2. Before deployment, validate v3.3 against actual hosted Qwen on a small, isolated
-   scenario set. Record the model digest and results; do not queue a whole live
-   course merely to test the prompt. Keep existing output-validation boundaries.
-3. Deployment needs explicit preparation: backup, add new v2 synthetic courses
-   alongside old data, authorize the new presentation IDs for test instructors,
-   and check policy/result version handling. Do not overwrite old source IDs or
-   remove histories. Neither SQL migration nor stored output schema change is
-   required for these additive JSON fields.
-4. Preserve the pre-existing unrelated edits listed at the top. New source file
-   `src/digital_twin/workspace/policy.py` and this checkpoint are untracked until
-   a later scoped commit; do not omit them when preparing that commit.
+1. Implement Phase 2 items 3–7. Keep
+   manual triage separate from model evidence/scores; authorized names must have
+   an ID-only display option. Support-case filters must include all active states.
+2. Distinguish action time, evidence checkpoint and record creation time. Keep
+   historical evidence cutoff-safe while permitting later instructor actions.
+   Bind new support records to the current snapshot revision, not any old row.
+3. Locally test, deploy and verify Phase 2 before Phase 3. Preserve the unrelated
+   edits listed at the top. Do not repeat the completed Phase 1 investigation.
