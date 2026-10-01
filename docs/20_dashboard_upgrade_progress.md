@@ -356,3 +356,25 @@ settings, not the production database.
   `synthetic:learner:2:0001` at week 6. No UI exceptions or data writes.
   Evidence: `hosted-guide-final.json` and `hosted-practice-guide-final.png` in the
   Phase 3 artifact directory. No implementation or verification gate remains open.
+
+## Background analysis outcome — 2026-10-01 read
+
+- All 12,984 current checkpoint records have been attempted: 12,960 validated
+  results, 12 explicit abstentions and 12 failed analyses. No queued, running,
+  retry-scheduled or unassessed records remained at this read. The worker was
+  healthy and **idle**, not halted; all course controls were active.
+- Updated ED220 (Learning and Research Methods) completed **1,920/1,920**
+  validated checkpoint records with **zero failures**.
+- Remaining failures: original CS110 has 6 `MODEL_POLICY_CONFLICT` and 1
+  `MODEL_RISK_NOT_SUPPORTED`; updated CS110 has 4 `MODEL_RISK_NOT_SUPPORTED`;
+  original ED220 has 1 `MODEL_POLICY_CONFLICT`. These require model-response
+  diagnosis, not a dashboard fix. Rejected risk scores remain unpublished.
+  No blind retries, pause resets or validator relaxation were performed.
+- 9,638 actual Qwen inferences were saved since the Phase 3 backup. Exact
+  preservation passed again for original source, assessment and support records;
+  account/config bytes unchanged and SQLite integrity OK. API, dashboard and
+  worker process IDs remained unchanged throughout deployment.
+- Evidence: `artifacts/dashboard-upgrade-phase3/hosted-preservation-latest.json`
+  and `remaining-validation-failures.json`. These are operational batch results,
+  not predictive-accuracy measurements. The dashboard upgrades are complete;
+  resolving the 12 retained model rejections is separate follow-up work.
