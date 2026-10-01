@@ -8,7 +8,8 @@
 - New user instruction: each phase follows build → local test → deploy → verify
   the real dashboard/model before proceeding. Phase 2 may start after Phase 1
   passes its hosted gate. Preserve this sequence at future interruptions.
-- Deployed on Lobot: `b8039b8` (Phase 3 UI implementation). See evidence below.
+- Deployed on Lobot: `82a1b81` (Phase 3 UI plus course-specific guide correction).
+  Initial Phase 3 implementation: `b8039b8`. See evidence below.
 - Baseline source commit: `e725db5`, branch `agent/align-strong-llm`.
 - Deployment integration base: `51b7e9b` (fast-forwarded newer team work without
   overwriting Phase 1 or unrelated local edits). Combined local run: 333 passed
@@ -349,3 +350,9 @@ settings, not the production database.
 - Independent final review found a guide-copy mismatch: only DS210 has marked
   practice quizzes. Corrected the guide to distinguish its practice marks from
   CS110/ED220 optional practice resources; learner IDs and model inputs unchanged.
+- Correction deployed as `82a1b81` without restarting any process. Five focused
+  UI tests passed. Final authenticated browser check confirmed the CS110 optional
+  resource wording and DS210 practice-grade wording, then opened DS210 learner
+  `synthetic:learner:2:0001` at week 6. No UI exceptions or data writes.
+  Evidence: `hosted-guide-final.json` and `hosted-practice-guide-final.png` in the
+  Phase 3 artifact directory. No implementation or verification gate remains open.
