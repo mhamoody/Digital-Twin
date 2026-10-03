@@ -1,0 +1,871 @@
+{
+    "protocol_version":  "e2-grounding-heldout-v1",
+    "split":  "heldout",
+    "created_at":  "2026-10-03",
+    "cases":  [
+                  {
+                      "case_id":  "heldout-e2-v1-001",
+                      "scenario_family":  "strong_academic_low_activity",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  3,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-002",
+                      "scenario_family":  "weak_academic_high_activity",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  5,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-003",
+                      "scenario_family":  "real_zero_grade",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  8,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-004",
+                      "scenario_family":  "grade_missing",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  10,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-005",
+                      "scenario_family":  "not_yet_due",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  3,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-006",
+                      "scenario_family":  "awaiting_marking",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  5,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-007",
+                      "scenario_family":  "approved_extension",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  8,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-008",
+                      "scenario_family":  "optional_resource",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  10,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-009",
+                      "scenario_family":  "missing_feed",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  3,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-010",
+                      "scenario_family":  "genuine_inactivity",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  5,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-011",
+                      "scenario_family":  "conflicting_evidence",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  8,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-012",
+                      "scenario_family":  "insufficient_evidence",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  10,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-013",
+                      "scenario_family":  "strong_academic_low_activity",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  3,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-014",
+                      "scenario_family":  "weak_academic_high_activity",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  5,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-015",
+                      "scenario_family":  "real_zero_grade",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  8,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-016",
+                      "scenario_family":  "grade_missing",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  10,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-017",
+                      "scenario_family":  "not_yet_due",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  3,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-018",
+                      "scenario_family":  "awaiting_marking",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  5,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-019",
+                      "scenario_family":  "approved_extension",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  8,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-020",
+                      "scenario_family":  "optional_resource",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  10,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-021",
+                      "scenario_family":  "missing_feed",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  3,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-022",
+                      "scenario_family":  "genuine_inactivity",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  5,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-023",
+                      "scenario_family":  "conflicting_evidence",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  8,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-024",
+                      "scenario_family":  "insufficient_evidence",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  10,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-025",
+                      "scenario_family":  "strong_academic_low_activity",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  3,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-026",
+                      "scenario_family":  "weak_academic_high_activity",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  5,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-027",
+                      "scenario_family":  "real_zero_grade",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  8,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-028",
+                      "scenario_family":  "grade_missing",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  10,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-029",
+                      "scenario_family":  "not_yet_due",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  3,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-030",
+                      "scenario_family":  "awaiting_marking",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  5,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-031",
+                      "scenario_family":  "approved_extension",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  8,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-032",
+                      "scenario_family":  "optional_resource",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  10,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-033",
+                      "scenario_family":  "missing_feed",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  3,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-034",
+                      "scenario_family":  "genuine_inactivity",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  5,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-035",
+                      "scenario_family":  "conflicting_evidence",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  8,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-036",
+                      "scenario_family":  "insufficient_evidence",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  10,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-037",
+                      "scenario_family":  "strong_academic_low_activity",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  3,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-038",
+                      "scenario_family":  "weak_academic_high_activity",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  5,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-039",
+                      "scenario_family":  "real_zero_grade",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  8,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-040",
+                      "scenario_family":  "grade_missing",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  10,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-041",
+                      "scenario_family":  "not_yet_due",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  3,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-042",
+                      "scenario_family":  "awaiting_marking",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  5,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-043",
+                      "scenario_family":  "approved_extension",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  8,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-044",
+                      "scenario_family":  "optional_resource",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  10,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-045",
+                      "scenario_family":  "missing_feed",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  3,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-046",
+                      "scenario_family":  "genuine_inactivity",
+                      "course_policy":  "weekly_participation",
+                      "checkpoint":  5,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "assessment_allowed"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-047",
+                      "scenario_family":  "conflicting_evidence",
+                      "course_policy":  "milestone_project",
+                      "checkpoint":  8,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  },
+                  {
+                      "case_id":  "heldout-e2-v1-048",
+                      "scenario_family":  "insufficient_evidence",
+                      "course_policy":  "blended_optional",
+                      "checkpoint":  10,
+                      "permitted_evidence":  [
+                                                 "activity",
+                                                 "assessment_status",
+                                                 "grade_if_observed",
+                                                 "course_policy"
+                                             ],
+                      "expected_evidence_constraints":  [
+                                                            "no_future_observation",
+                                                            "no_causal_claim",
+                                                            "cite_only_permitted_ids"
+                                                        ],
+                      "expected_behavior_class":  "abstention_expected"
+                  }
+              ]
+}
