@@ -1,0 +1,1 @@
+def paired_policy_row(case_id,global_label,course_aware_label,expected):return {'case_id':case_id,'global_policy':global_label,'course_aware_policy':course_aware_label,'expected':expected,'correct_global':global_label==expected,'correct_course_aware':course_aware_label==expected}

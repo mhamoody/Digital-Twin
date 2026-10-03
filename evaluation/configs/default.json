@@ -1,0 +1,1 @@
+﻿{"dataset_version":"oulad-aaa-2013j-v1","presentation_id":"oulad:AAA:2013J","checkpoints":[3,5,8,10],"seeds":[42,123,2026],"target":{"at_risk":["Fail","Withdrawn"],"not_at_risk":["Pass","Distinction"]},"development_grounding_cases":24,"held_out_grounding_cases":null}

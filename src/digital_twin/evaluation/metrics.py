@@ -1,0 +1,2 @@
+def binary_metrics(y_true,scores,threshold=.5):
+ y=list(y_true);s=list(scores);p=[int(x>=threshold) for x in s];tp=sum(a==b==1 for a,b in zip(y,p));tn=sum(a==b==0 for a,b in zip(y,p));fp=sum(a==0 and b==1 for a,b in zip(y,p));fn=sum(a==1 and b==0 for a,b in zip(y,p));pr=tp/(tp+fp) if tp+fp else 0.;rc=tp/(tp+fn) if tp+fn else 0.;return {'precision':pr,'recall':rc,'f1':2*pr*rc/(pr+rc) if pr+rc else 0.,'confusion_matrix':[[tn,fp],[fn,tp]],'n':len(y),'threshold':threshold}
