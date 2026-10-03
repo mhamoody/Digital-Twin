@@ -83,18 +83,34 @@ def create_app(*, database_url: str | None = None, engine: Engine | None = None)
         if effective_url:
             configured_engine = create_twin_engine(effective_url)
     app.state.api_service = ApiService(configured_engine) if configured_engine else None
+    from .browser_auth import configured_sessions, router as browser_router
+
+    app.state.browser_sessions = configured_sessions()
+    app.include_router(browser_router)
 
     @app.middleware("http")
     async def protect_sensitive_responses(request: Request, call_next):
-        if request.url.path.startswith("/api/"):
+        route_path = request.scope["path"]
+        root_path = request.scope.get("root_path", "")
+        if root_path and route_path.startswith(root_path + "/"):
+            route_path = route_path[len(root_path):]
+        is_api = route_path.startswith("/api/")
+        if is_api:
             body = await request.body()
             if len(body) > 1_000_000:
                 return JSONResponse(status_code=413, content={"detail": "Request is too large."})
             request.state.body_hash = hashlib.sha256(body).hexdigest()
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
-        if request.url.path.startswith("/api/"):
+        if is_api:
             response.headers["Cache-Control"] = "no-store"
+        if app.state.browser_sessions is not None:
+            response.headers["Referrer-Policy"] = "same-origin"
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+                "img-src 'self' data:; connect-src 'self'; object-src 'none'; "
+                "base-uri 'self'; frame-ancestors 'self'; form-action 'self'"
+            )
         return response
 
     @app.exception_handler(ResourceNotFound)
@@ -295,6 +311,13 @@ def create_app(*, database_url: str | None = None, engine: Engine | None = None)
 
     app.include_router(workspace_router)
     app.include_router(support_router)
+    frontend_path = os.environ.get("DIGITAL_TWIN_FRONTEND_DIST")
+    if frontend_path and app.state.browser_sessions is not None:
+        from fastapi.staticfiles import StaticFiles
+
+        # Hash navigation keeps API URLs and assets within a JupyterHub proxy prefix.
+        # Mount last: unknown API routes must not resolve to an HTML application page.
+        app.mount("/", StaticFiles(directory=frontend_path, html=True), name="react-workspace")
     app.openapi = phase4_openapi
     return app
 

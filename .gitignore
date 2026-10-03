@@ -12,6 +12,13 @@
 /*.pdf
 
 # Python environments and caches
+# Frontend dependencies and generated bundles
+node_modules/
+/frontend/dist/
+/frontend/coverage/
+/frontend/.vite/
+*.tsbuildinfo
+
 /.venv/
 __pycache__/
 *.py[cod]

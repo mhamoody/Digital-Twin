@@ -1,0 +1,123 @@
+# Course Twin — React instructor workspace
+
+The real frontend migration, on branch **reactvite**. This is not the earlier
+in-memory mock under `artifacts/react-focus-demo`.
+
+**Current gate: read-only foundation.** Login and data views use FastAPI and its
+real course authorization/database. Instructor edits, full academic charts,
+policy editing, model queue controls and complete Streamlit parity are the next
+phases. Streamlit remains the operational interface. Nothing here has been
+deployed to Lobot.
+
+## Code map
+
+- `src/App.tsx`: session, navigation, course/checkpoint/identity context, shell.
+- `src/api/contracts.ts`: TypeScript types **and runtime JSON validation**.
+- `src/api/client.ts`: same-origin authenticated requests, safe errors, timeout.
+- `src/hooks/useResource.ts`: cancellable reads; no old-course/student flash.
+- `src/pages/`: overview, roster and student evidence/history screens.
+- `src/styles.css`: responsive design tokens and page/component styling.
+- `vite.config.ts`: Vite build and optional development API proxy.
+- `../src/digital_twin/api/browser_auth.py`: server-managed pilot sessions.
+- `../docs/22_react_migration.md`: phases and feature-parity checklist.
+
+## Build
+
+Use Node 22.12+ (tested with Node 24) and the project's Python environment.
+
+```powershell
+cd E:\Z1\GP\Digital-Twin\frontend
+npm.cmd ci
+npm.cmd run build
+```
+
+The generated `dist/` bundle is served by FastAPI; Vite's development server is
+not the production hosting solution. `node_modules/`, `dist/`, credentials and
+all learner datasets stay untracked.
+
+## Isolated local preview (this workspace)
+
+The local validation helper lives in the existing ignored `tests/` directory.
+It creates only a separate synthetic database and a test-only instructor. It
+does not call Ollama, restore a live database, or change Lobot services.
+
+```powershell
+cd E:\Z1\GP\Digital-Twin
+python tests/run_react_preview.py
+```
+
+Open **http://127.0.0.1:18001/**. Username: `preview`. Read the generated password
+locally from `var/auth/react-preview-login.json`; do not paste it into chat or
+Git. Restarting the helper generates a new preview password. Stop with Ctrl+C.
+The preview uses generated records and **rules-baseline-v3**, not live Qwen.
+Do not launch a second copy on the same port. The helper is local-only and is
+not included in Git because the repository excludes `/tests/`.
+
+For a fresh clone, an operator can run the existing account/data preparation
+workflow against a separate pilot database, then use the environment below.
+Do not use the real hosted database for development testing.
+
+## Same-origin serving configuration
+
+Set these in the API process environment; never in `VITE_*` variables:
+
+```text
+DIGITAL_TWIN_BROWSER_ENABLED=1
+DIGITAL_TWIN_BROWSER_ORIGIN=http://127.0.0.1:18001
+DIGITAL_TWIN_BROWSER_SECURE=0
+DIGITAL_TWIN_BROWSER_PATH=/
+DIGITAL_TWIN_AUTH_FILE=<absolute path to the dedicated account file>
+DIGITAL_TWIN_DATABASE_URL=<dedicated pilot database URL>
+DIGITAL_TWIN_FRONTEND_DIST=<absolute path to frontend/dist>
+```
+
+```text
+python -m uvicorn digital_twin.api.app:app --host 127.0.0.1 --port 18001 --workers 1
+```
+
+Without `DIGITAL_TWIN_BROWSER_ENABLED=1`, existing Streamlit behavior stays in
+place. Browser cookies default to `Secure`; disabling it is accepted only with
+an explicit loopback HTTP origin. No wildcard CORS or browser signing key.
+
+For Vite hot reload: run `npm.cmd run dev` and use
+`DIGITAL_TWIN_BROWSER_ORIGIN=http://127.0.0.1:5175` in the API process. Vite proxies
+`/api` to loopback port 18001, so the browser still sees one origin. Use the
+FastAPI-served production build for acceptance checks.
+
+## Hosting/security boundary
+
+- One API worker for the current bounded in-memory session store. Restarts log
+  users out. Replicated deployment requires a shared session/rate-limit store.
+- Sessions use opaque HttpOnly/SameSite cookies, 30-minute inactivity expiry,
+  eight-hour absolute expiry, request-origin and CSRF checks for mutations.
+- Account removal, role/password changes and current grants are checked again
+  for every authenticated request. No student records or tokens in localStorage.
+- Login throttling is a pilot safeguard, not a substitute for institutional SSO
+  or a production edge rate limiter. Behind a proxy, limits may be shared by
+  users with the same visible client address.
+- Browser data contracts reject malformed responses rather than inventing risk
+  scores. Request failures do not trigger automatic mutation retries.
+- Hash navigation and relative asset/API paths support a proxy directory. For
+  Lobot later, use its exact HTTPS origin, `Secure=1`, and the assigned
+  `/user/<group>/proxy/<port>/` cookie path. A local prefix simulation passed;
+  real hosted authentication and deployment have **not** been verified yet.
+- Pilot account login is not LTI or Brightspace/onQ SSO. These remain separate
+  institution-approved integration tasks.
+
+## Validation
+
+```text
+npm.cmd run build
+npm.cmd audit --audit-level=high
+python -m pytest tests/test_browser_auth.py tests/test_workspace_security.py tests/unit/test_dashboard_client.py tests/unit/test_dashboard_auth.py -q
+python tests/check_react_foundation.py
+```
+
+Run Python commands from the repository root; browser checks need the isolated
+preview running, Python Playwright and Edge. Evidence is in the ignored folder
+`artifacts/react-migration/`. The current gate is not a full accessibility audit,
+penetration test or end-to-end replacement acceptance.
+
+Implementation references: [Vite backend integration](https://vite.dev/guide/backend-integration),
+[FastAPI static files](https://fastapi.tiangolo.com/tutorial/static-files/), and
+[OWASP CSRF prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html).

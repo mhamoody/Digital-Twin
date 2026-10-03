@@ -89,6 +89,12 @@ def require_instructor(
 ) -> InstructorIdentity:
     """Validate a signed LMS request or the explicit development-only headers."""
 
+    from .browser_auth import browser_identity
+
+    browser = browser_identity(request)
+    if browser is not None:
+        return browser
+
     # Hosted mode never accepts the legacy development identity headers alone.
     if os.environ.get("DIGITAL_TWIN_AUTH_FILE"):
         from digital_twin.dashboard.auth import AccountConfigurationError, load_accounts
