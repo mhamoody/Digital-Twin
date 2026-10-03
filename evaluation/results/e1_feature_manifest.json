@@ -1,0 +1,28 @@
+{
+  "feature_names": [
+    "active_days_cumulative",
+    "active_days_last_14",
+    "active_days_last_28",
+    "active_days_last_7",
+    "assessment_clicks_cumulative",
+    "assessments_due",
+    "assessments_missed",
+    "assessments_submitted",
+    "clicks_cumulative",
+    "clicks_last_14",
+    "clicks_last_28",
+    "clicks_last_7",
+    "collaboration_clicks_cumulative",
+    "content_clicks_cumulative",
+    "days_since_last_activity",
+    "forum_clicks_cumulative",
+    "other_clicks_cumulative",
+    "previous_attempts",
+    "studied_credits",
+    "submission_rate"
+  ],
+  "label_source": "G:\\Queen's\\Graduation Project\\Digital-Twin-runtime\\data\\processed\\oulad_runtime_AAA_2013J_v3\\outcomes_restricted.csv",
+  "train_only_fit": true,
+  "threshold_selection": "validation_f1",
+  "seed": 42
+}

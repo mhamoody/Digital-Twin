@@ -1,29 +1,32 @@
 ﻿# Comparison evaluation status
 
-## COMPLETED RESULT
+## Completed empirical results
 
-None yet. No predictive or grounding result is claimed.
+- Dataset: `oulad_AAA_2013J_v1`, presentation `oulad:AAA:2013J`.
+- Authoritative prepared manifest SHA-256: `fdf7d69b09cffbd25c1ee38a7ec57772fac37f4a0d7d35b14eb425221489c014`.
+- 383 source enrolments; 372 learners produced at least one eligible checkpoint state; 11 had no eligible state.
+- 1,464 states: week 3 = 371, week 5 = 368, week 8 = 365, week 10 = 360.
+- Restricted outcomes are joined only in the research evaluation layer. At-risk states = 352; not-at-risk = 1,112.
 
-## PIPELINE VALIDATION
+## E1 Logistic Regression
 
-- E4 temporal exporter/runner: implemented, awaiting canonical OULAD state export.
-- E1 Logistic Regression: runner contract defined, awaiting frozen canonical states/labels and train/validation/test split.
+Executed with learner-grouped train/validation/test splits (seed 42), train-only standardisation and fitting, validation-F1 threshold selection, and a fixed test report. Results are in `evaluation/results/e1_logistic_oulad_AAA_2013J_v1.csv`; feature separation is recorded in `e1_feature_manifest.json`.
 
-## READY — BLOCKED BY MODEL ACCESS
+| Checkpoint | AUROC | Average Precision | Threshold |
+|---|---:|---:|---:|
+| Week 3 | 0.621 | 0.379 | 0.25 |
+| Week 5 | 0.657 | 0.531 | 0.41 |
+| Week 8 | 0.896 | 0.819 | 0.49 |
+| Week 10 | 0.834 | 0.802 | 0.58 |
 
-- E2 grounding protocol: held-out manifest frozen; Qwen adapter fails clearly when research runtime is unavailable.
+These are baseline test metrics, not LLM results and not calibrated probabilities.
 
-## PRELIMINARY DEVELOPMENT RESULT
+## E4 Temporal safety
 
-Historical development-only grounding result: 17/24 before evidence-first and 24/24 after evidence-first. This is not held-out evaluation and is not combined with future metrics.
+Completed from the artifact's actual activity and assessment provenance rows. 194,590 provenance rows across checkpoints 3, 5, 8, and 10 were checked; 0 cutoff violations were found. Result: `evaluation/results/e4_temporal_oulad_AAA_2013J_v1.csv`.
 
-## NOT YET EXECUTED
+The checkpoint time follows the canonical builder's fixed demo calendar (`checkpoint_week * 7 - 1`). The prepared replay calendar is synthetic and is not treated as historical calendar evidence.
 
-E2 held-out inference, E3 missingness, E5 course policy, E6 workflow, and E7 efficiency.
+## Still blocked / not executed
 
-## Milestone execution audit (2026-10-03)
-
-- Disposable PostgreSQL restore verified migration `20260924_0006` and counts: 383 learners, 1464 states, 1464 predictions, 142 alerts.
-- E4 is **BLOCKED — missing canonical source timestamps**. `analytics.weekly_feature` has provenance references and counts but no feature-level source time; no valid temporal violation count can be asserted.
-- E1 is **BLOCKED — missing evaluation labels**. `core.enrolment` contains registration/unregistration fields but no `final_result`; no Logistic Regression result was generated.
-- No production database or runtime was queried or modified.
+E2 held-out Qwen grounding, E3 missingness, E5 course policy, E6 workflow, and E7 efficiency remain unexecuted. No Qwen inference, calibration, production query, or runtime change was performed.
