@@ -46,4 +46,12 @@ def test_v2_protocol_shape_and_balanced_reference_labels():
     assert sum(c["evaluation_reference"]["expected_behavior_class"]=="assessment_allowed" for c in doc["cases"])==24
     assert len({json.dumps(c["model_input"],sort_keys=True) for c in doc["cases"]})==48
 
+def test_v2_manifest_hash_matches_runner_constant():
+    import hashlib
+    from scripts.evaluate_grounding import V2_PROTOCOL_SHA
+    raw=Path("evaluation/protocols/e2_grounding_heldout_v2.json").read_bytes()
+    canonical=raw.decode("utf-8-sig").replace("\r\n","\n").replace("\r","\n").encode()
+    manifest=json.loads(Path("evaluation/protocols/e2_grounding_heldout_v2_manifest.json").read_text(encoding="utf-8-sig"))
+    assert hashlib.sha256(canonical).hexdigest().upper()==manifest["canonical_sha256"]==V2_PROTOCOL_SHA
+
 

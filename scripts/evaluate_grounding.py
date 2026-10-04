@@ -7,7 +7,7 @@ from digital_twin.evaluation.grounding_v2 import deterministic_output_validation
 
 PROTOCOL_SHA = "13A6FA0B05455EB81BB1B2A4979A1396AAC9EF9D4621239CD8D2E71989CD25F1"
 LEGACY_WINDOWS_CRLF_SHA = "220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E"
-V2_PROTOCOL_SHA = "30063698623A47EA30EA96FF20A3655F14D979DAC65BB00AA81AE399F71E513C"
+V2_PROTOCOL_SHA = "6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D"
 SCHEMA = {"type":"object","required":["assessment","claims","abstain"],"properties":{"assessment":{"type":"string"},"claims":{"type":"array"},"abstain":{"type":"boolean"},"uncertainty_note":{"type":"string"}},"additionalProperties":True}
 OUTPUT_CONTRACT = "Return JSON with fields assessment (string), claims (array of evidence claims with evidence_ids), abstain (boolean), and optional uncertainty_note. Do not infer causes or psychological states."
 FIELDS = ["case_id","scenario_family","checkpoint","variant","model_name","model_digest","runtime","generation_parameters","schema_valid","json_parse_valid","model_call_succeeded","evidence_diagnostic_evaluable","evidence_valid","citation_valid","semantic_evidence_valid","validator_codes","unsupported_claim_count","contradiction_count","accepted","abstained","correction_required","correction_attempted","correction_success","initial_latency_ms","correction_latency_ms","total_latency_ms","latency_ms","failure_reason","protocol_version","protocol_sha256","legacy_windows_crlf_sha256","case_count","evaluation_git_commit","run_id","timestamp","raw_response","expected_behavior_class","predicted_behavior_class","behavior_correct","expected_evidence_constraint_valid","constraint_results"]
@@ -102,5 +102,6 @@ def main(argv=None):
             attempts=sum(r["correction_attempted"]=="True" for r in rows); success=sum(r["correction_success"]=="True" for r in rows); summary.update(correction_attempt_count=attempts,correction_success_count=success,correction_success_rate=success/attempts if attempts else 0,post_correction_acceptance=sum(r["correction_success"]=="True" for r in rows)/total)
         summary_path=outdir/f"e2_grounding_{variant}_{run_id}_summary.json"; summary_path.write_text(json.dumps(summary,indent=2),encoding="utf-8"); print(f"[E2][{variant}] summary={summary_path}", flush=True)
 if __name__=="__main__": main()
+
 
 

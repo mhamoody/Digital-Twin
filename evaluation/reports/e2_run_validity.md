@@ -7,3 +7,7 @@
 E2 v2 is a controlled held-out grounding ablation. It evaluates structural compliance, evidence-reference discipline, deterministic evidence/policy consistency, selective abstention, and correction effectiveness. It is not an empirical student-performance dataset and does not establish predictive accuracy, causal correctness, universal hallucination rates, or real-world generalization.
 
 The first clean v2 Lobot run is `lobot-e2-v2-r1`.
+
+## v2 hash metadata correction
+
+The initially recorded v2 canonical hash (`300636...`) was incorrect. Direct LF-normalized hashing of the unchanged protocol bytes at both the creation and validator commits produced `6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D`. No live v2 model run occurred before the correction. Protocol bytes and semantic content were not modified; this is an integrity metadata correction, not a protocol revision.

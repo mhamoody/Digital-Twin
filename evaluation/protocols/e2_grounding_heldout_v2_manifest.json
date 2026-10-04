@@ -1,23 +1,23 @@
-{
-  "protocol_version": "v2",
-  "canonical_sha256": "30063698623A47EA30EA96FF20A3655F14D979DAC65BB00AA81AE399F71E513C",
-  "case_count": 48,
-  "scenario_family_count": 12,
-  "cases_per_family": 4,
-  "behavior_distribution": {
-    "assessment_allowed": 24,
-    "abstention_expected": 24
-  },
-  "created_from": "controlled scenario design",
-  "model_visible_schema": [
-    "checkpoint",
-    "course_policy",
-    "evidence"
-  ],
-  "evaluation_only_schema": [
-    "case_id",
-    "scenario_family",
-    "expected_behavior_class",
-    "expected_evidence_constraints"
-  ]
-}\n
+﻿{
+    "protocol_version":  "v2",
+    "canonical_sha256":  "6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D",
+    "case_count":  48,
+    "scenario_family_count":  12,
+    "cases_per_family":  4,
+    "behavior_distribution":  {
+                                  "assessment_allowed":  24,
+                                  "abstention_expected":  24
+                              },
+    "created_from":  "controlled scenario design",
+    "model_visible_schema":  [
+                                 "checkpoint",
+                                 "course_policy",
+                                 "evidence"
+                             ],
+    "evaluation_only_schema":  [
+                                   "case_id",
+                                   "scenario_family",
+                                   "expected_behavior_class",
+                                   "expected_evidence_constraints"
+                               ]
+}
