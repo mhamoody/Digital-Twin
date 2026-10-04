@@ -6,6 +6,7 @@ from digital_twin.evaluation.research_adapter import ResearchModelAdapter, Resea
 
 PROTOCOL_SHA = "13A6FA0B05455EB81BB1B2A4979A1396AAC9EF9D4621239CD8D2E71989CD25F1"
 LEGACY_WINDOWS_CRLF_SHA = "220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E"
+V2_PROTOCOL_SHA = "30063698623A47EA30EA96FF20A3655F14D979DAC65BB00AA81AE399F71E513C"
 SCHEMA = {"type":"object","required":["assessment","claims","abstain"],"properties":{"assessment":{"type":"string"},"claims":{"type":"array"},"abstain":{"type":"boolean"},"uncertainty_note":{"type":"string"}},"additionalProperties":True}
 OUTPUT_CONTRACT = "Return JSON with fields assessment (string), claims (array of evidence claims with evidence_ids), abstain (boolean), and optional uncertainty_note. Do not infer causes or psychological states."
 FIELDS = ["case_id","scenario_family","checkpoint","variant","model_name","model_digest","runtime","generation_parameters","schema_valid","json_parse_valid","model_call_succeeded","evidence_diagnostic_evaluable","evidence_valid","unsupported_claim_count","contradiction_count","accepted","abstained","correction_required","correction_attempted","correction_success","initial_latency_ms","correction_latency_ms","total_latency_ms","latency_ms","failure_reason","protocol_version","protocol_sha256","legacy_windows_crlf_sha256","case_count","evaluation_git_commit","run_id","timestamp","raw_response","expected_behavior_class","predicted_behavior_class","behavior_correct","expected_evidence_constraint_valid"]
@@ -13,14 +14,17 @@ MODEL_VISIBLE_FIELDS = ["checkpoint", "course_policy", "permitted_evidence"]
 EVALUATION_ONLY_FIELDS = ["case_id", "scenario_family", "expected_behavior_class", "expected_evidence_constraints"]
 
 def model_visible_case(case):
+    if "model_input" in case:
+        return case["model_input"]
     return {key: case[key] for key in MODEL_VISIBLE_FIELDS}
 
 def git_commit():
     return subprocess.run(["git","rev-parse","HEAD"],capture_output=True,text=True).stdout.strip() or "unknown"
 def protocol(path):
     raw=Path(path).read_bytes(); canonical=raw.decode("utf-8").replace("\r\n","\n").replace("\r","\n").encode("utf-8"); digest=hashlib.sha256(canonical).hexdigest().upper()
-    if digest != PROTOCOL_SHA: raise SystemExit(f"PROTOCOL_HASH_MISMATCH:{digest}")
     doc=json.loads(raw)
+    expected_hash = V2_PROTOCOL_SHA if doc.get("protocol_version")=="v2" else PROTOCOL_SHA
+    if digest != expected_hash: raise SystemExit(f"PROTOCOL_HASH_MISMATCH:{digest}")
     if len(doc.get("cases",[])) != 48: raise SystemExit("PROTOCOL_CASE_COUNT_MISMATCH")
     return doc,digest
 def validate(parsed, case):
@@ -32,22 +36,23 @@ def validate(parsed, case):
             if not isinstance(claim,dict): unsupported += 1; continue
             refs.extend(claim.get("evidence_ids",[]) if isinstance(claim.get("evidence_ids",[]),list) else [])
     else: unsupported += 1
-    permitted=set(case.get("permitted_evidence",[]))
+    permitted=set(model_visible_case(case).get("permitted_evidence",[]))
     unsupported += sum(1 for ref in refs if ref not in permitted)
     if parsed.get("assessment") and "cause" in str(parsed.get("assessment")).lower(): contradiction += 1
     evidence_valid=unsupported==0 and contradiction==0
     return True,evidence_valid,unsupported,contradiction
 def reference_scores(parsed, case):
     predicted = parsed.get("behavior_class") if isinstance(parsed, dict) else None
-    expected = case.get("expected_behavior_class")
+    reference=case.get("evaluation_reference",case)
+    expected = reference.get("expected_behavior_class")
     constraints = parsed.get("evidence_constraints") if isinstance(parsed, dict) else None
-    expected_constraints = case.get("expected_evidence_constraints") or []
+    expected_constraints = reference.get("expected_evidence_constraints") or []
     constraint_ok = isinstance(constraints, list) and set(expected_constraints).issubset(set(constraints))
     return expected, predicted, (predicted == expected if predicted is not None else None), constraint_ok if constraints is not None else None
-def run_case(adapter, case, variant, model_digest, run_id, commit, protocol_sha):
+def run_case(adapter, case, variant, model_digest, run_id, commit, protocol_sha, protocol_version="v1"):
     visible=model_visible_case(case); base={"case":visible,"task":"Assess only the supplied case. Do not infer causes. Cite only permitted evidence categories.","output_contract":OUTPUT_CONTRACT}
     schema=SCHEMA if variant != "plain_llm" else None
-    row={"case_id":case["case_id"],"scenario_family":case["scenario_family"],"checkpoint":case["checkpoint"],"variant":variant,"model_name":adapter.runtime.model_name,"model_digest":model_digest,"runtime":"ollama","generation_parameters":json.dumps(adapter.runtime.generation,sort_keys=True),"schema_valid":False,"json_parse_valid":False,"model_call_succeeded":False,"evidence_diagnostic_evaluable":False,"evidence_valid":False,"unsupported_claim_count":"","contradiction_count":"","accepted":False,"abstained":False,"correction_required":False,"correction_attempted":False,"correction_success":False,"initial_latency_ms":"","correction_latency_ms":"","total_latency_ms":"","latency_ms":"","failure_reason":"","protocol_version":"v1","protocol_sha256":protocol_sha,"legacy_windows_crlf_sha256":LEGACY_WINDOWS_CRLF_SHA,"case_count":48,"evaluation_git_commit":commit,"run_id":run_id,"timestamp":datetime.now(timezone.utc).isoformat(),"raw_response":"","expected_behavior_class":case.get("expected_behavior_class"),"predicted_behavior_class":"","behavior_correct":"","expected_evidence_constraint_valid":""}
+    reference=case.get("evaluation_reference",case); checkpoint=case.get("checkpoint"); checkpoint=checkpoint if checkpoint is not None else model_visible_case(case).get("checkpoint",{}).get("week") if isinstance(model_visible_case(case).get("checkpoint",{}),dict) else model_visible_case(case).get("checkpoint"); row={"case_id":case["case_id"],"scenario_family":case["scenario_family"],"checkpoint":checkpoint,"variant":variant,"model_name":adapter.runtime.model_name,"model_digest":model_digest,"runtime":"ollama","generation_parameters":json.dumps(adapter.runtime.generation,sort_keys=True),"schema_valid":False,"json_parse_valid":False,"model_call_succeeded":False,"evidence_diagnostic_evaluable":False,"evidence_valid":False,"unsupported_claim_count":"","contradiction_count":"","accepted":False,"abstained":False,"correction_required":False,"correction_attempted":False,"correction_success":False,"initial_latency_ms":"","correction_latency_ms":"","total_latency_ms":"","latency_ms":"","failure_reason":"","protocol_version":protocol_version,"protocol_sha256":protocol_sha,"legacy_windows_crlf_sha256":LEGACY_WINDOWS_CRLF_SHA,"case_count":48,"evaluation_git_commit":commit,"run_id":run_id,"timestamp":datetime.now(timezone.utc).isoformat(),"raw_response":"","expected_behavior_class":reference.get("expected_behavior_class"),"predicted_behavior_class":"","behavior_correct":"","expected_evidence_constraint_valid":""}
     try:
         result=adapter.generate(base,prompt=json.dumps(base,sort_keys=True),system=OUTPUT_CONTRACT,schema=schema,allow_non_json=(variant=="plain_llm"))
         parsed=result["parsed"]; row.update(model_call_succeeded=True,json_parse_valid=result.get("json_parse_valid",parsed is not None),raw_response=result.get("raw","")[:65536],initial_latency_ms=result["metadata"].get("latency_ms",""),total_latency_ms=result["metadata"].get("latency_ms",""),latency_ms=result["metadata"].get("latency_ms",""))
@@ -82,7 +87,7 @@ def main(argv=None):
         with path.open("w",newline="",encoding="utf-8") as h:
             w=csv.DictWriter(h,fieldnames=FIELDS); w.writeheader()
             for index, case in enumerate(doc["cases"], 1):
-                w.writerow(run_case(adapter,case,variant,meta["digest"],run_id,commit,psha)); h.flush()
+                w.writerow(run_case(adapter,case,variant,meta["digest"],run_id,commit,psha,doc.get("protocol_version","v1"))); h.flush()
                 print(f"[E2][{variant}] {index}/48 {case['case_id']} completed", flush=True)
         rows=list(csv.DictReader(path.open(encoding="utf-8"))); total=len(rows)
         evaluable=[r for r in rows if r["evidence_diagnostic_evaluable"]=="True"]; summary={"run_id":run_id,"variant":variant,"total_cases":48,"completed_cases":sum(r["model_call_succeeded"]=="True" for r in rows),"failed_cases":sum(bool(r["failure_reason"]) for r in rows),"model_call_success_count":sum(r["model_call_succeeded"]=="True" for r in rows),"json_parseable_count":sum(r["json_parse_valid"]=="True" for r in rows),"evidence_evaluable_count":len(evaluable),"failed_inference_count":sum(bool(r["failure_reason"]) for r in rows),"schema_valid_rate":sum(r["schema_valid"]=="True" for r in rows)/total,"evidence_valid_rate":sum(r["evidence_valid"]=="True" for r in evaluable)/len(evaluable) if evaluable else None,"accepted_rate":sum(r["accepted"]=="True" for r in rows)/total,"abstention_rate":sum(r["abstained"]=="True" for r in rows)/total,"unsupported_claim_rate":sum(int(r["unsupported_claim_count"])>0 for r in evaluable)/len(evaluable) if evaluable else None,"contradiction_rate":sum(int(r["contradiction_count"])>0 for r in evaluable)/len(evaluable) if evaluable else None,"model":meta,"protocol_version":"v1","protocol_sha256":psha,"legacy_windows_crlf_sha256":LEGACY_WINDOWS_CRLF_SHA,"case_count":48,"scenario_family":{}}

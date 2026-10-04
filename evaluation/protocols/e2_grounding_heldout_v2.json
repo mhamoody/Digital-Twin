@@ -1,0 +1,2169 @@
+{
+  "protocol_version": "v2",
+  "split": "heldout",
+  "created_at": "2026-10-04",
+  "created_from": "controlled scenario design",
+  "cases": [
+    {
+      "case_id": "heldout-e2-v2-001",
+      "scenario_family": "strong_academic_low_activity",
+      "model_input": {
+        "checkpoint": {
+          "week": 3,
+          "timestamp": "2026-02-07T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 10,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-08T12:00:00Z",
+          "instructor_policy_revision": 1
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 2,
+              "days_since_last_activity": 9
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-06T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-002",
+      "scenario_family": "strong_academic_low_activity",
+      "model_input": {
+        "checkpoint": {
+          "week": 5,
+          "timestamp": "2026-02-08T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 11,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-09T12:00:00Z",
+          "instructor_policy_revision": 2
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 4,
+              "days_since_last_activity": 10
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-07T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-003",
+      "scenario_family": "strong_academic_low_activity",
+      "model_input": {
+        "checkpoint": {
+          "week": 8,
+          "timestamp": "2026-02-09T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 12,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-10T12:00:00Z",
+          "instructor_policy_revision": 3
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 6,
+              "days_since_last_activity": 11
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-08T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-004",
+      "scenario_family": "strong_academic_low_activity",
+      "model_input": {
+        "checkpoint": {
+          "week": 10,
+          "timestamp": "2026-02-10T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 13,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-11T12:00:00Z",
+          "instructor_policy_revision": 4
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 8,
+              "days_since_last_activity": 12
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-09T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-005",
+      "scenario_family": "weak_academic_high_activity",
+      "model_input": {
+        "checkpoint": {
+          "week": 3,
+          "timestamp": "2026-02-07T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 10,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-08T12:00:00Z",
+          "instructor_policy_revision": 5
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 6,
+              "days_since_last_activity": 9
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-06T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-006",
+      "scenario_family": "weak_academic_high_activity",
+      "model_input": {
+        "checkpoint": {
+          "week": 5,
+          "timestamp": "2026-02-08T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 11,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-09T12:00:00Z",
+          "instructor_policy_revision": 6
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 8,
+              "days_since_last_activity": 10
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-07T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-007",
+      "scenario_family": "weak_academic_high_activity",
+      "model_input": {
+        "checkpoint": {
+          "week": 8,
+          "timestamp": "2026-02-09T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 12,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-10T12:00:00Z",
+          "instructor_policy_revision": 7
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 10,
+              "days_since_last_activity": 11
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-08T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-008",
+      "scenario_family": "weak_academic_high_activity",
+      "model_input": {
+        "checkpoint": {
+          "week": 10,
+          "timestamp": "2026-02-10T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 13,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-11T12:00:00Z",
+          "instructor_policy_revision": 8
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 12,
+              "days_since_last_activity": 12
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-09T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-009",
+      "scenario_family": "real_zero_grade",
+      "model_input": {
+        "checkpoint": {
+          "week": 3,
+          "timestamp": "2026-02-07T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 10,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-08T12:00:00Z",
+          "instructor_policy_revision": 9
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 10,
+              "days_since_last_activity": 9
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-06T12:00:00Z"
+          },
+          {
+            "evidence_id": "grade_1",
+            "evidence_type": "grade",
+            "observed": true,
+            "value": {
+              "score": 0,
+              "max_score": 100
+            },
+            "source_time": "2026-02-06T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-010",
+      "scenario_family": "real_zero_grade",
+      "model_input": {
+        "checkpoint": {
+          "week": 5,
+          "timestamp": "2026-02-08T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 11,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-09T12:00:00Z",
+          "instructor_policy_revision": 10
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 12,
+              "days_since_last_activity": 10
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-07T12:00:00Z"
+          },
+          {
+            "evidence_id": "grade_1",
+            "evidence_type": "grade",
+            "observed": true,
+            "value": {
+              "score": 0,
+              "max_score": 100
+            },
+            "source_time": "2026-02-07T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-011",
+      "scenario_family": "real_zero_grade",
+      "model_input": {
+        "checkpoint": {
+          "week": 8,
+          "timestamp": "2026-02-09T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 12,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-10T12:00:00Z",
+          "instructor_policy_revision": 11
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 14,
+              "days_since_last_activity": 11
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-08T12:00:00Z"
+          },
+          {
+            "evidence_id": "grade_1",
+            "evidence_type": "grade",
+            "observed": true,
+            "value": {
+              "score": 0,
+              "max_score": 100
+            },
+            "source_time": "2026-02-08T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-012",
+      "scenario_family": "real_zero_grade",
+      "model_input": {
+        "checkpoint": {
+          "week": 10,
+          "timestamp": "2026-02-10T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 13,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-11T12:00:00Z",
+          "instructor_policy_revision": 12
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 16,
+              "days_since_last_activity": 12
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-09T12:00:00Z"
+          },
+          {
+            "evidence_id": "grade_1",
+            "evidence_type": "grade",
+            "observed": true,
+            "value": {
+              "score": 0,
+              "max_score": 100
+            },
+            "source_time": "2026-02-09T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-013",
+      "scenario_family": "grade_missing",
+      "model_input": {
+        "checkpoint": {
+          "week": 3,
+          "timestamp": "2026-02-07T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 10,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-08T12:00:00Z",
+          "instructor_policy_revision": 13
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 14,
+              "days_since_last_activity": 9
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-06T12:00:00Z"
+          },
+          {
+            "evidence_id": "grade_1",
+            "evidence_type": "grade",
+            "observed": false,
+            "value": null,
+            "availability_reason": "not_available",
+            "source_time": null
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "do_not_treat_missing_as_zero"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-014",
+      "scenario_family": "grade_missing",
+      "model_input": {
+        "checkpoint": {
+          "week": 5,
+          "timestamp": "2026-02-08T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 11,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-09T12:00:00Z",
+          "instructor_policy_revision": 14
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 16,
+              "days_since_last_activity": 10
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-07T12:00:00Z"
+          },
+          {
+            "evidence_id": "grade_1",
+            "evidence_type": "grade",
+            "observed": false,
+            "value": null,
+            "availability_reason": "not_available",
+            "source_time": null
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "do_not_treat_missing_as_zero"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-015",
+      "scenario_family": "grade_missing",
+      "model_input": {
+        "checkpoint": {
+          "week": 8,
+          "timestamp": "2026-02-09T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 12,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-10T12:00:00Z",
+          "instructor_policy_revision": 15
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 18,
+              "days_since_last_activity": 11
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-08T12:00:00Z"
+          },
+          {
+            "evidence_id": "grade_1",
+            "evidence_type": "grade",
+            "observed": false,
+            "value": null,
+            "availability_reason": "not_available",
+            "source_time": null
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "do_not_treat_missing_as_zero"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-016",
+      "scenario_family": "grade_missing",
+      "model_input": {
+        "checkpoint": {
+          "week": 10,
+          "timestamp": "2026-02-10T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 13,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-11T12:00:00Z",
+          "instructor_policy_revision": 16
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 20,
+              "days_since_last_activity": 12
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-09T12:00:00Z"
+          },
+          {
+            "evidence_id": "grade_1",
+            "evidence_type": "grade",
+            "observed": false,
+            "value": null,
+            "availability_reason": "not_available",
+            "source_time": null
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "do_not_treat_missing_as_zero"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-017",
+      "scenario_family": "not_yet_due",
+      "model_input": {
+        "checkpoint": {
+          "week": 3,
+          "timestamp": "2026-02-07T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 10,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-03-01T12:00:00Z",
+          "instructor_policy_revision": 17
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 18,
+              "days_since_last_activity": 9
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-06T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "do_not_treat_not_due_as_missing"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-018",
+      "scenario_family": "not_yet_due",
+      "model_input": {
+        "checkpoint": {
+          "week": 5,
+          "timestamp": "2026-02-08T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 11,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-03-02T12:00:00Z",
+          "instructor_policy_revision": 18
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 20,
+              "days_since_last_activity": 10
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-07T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "do_not_treat_not_due_as_missing"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-019",
+      "scenario_family": "not_yet_due",
+      "model_input": {
+        "checkpoint": {
+          "week": 8,
+          "timestamp": "2026-02-09T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 12,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-03-03T12:00:00Z",
+          "instructor_policy_revision": 19
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 22,
+              "days_since_last_activity": 11
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-08T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "do_not_treat_not_due_as_missing"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-020",
+      "scenario_family": "not_yet_due",
+      "model_input": {
+        "checkpoint": {
+          "week": 10,
+          "timestamp": "2026-02-10T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 13,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-03-04T12:00:00Z",
+          "instructor_policy_revision": 20
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 24,
+              "days_since_last_activity": 12
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-09T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "do_not_treat_not_due_as_missing"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-021",
+      "scenario_family": "awaiting_marking",
+      "model_input": {
+        "checkpoint": {
+          "week": 3,
+          "timestamp": "2026-02-07T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 10,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-08T12:00:00Z",
+          "instructor_policy_revision": 21
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 22,
+              "days_since_last_activity": 9
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-06T12:00:00Z"
+          },
+          {
+            "evidence_id": "assessment_1",
+            "evidence_type": "assessment_status",
+            "observed": true,
+            "value": {
+              "status": "awaiting_marking",
+              "submitted": true
+            },
+            "source_time": "2026-02-06T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "do_not_treat_awaiting_marking_as_failure"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-022",
+      "scenario_family": "awaiting_marking",
+      "model_input": {
+        "checkpoint": {
+          "week": 5,
+          "timestamp": "2026-02-08T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 11,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-09T12:00:00Z",
+          "instructor_policy_revision": 22
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 24,
+              "days_since_last_activity": 10
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-07T12:00:00Z"
+          },
+          {
+            "evidence_id": "assessment_1",
+            "evidence_type": "assessment_status",
+            "observed": true,
+            "value": {
+              "status": "awaiting_marking",
+              "submitted": true
+            },
+            "source_time": "2026-02-07T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "do_not_treat_awaiting_marking_as_failure"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-023",
+      "scenario_family": "awaiting_marking",
+      "model_input": {
+        "checkpoint": {
+          "week": 8,
+          "timestamp": "2026-02-09T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 12,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-10T12:00:00Z",
+          "instructor_policy_revision": 23
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 26,
+              "days_since_last_activity": 11
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-08T12:00:00Z"
+          },
+          {
+            "evidence_id": "assessment_1",
+            "evidence_type": "assessment_status",
+            "observed": true,
+            "value": {
+              "status": "awaiting_marking",
+              "submitted": true
+            },
+            "source_time": "2026-02-08T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "do_not_treat_awaiting_marking_as_failure"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-024",
+      "scenario_family": "awaiting_marking",
+      "model_input": {
+        "checkpoint": {
+          "week": 10,
+          "timestamp": "2026-02-10T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 13,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-11T12:00:00Z",
+          "instructor_policy_revision": 24
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 28,
+              "days_since_last_activity": 12
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-09T12:00:00Z"
+          },
+          {
+            "evidence_id": "assessment_1",
+            "evidence_type": "assessment_status",
+            "observed": true,
+            "value": {
+              "status": "awaiting_marking",
+              "submitted": true
+            },
+            "source_time": "2026-02-09T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "do_not_treat_awaiting_marking_as_failure"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-025",
+      "scenario_family": "approved_extension",
+      "model_input": {
+        "checkpoint": {
+          "week": 3,
+          "timestamp": "2026-02-07T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 10,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-08T12:00:00Z",
+          "instructor_policy_revision": 25
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 26,
+              "days_since_last_activity": 9
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-06T12:00:00Z"
+          },
+          {
+            "evidence_id": "extension_1",
+            "evidence_type": "extension",
+            "observed": true,
+            "value": {
+              "approved": true,
+              "new_due_time": "2026-03-02T12:00:00Z"
+            },
+            "source_time": "2026-02-06T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-026",
+      "scenario_family": "approved_extension",
+      "model_input": {
+        "checkpoint": {
+          "week": 5,
+          "timestamp": "2026-02-08T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 11,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-09T12:00:00Z",
+          "instructor_policy_revision": 26
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 28,
+              "days_since_last_activity": 10
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-07T12:00:00Z"
+          },
+          {
+            "evidence_id": "extension_1",
+            "evidence_type": "extension",
+            "observed": true,
+            "value": {
+              "approved": true,
+              "new_due_time": "2026-03-03T12:00:00Z"
+            },
+            "source_time": "2026-02-07T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-027",
+      "scenario_family": "approved_extension",
+      "model_input": {
+        "checkpoint": {
+          "week": 8,
+          "timestamp": "2026-02-09T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 12,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-10T12:00:00Z",
+          "instructor_policy_revision": 27
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 30,
+              "days_since_last_activity": 11
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-08T12:00:00Z"
+          },
+          {
+            "evidence_id": "extension_1",
+            "evidence_type": "extension",
+            "observed": true,
+            "value": {
+              "approved": true,
+              "new_due_time": "2026-03-04T12:00:00Z"
+            },
+            "source_time": "2026-02-08T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-028",
+      "scenario_family": "approved_extension",
+      "model_input": {
+        "checkpoint": {
+          "week": 10,
+          "timestamp": "2026-02-10T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 13,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-11T12:00:00Z",
+          "instructor_policy_revision": 28
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 32,
+              "days_since_last_activity": 12
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-09T12:00:00Z"
+          },
+          {
+            "evidence_id": "extension_1",
+            "evidence_type": "extension",
+            "observed": true,
+            "value": {
+              "approved": true,
+              "new_due_time": "2026-03-05T12:00:00Z"
+            },
+            "source_time": "2026-02-09T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-029",
+      "scenario_family": "optional_resource",
+      "model_input": {
+        "checkpoint": {
+          "week": 3,
+          "timestamp": "2026-02-07T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 10,
+          "passing_score": 50,
+          "assessment_required": false,
+          "resource_required": false,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-08T12:00:00Z",
+          "instructor_policy_revision": 29
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 30,
+              "days_since_last_activity": 9
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-06T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-030",
+      "scenario_family": "optional_resource",
+      "model_input": {
+        "checkpoint": {
+          "week": 5,
+          "timestamp": "2026-02-08T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 11,
+          "passing_score": 50,
+          "assessment_required": false,
+          "resource_required": false,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-09T12:00:00Z",
+          "instructor_policy_revision": 30
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 32,
+              "days_since_last_activity": 10
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-07T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-031",
+      "scenario_family": "optional_resource",
+      "model_input": {
+        "checkpoint": {
+          "week": 8,
+          "timestamp": "2026-02-09T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 12,
+          "passing_score": 50,
+          "assessment_required": false,
+          "resource_required": false,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-10T12:00:00Z",
+          "instructor_policy_revision": 31
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 34,
+              "days_since_last_activity": 11
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-08T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-032",
+      "scenario_family": "optional_resource",
+      "model_input": {
+        "checkpoint": {
+          "week": 10,
+          "timestamp": "2026-02-10T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 13,
+          "passing_score": 50,
+          "assessment_required": false,
+          "resource_required": false,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-11T12:00:00Z",
+          "instructor_policy_revision": 32
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 36,
+              "days_since_last_activity": 12
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-09T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-033",
+      "scenario_family": "missing_feed",
+      "model_input": {
+        "checkpoint": {
+          "week": 3,
+          "timestamp": "2026-02-07T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 10,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-08T12:00:00Z",
+          "instructor_policy_revision": 33
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": false,
+            "value": null,
+            "availability_reason": "feed_unavailable",
+            "source_time": "2026-02-06T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "missing_feed_requires_abstention"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-034",
+      "scenario_family": "missing_feed",
+      "model_input": {
+        "checkpoint": {
+          "week": 5,
+          "timestamp": "2026-02-08T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 11,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-09T12:00:00Z",
+          "instructor_policy_revision": 34
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": false,
+            "value": null,
+            "availability_reason": "feed_unavailable",
+            "source_time": "2026-02-07T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "missing_feed_requires_abstention"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-035",
+      "scenario_family": "missing_feed",
+      "model_input": {
+        "checkpoint": {
+          "week": 8,
+          "timestamp": "2026-02-09T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 12,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-10T12:00:00Z",
+          "instructor_policy_revision": 35
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": false,
+            "value": null,
+            "availability_reason": "feed_unavailable",
+            "source_time": "2026-02-08T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "missing_feed_requires_abstention"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-036",
+      "scenario_family": "missing_feed",
+      "model_input": {
+        "checkpoint": {
+          "week": 10,
+          "timestamp": "2026-02-10T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 13,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-11T12:00:00Z",
+          "instructor_policy_revision": 36
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": false,
+            "value": null,
+            "availability_reason": "feed_unavailable",
+            "source_time": "2026-02-09T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "missing_feed_requires_abstention"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-037",
+      "scenario_family": "genuine_inactivity",
+      "model_input": {
+        "checkpoint": {
+          "week": 3,
+          "timestamp": "2026-02-07T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 10,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-08T12:00:00Z",
+          "instructor_policy_revision": 37
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 38,
+              "days_since_last_activity": 9
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-06T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-038",
+      "scenario_family": "genuine_inactivity",
+      "model_input": {
+        "checkpoint": {
+          "week": 5,
+          "timestamp": "2026-02-08T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 11,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-09T12:00:00Z",
+          "instructor_policy_revision": 38
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 40,
+              "days_since_last_activity": 10
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-07T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-039",
+      "scenario_family": "genuine_inactivity",
+      "model_input": {
+        "checkpoint": {
+          "week": 8,
+          "timestamp": "2026-02-09T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 12,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-10T12:00:00Z",
+          "instructor_policy_revision": 39
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 42,
+              "days_since_last_activity": 11
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-08T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-040",
+      "scenario_family": "genuine_inactivity",
+      "model_input": {
+        "checkpoint": {
+          "week": 10,
+          "timestamp": "2026-02-10T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 13,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-11T12:00:00Z",
+          "instructor_policy_revision": 40
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 44,
+              "days_since_last_activity": 12
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-09T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "assessment_allowed",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-041",
+      "scenario_family": "conflicting_evidence",
+      "model_input": {
+        "checkpoint": {
+          "week": 3,
+          "timestamp": "2026-02-07T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 10,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-08T12:00:00Z",
+          "instructor_policy_revision": 41
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 42,
+              "days_since_last_activity": 9
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-06T12:00:00Z"
+          },
+          {
+            "evidence_id": "activity_conflict",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 60,
+              "days_since_last_activity": 1
+            },
+            "source_time": "2026-02-06T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "conflict_requires_abstention"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-042",
+      "scenario_family": "conflicting_evidence",
+      "model_input": {
+        "checkpoint": {
+          "week": 5,
+          "timestamp": "2026-02-08T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 11,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-09T12:00:00Z",
+          "instructor_policy_revision": 42
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 44,
+              "days_since_last_activity": 10
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-07T12:00:00Z"
+          },
+          {
+            "evidence_id": "activity_conflict",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 61,
+              "days_since_last_activity": 1
+            },
+            "source_time": "2026-02-07T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "conflict_requires_abstention"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-043",
+      "scenario_family": "conflicting_evidence",
+      "model_input": {
+        "checkpoint": {
+          "week": 8,
+          "timestamp": "2026-02-09T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 12,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-10T12:00:00Z",
+          "instructor_policy_revision": 43
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 46,
+              "days_since_last_activity": 11
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-08T12:00:00Z"
+          },
+          {
+            "evidence_id": "activity_conflict",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 62,
+              "days_since_last_activity": 1
+            },
+            "source_time": "2026-02-08T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "conflict_requires_abstention"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-044",
+      "scenario_family": "conflicting_evidence",
+      "model_input": {
+        "checkpoint": {
+          "week": 10,
+          "timestamp": "2026-02-10T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 13,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-11T12:00:00Z",
+          "instructor_policy_revision": 44
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 48,
+              "days_since_last_activity": 12
+            },
+            "availability_reason": null,
+            "source_time": "2026-02-09T12:00:00Z"
+          },
+          {
+            "evidence_id": "activity_conflict",
+            "evidence_type": "activity",
+            "observed": true,
+            "value": {
+              "events_last_7_days": 63,
+              "days_since_last_activity": 1
+            },
+            "source_time": "2026-02-09T12:00:00Z"
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "conflict_requires_abstention"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-045",
+      "scenario_family": "insufficient_evidence",
+      "model_input": {
+        "checkpoint": {
+          "week": 3,
+          "timestamp": "2026-02-07T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 10,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-08T12:00:00Z",
+          "instructor_policy_revision": 45
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": false,
+            "value": null,
+            "availability_reason": "insufficient_coverage",
+            "source_time": null
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "insufficient_evidence_requires_abstention"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-046",
+      "scenario_family": "insufficient_evidence",
+      "model_input": {
+        "checkpoint": {
+          "week": 5,
+          "timestamp": "2026-02-08T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 11,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-09T12:00:00Z",
+          "instructor_policy_revision": 46
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": false,
+            "value": null,
+            "availability_reason": "insufficient_coverage",
+            "source_time": null
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "insufficient_evidence_requires_abstention"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-047",
+      "scenario_family": "insufficient_evidence",
+      "model_input": {
+        "checkpoint": {
+          "week": 8,
+          "timestamp": "2026-02-09T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 12,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-10T12:00:00Z",
+          "instructor_policy_revision": 47
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": false,
+            "value": null,
+            "availability_reason": "insufficient_coverage",
+            "source_time": null
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "insufficient_evidence_requires_abstention"
+        ]
+      }
+    },
+    {
+      "case_id": "heldout-e2-v2-048",
+      "scenario_family": "insufficient_evidence",
+      "model_input": {
+        "checkpoint": {
+          "week": 10,
+          "timestamp": "2026-02-10T12:00:00Z"
+        },
+        "course_policy": {
+          "required_activity_window_days": 7,
+          "inactivity_concern_after_days": 13,
+          "passing_score": 50,
+          "assessment_required": true,
+          "resource_required": true,
+          "extensions_respected": true,
+          "assessment_due_time": "2026-02-11T12:00:00Z",
+          "instructor_policy_revision": 48
+        },
+        "evidence": [
+          {
+            "evidence_id": "activity_week",
+            "evidence_type": "activity",
+            "observed": false,
+            "value": null,
+            "availability_reason": "insufficient_coverage",
+            "source_time": null
+          }
+        ]
+      },
+      "evaluation_reference": {
+        "expected_behavior_class": "abstention_expected",
+        "expected_evidence_constraints": [
+          "cite_only_permitted_ids",
+          "no_future_observation",
+          "no_causal_claim",
+          "insufficient_evidence_requires_abstention"
+        ]
+      }
+    }
+  ]
+}
+

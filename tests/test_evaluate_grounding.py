@@ -38,4 +38,12 @@ def test_model_visible_projection_excludes_reference_fields():
     assert set(visible)=={"checkpoint","course_policy","permitted_evidence"}
     assert all(key not in json.dumps(visible) for key in ("case_id","scenario_family","expected_behavior_class","expected_evidence_constraints"))
 
+def test_v2_protocol_shape_and_balanced_reference_labels():
+    doc=json.loads(Path("evaluation/protocols/e2_grounding_heldout_v2.json").read_text(encoding="utf-8"))
+    assert doc["protocol_version"]=="v2" and len(doc["cases"])==48
+    assert len({c["scenario_family"] for c in doc["cases"]})==12
+    assert {f:sum(c["scenario_family"]==f for c in doc["cases"]) for f in {c["scenario_family"] for c in doc["cases"]}} == {f:4 for f in {c["scenario_family"] for c in doc["cases"]}}
+    assert sum(c["evaluation_reference"]["expected_behavior_class"]=="assessment_allowed" for c in doc["cases"])==24
+    assert len({json.dumps(c["model_input"],sort_keys=True) for c in doc["cases"]})==48
+
 
