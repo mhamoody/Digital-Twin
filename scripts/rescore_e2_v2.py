@@ -1,5 +1,5 @@
 ﻿from __future__ import annotations
-import argparse,csv,json,subprocess
+import argparse,csv,json,subprocess,sys\nfrom pathlib import Path\nsys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from pathlib import Path
 from scripts.evaluate_grounding import protocol, FIELDS, LEGACY_WINDOWS_CRLF_SHA
 from digital_twin.evaluation.grounding_v2 import deterministic_output_validation, reference_scoring
@@ -19,5 +19,6 @@ def main():
   fields=list(dict.fromkeys(FIELDS+['source_run_id','rescoring_git_commit'])); w=csv.DictWriter(h,fieldnames=fields); w.writeheader(); w.writerows(rows)
  summary=build_e2_summary(rows,{},'v2',sha,a.run_id,'plain_llm'); summary.update(source_run_id=a.source_run_id,rescoring_git_commit=subprocess.run(['git','rev-parse','HEAD'],capture_output=True,text=True).stdout.strip(),validator_version='grounding_v2'); (out/(a.run_id+'_summary.json')).write_text(json.dumps(summary,indent=2),encoding='utf-8'); print(target)
 if __name__=='__main__': main()
+
 
 
