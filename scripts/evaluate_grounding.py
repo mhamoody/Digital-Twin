@@ -1,0 +1,74 @@
+﻿from __future__ import annotations
+import argparse, csv, hashlib, json, os, subprocess, sys
+from datetime import datetime, timezone
+from pathlib import Path
+from digital_twin.evaluation.research_adapter import ResearchModelAdapter, ResearchModelError, EXPECTED_DIGEST
+
+PROTOCOL_SHA = "220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E"
+SCHEMA = {"type":"object","required":["assessment","claims","abstain"],"properties":{"assessment":{"type":"string"},"claims":{"type":"array"},"abstain":{"type":"boolean"},"uncertainty_note":{"type":"string"}},"additionalProperties":True}
+FIELDS = ["case_id","scenario_family","checkpoint","variant","model_name","model_digest","runtime","generation_parameters","schema_valid","evidence_valid","unsupported_claim_count","contradiction_count","accepted","abstained","correction_required","correction_attempted","correction_success","latency_ms","failure_reason","protocol_sha256","evaluation_git_commit","run_id","timestamp"]
+
+def git_commit():
+    return subprocess.run(["git","rev-parse","HEAD"],capture_output=True,text=True).stdout.strip() or "unknown"
+def protocol(path):
+    raw=Path(path).read_bytes(); digest=hashlib.sha256(raw).hexdigest().upper()
+    if digest != PROTOCOL_SHA: raise SystemExit(f"PROTOCOL_HASH_MISMATCH:{digest}")
+    doc=json.loads(raw)
+    if len(doc.get("cases",[])) != 48: raise SystemExit("PROTOCOL_CASE_COUNT_MISMATCH")
+    return doc,digest
+def validate(parsed, case):
+    if not isinstance(parsed,dict) or not all(k in parsed for k in ("assessment","claims","abstain")):
+        return False,False,1,0
+    claims=parsed.get("claims"); unsupported=0; contradiction=0; refs=[]
+    if isinstance(claims,list):
+        for claim in claims:
+            if not isinstance(claim,dict): unsupported += 1; continue
+            refs.extend(claim.get("evidence_ids",[]) if isinstance(claim.get("evidence_ids",[]),list) else [])
+    else: unsupported += 1
+    permitted=set(case.get("permitted_evidence",[]))
+    unsupported += sum(1 for ref in refs if ref not in permitted)
+    if parsed.get("assessment") and "cause" in str(parsed.get("assessment")).lower(): contradiction += 1
+    evidence_valid=unsupported==0 and contradiction==0
+    return True,evidence_valid,unsupported,contradiction
+def run_case(adapter, case, variant, model_digest, run_id, commit, protocol_sha):
+    base={"case":case,"task":"Assess only the supplied case. Do not infer causes. Cite only permitted evidence categories."}
+    schema=SCHEMA if variant != "plain_llm" else None
+    row={"case_id":case["case_id"],"scenario_family":case["scenario_family"],"checkpoint":case["checkpoint"],"variant":variant,"model_name":adapter.runtime.model_name,"model_digest":model_digest,"runtime":"ollama","generation_parameters":json.dumps(adapter.runtime.generation,sort_keys=True),"schema_valid":False,"evidence_valid":False,"unsupported_claim_count":0,"contradiction_count":0,"accepted":False,"abstained":False,"correction_required":False,"correction_attempted":False,"correction_success":False,"latency_ms":"","failure_reason":"","protocol_sha256":protocol_sha,"evaluation_git_commit":commit,"run_id":run_id,"timestamp":datetime.now(timezone.utc).isoformat()}
+    try:
+        result=adapter.generate(base,prompt=json.dumps(base,sort_keys=True),system="Return the requested assessment.",schema=schema)
+        parsed=result["parsed"]; sv,ev,uc,cc=validate(parsed,case); row.update(schema_valid=sv,evidence_valid=ev,unsupported_claim_count=uc,contradiction_count=cc,latency_ms=result["metadata"].get("latency_ms",""))
+        if variant=="evidence_first_full" and not ev:
+            row["correction_required"]=True; row["correction_attempted"]=True
+            feedback={"case":case,"prior_output":parsed,"instruction":"Correct only evidence references and unsupported claims using the same permitted evidence. Return the same JSON schema. Do not invent evidence."}
+            corrected=adapter.generate(feedback,prompt=json.dumps(feedback,sort_keys=True),system="Return a corrected evidence-grounded assessment.",schema=SCHEMA)
+            csvv=corrected["parsed"]; sv2,ev2,uc2,cc2=validate(csvv,case); row.update(schema_valid=sv2,evidence_valid=ev2,unsupported_claim_count=uc2,contradiction_count=cc2,correction_success=bool(sv2 and ev2),latency_ms=corrected["metadata"].get("latency_ms",row["latency_ms"]))
+        row["abstained"]=bool(isinstance(parsed,dict) and parsed.get("abstain") is True)
+        row["accepted"]=bool(row["schema_valid"] and (variant!="evidence_first_full" or row["evidence_valid"]) and not row["abstained"])
+    except ResearchModelError as exc:
+        row["failure_reason"]=exc.code
+    except Exception as exc:
+        row["failure_reason"]=type(exc).__name__
+    return row
+def main(argv=None):
+    p=argparse.ArgumentParser(); p.add_argument("--scenarios",default="evaluation/protocols/e2_grounding_heldout_v1.json"); p.add_argument("--variant",choices=["plain_llm","schema_only","evidence_first_full"]); p.add_argument("--model",required=True); p.add_argument("--output-dir",default="evaluation/results"); p.add_argument("--run-id"); p.add_argument("--all-variants",action="store_true"); a=p.parse_args(argv)
+    variants=["plain_llm","schema_only","evidence_first_full"] if a.all_variants else [a.variant]
+    if not a.all_variants and not a.variant: p.error("--variant or --all-variants is required")
+    doc,psha=protocol(a.scenarios); adapter=ResearchModelAdapter(); readiness=adapter.readiness(verify_generation=True)
+    if readiness.get("inference_verified") is not True: raise SystemExit("MODEL_NOT_READY")
+    if adapter.runtime.model_name != a.model: raise SystemExit("MODEL_IDENTITY_MISMATCH")
+    meta=adapter.metadata(); run_id=a.run_id or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"); outdir=Path(a.output_dir); outdir.mkdir(parents=True,exist_ok=True); commit=git_commit()
+    for variant in variants:
+        path=outdir/f"e2_grounding_{variant}_{run_id}.csv"
+        if path.exists(): raise SystemExit(f"REFUSING_TO_OVERWRITE:{path}")
+        with path.open("w",newline="",encoding="utf-8") as h:
+            w=csv.DictWriter(h,fieldnames=FIELDS); w.writeheader()
+            for case in doc["cases"]:
+                w.writerow(run_case(adapter,case,variant,meta["digest"],run_id,commit,psha)); h.flush()
+        rows=list(csv.DictReader(path.open(encoding="utf-8"))); total=len(rows)
+        summary={"run_id":run_id,"variant":variant,"total_cases":48,"completed_cases":sum(not r["failure_reason"] for r in rows),"failed_cases":sum(bool(r["failure_reason"]) for r in rows),"schema_valid_rate":sum(r["schema_valid"]=="True" for r in rows)/total,"evidence_valid_rate":sum(r["evidence_valid"]=="True" for r in rows)/total,"accepted_rate":sum(r["accepted"]=="True" for r in rows)/total,"abstention_rate":sum(r["abstained"]=="True" for r in rows)/total,"unsupported_claim_rate":sum(int(r["unsupported_claim_count"])>0 for r in rows)/total,"contradiction_rate":sum(int(r["contradiction_count"])>0 for r in rows)/total,"model":meta,"protocol_sha256":psha,"scenario_family":{}}
+        for family in sorted({r["scenario_family"] for r in rows}): summary["scenario_family"][family]={"total":sum(r["scenario_family"]==family for r in rows),"accepted":sum(r["accepted"]=="True" and r["scenario_family"]==family for r in rows)}
+        if variant=="evidence_first_full":
+            attempts=sum(r["correction_attempted"]=="True" for r in rows); success=sum(r["correction_success"]=="True" for r in rows); summary.update(correction_attempt_count=attempts,correction_success_count=success,correction_success_rate=success/attempts if attempts else 0,post_correction_acceptance=sum(r["correction_success"]=="True" for r in rows)/total)
+        (outdir/f"e2_grounding_{variant}_{run_id}_summary.json").write_text(json.dumps(summary,indent=2),encoding="utf-8")
+if __name__=="__main__": main()
+
