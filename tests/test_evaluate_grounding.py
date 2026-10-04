@@ -1,6 +1,6 @@
 ﻿import json
 from pathlib import Path
-from scripts.evaluate_grounding import protocol, PROTOCOL_SHA, LEGACY_WINDOWS_CRLF_SHA, run_case
+from scripts.evaluate_grounding import protocol, PROTOCOL_SHA, LEGACY_WINDOWS_CRLF_SHA, run_case, model_visible_case
 import hashlib
 from digital_twin.evaluation.research_adapter import ResearchRuntime
 
@@ -28,8 +28,14 @@ def test_runner_variant_schema_separation():
         def generate(self, case, **kwargs):
             assert kwargs.get("schema") is None
             return {"parsed":{"assessment":"ok","claims":[],"abstain":True},"metadata":{"latency_ms":1}}
-    case={"case_id":"x","scenario_family":"f","checkpoint":3,"permitted_evidence":[],"_variant":"plain_llm"}
+    case={"case_id":"x","scenario_family":"f","checkpoint":3,"course_policy":"weekly_participation","permitted_evidence":[],"_variant":"plain_llm"}
     row=run_case(Fake(),case,"plain_llm","d","r","c","p")
     assert row["abstained"] is True and row["accepted"] is False
+
+def test_model_visible_projection_excludes_reference_fields():
+    case={"case_id":"x","scenario_family":"genuine_inactivity","checkpoint":3,"course_policy":"weekly_participation","permitted_evidence":["activity"],"expected_behavior_class":"assessment_allowed","expected_evidence_constraints":["no_causal_claim"]}
+    visible=model_visible_case(case)
+    assert set(visible)=={"checkpoint","course_policy","permitted_evidence"}
+    assert all(key not in json.dumps(visible) for key in ("case_id","scenario_family","expected_behavior_class","expected_evidence_constraints"))
 
 
