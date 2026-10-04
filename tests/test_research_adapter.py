@@ -45,6 +45,14 @@ def test_invalid_json_and_no_fallback():
     a=ResearchModelAdapter(endpoint="http://127.0.0.1:11434",model_name="qwen2.5:7b",transport=transport(route))
     with pytest.raises(ResearchModelError,match="MODEL_JSON_INVALID"): a.generate({})
 
+def test_allow_non_json_preserves_plain_response():
+    def route(r):
+        if r.url.path=="/api/tags": return httpx.Response(200,json=tags())
+        return httpx.Response(200,json={"model":"qwen2.5:7b","response":"plain answer"})
+    a=ResearchModelAdapter(endpoint="http://127.0.0.1:11434",model_name="qwen2.5:7b",transport=transport(route))
+    out=a.generate({},allow_non_json=True)
+    assert out["raw"]=="plain answer" and out["parsed"] is None and out["json_parse_valid"] is False
+
 def test_unavailable_and_endpoint_rejection():
     def route(r): raise httpx.ConnectError("offline")
     a=ResearchModelAdapter(endpoint="http://127.0.0.1:11434",model_name="qwen2.5:7b",transport=transport(route))

@@ -87,7 +87,7 @@ class ResearchModelAdapter:
         except ResearchModelError as exc:
             return {"status": "unavailable", "inference_verified": False, "error_code": exc.code, "model_name": self.runtime.model_name, "runtime": "ollama", "endpoint": self.runtime.endpoint}
 
-    def generate(self, case, *, system="", prompt=None, schema=None, _smoke=False) -> dict[str, Any]:
+    def generate(self, case, *, system="", prompt=None, schema=None, allow_non_json=False, _smoke=False) -> dict[str, Any]:
         if not self.runtime.endpoint or not self.runtime.model_name:
             raise RuntimeError("BLOCKED BY MODEL ACCESS")
         meta = self.metadata()
@@ -104,9 +104,11 @@ class ResearchModelAdapter:
         try:
             parsed = json.loads(raw)
         except (TypeError, ValueError) as exc:
-            raise ResearchModelError("MODEL_JSON_INVALID") from exc
+            if not allow_non_json:
+                raise ResearchModelError("MODEL_JSON_INVALID") from exc
+            parsed = None
         meta = {**meta, "latency_ms": round((time.perf_counter() - started) * 1000, 3), "output_hash": hashlib.sha256(raw.encode()).hexdigest()}
-        return {"raw": raw, "parsed": parsed, "metadata": meta, "smoke": _smoke}
+        return {"raw": raw, "parsed": parsed, "json_parse_valid": parsed is not None, "metadata": meta, "smoke": _smoke}
 
 
 
