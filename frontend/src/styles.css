@@ -1,4 +1,212 @@
 @layer base, components, responsive;
+@layer components {
+  .instructor-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0 24px;
+  }
+  .instructor-actions > div {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .instructor-actions > small {
+    flex-basis: 100%;
+    color: var(--muted);
+  }
+  .success-message {
+    margin: 16px 0;
+    padding: 14px 18px;
+    background: #e7f1e8;
+    border: 1px solid #b9d3bd;
+    border-radius: 10px;
+    color: #285637;
+  }
+  .edit-dialog {
+    width: min(680px, calc(100vw - 24px));
+    max-height: calc(100dvh - 32px);
+    padding: 24px;
+    color: #233f43;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 0 24px 80px #12363233;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .edit-dialog::backdrop {
+    background: #132e3766;
+    backdrop-filter: blur(3px);
+  }
+  .edit-dialog > header {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .edit-dialog > header h2 {
+    padding-top: 5px;
+  }
+  .edit-dialog .notice {
+    margin: 12px 0;
+  }
+  .editor-form {
+    display: grid;
+    gap: 16px;
+  }
+  .editor-form > p {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 0;
+  }
+  .editor-form fieldset {
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 18px;
+  }
+  .editor-form fieldset:disabled {
+    opacity: 0.72;
+  }
+  .editor-form textarea {
+    display: block;
+    font: inherit;
+    width: 100%;
+    min-width: 0;
+    resize: vertical;
+    min-height: 100px;
+    border: 1px solid #cbd8d1;
+    border-radius: 8px;
+    padding: 12px;
+    background: #fff;
+    color: #233f43;
+  }
+  .form-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .editor-form .check-field {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 0;
+  }
+  .check-field input[type="checkbox"] {
+    flex: 0 0 19px;
+    width: 19px;
+    height: 19px;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    accent-color: var(--teal);
+  }
+  .plan-selector {
+    margin-bottom: 18px;
+  }
+  .support-summary {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+  .planned-actions {
+    border: 1px solid #e5dabb;
+    border-radius: 12px;
+    background: #fcf7e9;
+    padding: 16px;
+    margin: 18px 0;
+  }
+  .planned-actions > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 13px;
+  }
+  .resource-picker {
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 4px;
+  }
+  .resource-library {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    gap: 16px;
+  }
+  .resource-library article {
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .resource-library a {
+    color: var(--teal);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .save-status {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    max-width: calc(100vw - 32px);
+    z-index: 30;
+  }
+  .chart-scroll {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  .evidence-chart {
+    width: 100%;
+    min-width: 480px;
+    height: auto;
+    display: block;
+  }
+  .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--muted);
+    margin: 12px 0;
+  }
+  .completion-meter {
+    accent-color: var(--teal);
+    width: 100%;
+    height: 12px;
+  }
+}
+@layer responsive {
+  @media (max-width: 600px) {
+    .edit-dialog {
+      padding: 18px;
+    }
+    .form-columns {
+      grid-template-columns: 1fr;
+    }
+    .planned-actions > div {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    .editor-form > button {
+      width: 100%;
+    }
+  }
+}
 @layer base {
   :root {
     font-family:

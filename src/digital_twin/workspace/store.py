@@ -927,7 +927,13 @@ class Store(SchedulingMixin):
                     "previous_analysis": prev_a.payload if prev_a else None,
                     "history": history,
                     "snapshot_history": [
-                        {"checkpoint_week": s.week, "features": s.payload["features"]}
+                        {
+                            "checkpoint_week": s.week,
+                            "cutoff_day": s.payload.get("cutoff_day", s.week * 7 - 1),
+                            "feature_version": s.payload.get("feature_version"),
+                            "course_context": s.payload.get("course_context", {}),
+                            "features": s.payload["features"],
+                        }
                         for s in states
                     ],
                     "case": self.get_case(course_id, learner_id, week * 7 - 1),

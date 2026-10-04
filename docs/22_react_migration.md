@@ -92,7 +92,39 @@ Evidence: `artifacts/react-migration/browser-checks.json` and screenshots (local
 The isolated preview uses synthetic records with the temporary rules baseline;
 no Qwen inferences or live data changes were made for this gate.
 
+Phase 2 implemented locally: instructor flags/watchlists/priority, manual
+concerns, ongoing cases, planned/completed/cancelled support actions, resource
+links, explicit follow-up scheduling/clearing, current history and observed
+before/after evidence. Updates retain server-side course authorization, CSRF,
+expected case/triage versions, expected evidence snapshot and idempotency keys.
+An uncertain save freezes its payload; only an explicit exact retry is allowed.
+Conflicts retain the draft for review and never silently overwrite another edit.
+
+Academic views separate published assessed marks from practice/unclassified
+work, show required-due resource completion and recorded activity, and preserve
+raw records. Risk history retains exact values and breaks lines at gaps or
+incompatible provenance. Explicitly uncalibrated or rules-only metadata can
+match; missing metadata cannot. Snapshot history now includes feature version,
+cutoff and evidence semantics so before/after deltas cannot mix incompatible
+grade or completion definitions. Such changes remain observations, not causal
+proof of intervention benefit.
+
+Validation on 2026-10-04: 37 focused Python tests passed; production TypeScript/
+Vite build passed; npm audit reported zero vulnerabilities. The 10 foundation
+browser scenarios, 7 instructor-save scenarios and 4 edge-case browser scenarios
+passed, with no JavaScript errors. Instructor-save checks exercise actual synthetic-preview writes,
+including an intentionally lost successful response. Ten deterministic
+component-check groups cover academic, risk and intervention-comparison
+semantics. These are integration/UX checks, not LLM accuracy evaluations.
+
+Additional Phase 2 gates: real browser saves, lost-success-response replay with
+exactly one event, version-conflict blocking, explicit closure/follow-up handling,
+draft navigation/focus, older-checkpoint resource selection, future-action
+blocking and academic/editor mobile layouts. Local screenshots and machine-
+readable check results are under `artifacts/react-migration/`. No live model,
+real course or hosted database was changed.
+
 Full Streamlit parity and hosted React deployment are **not** complete. Next:
-Phase 2 instructor actions/history and academic/risk visual parity. Do not
-replace the operational UI yet. See `frontend/README.md` for running the preview
-and the pilot session limits.
+Phase 3 course policies and analysis controls, then the full parity/usability
+gate before parallel Lobot deployment. Do not replace the operational UI yet.
+See `frontend/README.md` for running the preview and pilot session limits.

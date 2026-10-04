@@ -123,6 +123,8 @@ const snapshotSchema = z.object({
   is_fresh: z.boolean(),
   coverage: z.record(z.string(), z.string()),
   features,
+  feature_version: z.string().optional(),
+  course_context: bag.optional(),
 });
 const outputSchema = z.object({
   risk_score: z.number().min(0).max(1).nullable(),
@@ -145,12 +147,39 @@ const analysisSchema = z
     calibration_version: z.string().nullable().optional(),
   })
   .passthrough();
-const caseSchema = z.object({
+export const caseEventSchema = z.object({
+  id: z.string(),
+  actor: z.string(),
+  recorded_at: z.string(),
+  status: z.enum(["new", "reviewed", "ongoing", "resolved", "dismissed"]),
+  action: z.enum([
+    "note",
+    "contact",
+    "warning",
+    "support",
+    "resource",
+    "follow_up",
+  ]),
+  action_state: z.enum(["planned", "completed", "cancelled"]),
+  occurred_day: count,
+  follow_up_day: count.nullable(),
+  checkpoint_week: count,
+  evidence_checkpoint_week: count.optional(),
+  note: z.string(),
+  resource_ids: z.array(z.string()),
+  resolves_event_id: z.string().nullable().optional(),
+});
+export type CaseEvent = z.infer<typeof caseEventSchema>;
+export const caseSchema = z.object({
   id: z.string(),
   status: z.string(),
   version: count,
   follow_up_day: count.nullable(),
-  events: z.array(bag),
+  events: z.array(caseEventSchema),
+});
+export const triageResponseSchema = z.object({
+  triage: triageSchema,
+  triage_history: z.array(bag),
 });
 export const detailSchema = z.object({
   learner_id: z.string(),
@@ -173,10 +202,22 @@ export const detailSchema = z.object({
       risk_band: z.string().nullable(),
       model_version: z.string(),
       policy_version: count,
+      model_digest: z.string().nullable().optional(),
+      prompt_version: z.string().nullable().optional(),
+      feature_version: z.string().nullable().optional(),
+      calibration_version: z.string().nullable().optional(),
       features,
     }),
   ),
-  snapshot_history: z.array(z.object({ checkpoint_week: count, features })),
+  snapshot_history: z.array(
+    z.object({
+      checkpoint_week: count,
+      cutoff_day: z.number().optional(),
+      feature_version: z.string().nullable().optional(),
+      course_context: bag.optional(),
+      features,
+    }),
+  ),
   case: caseSchema.nullable(),
   current_case: caseSchema.nullable(),
   triage: triageSchema,

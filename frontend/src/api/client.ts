@@ -19,6 +19,7 @@ export async function request<T>(
     signal?: AbortSignal;
     body?: unknown;
     csrf?: string;
+    idempotencyKey?: string;
   } = {},
 ): Promise<T> {
   const response = await fetch(new URL(path, apiRoot), {
@@ -36,6 +37,9 @@ export async function request<T>(
         ? {}
         : { "Content-Type": "application/json" }),
       ...(options.csrf ? { "X-CSRF-Token": options.csrf } : {}),
+      ...(options.idempotencyKey
+        ? { "Idempotency-Key": options.idempotencyKey }
+        : {}),
     },
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
   }).catch((error: unknown) => {
@@ -55,14 +59,22 @@ export async function request<T>(
       409: "Another instructor updated this record. Refresh before saving.",
       422: "Some values were not accepted. Review the form.",
       429: "Too many sign-in attempts. Wait five minutes.",
-      503: "The service is temporarily unavailable. Your saved records are unchanged.",
+      503: "The service is temporarily unavailable. Refresh to check saved records before repeating an action.",
     };
+    let detail: unknown;
+    if ([409, 422].includes(response.status)) {
+      const problem: unknown = await response.json().catch(() => null);
+      if (problem && typeof problem === "object" && "detail" in problem)
+        detail = problem.detail;
+    }
     throw new ApiError(
       response.status,
       path === "browser/login" && response.status === 401
         ? "Username or password is incorrect."
-        : (messages[response.status] ??
-          `The request failed (${response.status}). Try again or contact the operator.`),
+        : typeof detail === "string" && detail.length < 400
+          ? detail
+          : (messages[response.status] ??
+            `The request failed (${response.status}). Try again or contact the operator.`),
     );
   }
   const parsed = schema.safeParse(await response.json());

@@ -3,10 +3,11 @@
 The real frontend migration, on branch **reactvite**. This is not the earlier
 in-memory mock under `artifacts/react-focus-demo`.
 
-**Current gate: read-only foundation.** Login and data views use FastAPI and its
-real course authorization/database. Instructor edits, full academic charts,
-policy editing, model queue controls and complete Streamlit parity are the next
-phases. Streamlit remains the operational interface. Nothing here has been
+**Current gate: instructor workflow (Phase 2).** Login, reads and instructor
+edits use FastAPI and its real authorization/database. Flags, watchlists,
+priority, audited support actions, follow-ups, resources and academic/risk
+charts are implemented. Policy editing and model operations remain the next
+phase. Streamlit remains the hosted operational interface; React has not been
 deployed to Lobot.
 
 ## Code map
@@ -15,6 +16,14 @@ deployed to Lobot.
 - `src/api/contracts.ts`: TypeScript types **and runtime JSON validation**.
 - `src/api/client.ts`: same-origin authenticated requests, safe errors, timeout.
 - `src/hooks/useResource.ts`: cancellable reads; no old-course/student flash.
+- `src/hooks/useSave.ts`: CSRF, optimistic concurrency and explicit idempotent
+  retries after an uncertain response; no automatic mutation retries.
+- `src/hooks/editGuard.tsx`: pending-save and unsaved-draft navigation guard.
+- `src/pages/InstructorActions.tsx`, `SupportRecord.tsx`: audited instructor
+  markers and support history, with no automatic student messaging.
+- `src/pages/AcademicRecords.tsx`, `RiskHistory.tsx`: publication-safe grades,
+  practice/assessed distinction, required-due resource completion and versioned
+  risk history. `supportComparison.ts` rejects incompatible before/after facts.
 - `src/pages/`: overview, roster and student evidence/history screens.
 - `src/styles.css`: responsive design tokens and page/component styling.
 - `vite.config.ts`: Vite build and optional development API proxy.
@@ -109,14 +118,25 @@ FastAPI-served production build for acceptance checks.
 ```text
 npm.cmd run build
 npm.cmd audit --audit-level=high
-python -m pytest tests/test_browser_auth.py tests/test_workspace_security.py tests/unit/test_dashboard_client.py tests/unit/test_dashboard_auth.py -q
+python -m pytest tests/test_browser_auth.py tests/test_workspace_security.py tests/test_workspace_instructor_phase2.py tests/unit/test_dashboard_client.py tests/unit/test_dashboard_auth.py -q
 python tests/check_react_foundation.py
+python tests/check_react_instructor_actions.py
+python tests/check_react_phase2_edges.py
+node tests/check_react_academic_semantics.mjs
 ```
 
 Run Python commands from the repository root; browser checks need the isolated
 preview running, Python Playwright and Edge. Evidence is in the ignored folder
 `artifacts/react-migration/`. The current gate is not a full accessibility audit,
-penetration test or end-to-end replacement acceptance.
+penetration test or end-to-end replacement acceptance. The instructor-action
+check writes labeled test support records only to the isolated synthetic
+preview. Never point these checks at the hosted database.
+
+Support history always represents current instructor records even when viewing
+earlier evidence. Planned actions require explicit completion/cancellation;
+case closure does not silently finish plans. Follow-up scheduling/clearing is
+explicit. If a save response is lost, the editor freezes that request and lets
+the instructor retry its exact idempotency key or inspect history first.
 
 Implementation references: [Vite backend integration](https://vite.dev/guide/backend-integration),
 [FastAPI static files](https://fastapi.tiangolo.com/tutorial/static-files/), and

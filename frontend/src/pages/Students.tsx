@@ -57,6 +57,7 @@ export function StudentFilters({
       <label>
         Attention
         <select
+          aria-label="Attention"
           value={filters.attention}
           onChange={(e) => update("attention", e.target.value)}
         >
@@ -78,6 +79,7 @@ export function StudentFilters({
       <label>
         Support level
         <select
+          aria-label="Support level"
           value={filters.risk}
           onChange={(e) => update("risk", e.target.value)}
         >
@@ -92,6 +94,7 @@ export function StudentFilters({
       <label>
         Case / analysis status
         <select
+          aria-label="Case / analysis status"
           value={filters.status}
           onChange={(e) => update("status", e.target.value)}
         >
@@ -110,13 +113,16 @@ export function StudentFilters({
             "failed",
             "outdated",
           ].map((v) => (
-            <option key={v}>{v}</option>
+            <option key={v} value={v}>
+              {label(v)}
+            </option>
           ))}
         </select>
       </label>
       <label>
         Instructor priority
         <select
+          aria-label="Instructor priority"
           value={filters.priority}
           onChange={(e) => update("priority", e.target.value)}
         >
@@ -129,6 +135,7 @@ export function StudentFilters({
       <label>
         Sort by
         <select
+          aria-label="Sort by"
           value={filters.sort}
           onChange={(e) => update("sort", e.target.value)}
         >
@@ -175,7 +182,7 @@ export function Students({
           <h2>{data.total.toLocaleString()} matching students</h2>
           <p>Evidence: week {data.week} · support cases: current records</p>
         </div>
-        <Badge>Read-only preview</Badge>
+        <Badge>Open a profile to record support</Badge>
       </div>
       <div
         className="table-scroll"

@@ -1,8 +1,13 @@
-import { useState } from "react";
-import { ArrowLeft, ShieldCheck, FileText } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { AcademicRecords } from "./AcademicRecords";
+import { RiskHistory } from "./RiskHistory";
 import { detailSchema } from "../api/contracts";
 import type { Fact, LearnerDetail, Privacy } from "../api/contracts";
 import { useResource } from "../hooks/useResource";
+import { useEditGuard } from "../hooks/editGuard";
+import { InstructorActions } from "./InstructorActions";
+import { SupportRecord } from "./SupportRecord";
 import {
   Badge,
   band,
@@ -19,6 +24,7 @@ export function StudentProfile({
   week,
   privacy,
   revision,
+  csrf,
   back,
 }: {
   course: string;
@@ -26,11 +32,29 @@ export function StudentProfile({
   week: number;
   privacy: Privacy;
   revision: number;
+  csrf: string;
   back: () => void;
 }) {
   const [tab, setTab] = useState("Evidence");
+  const [savedRevision, setSavedRevision] = useState(0);
+  const [flash, setFlash] = useState("");
+  const savedMessage = useRef<HTMLDivElement>(null);
+  const guard = useEditGuard();
   const path = `v2/courses/${encodeURIComponent(course)}/learners/${encodeURIComponent(id)}?week=${week}&privacy=${privacy}`;
-  const { data, error } = useResource(path, detailSchema, revision);
+  const { data, error } = useResource(
+    path,
+    detailSchema,
+    revision + savedRevision,
+  );
+  useEffect(() => {
+    if (data && flash) savedMessage.current?.focus({ preventScroll: true });
+  }, [data, flash]);
+  const saved = () => {
+    setFlash(
+      "Instructor record saved. Model scores and checkpoint evidence are unchanged.",
+    );
+    setSavedRevision((v) => v + 1);
+  };
   if (error)
     return (
       <>
@@ -110,16 +134,22 @@ export function StudentProfile({
           <span>Retained across checkpoints</span>
         </div>
       </div>
-      <div className="profile-markers">
-        <Badge>
-          {data.triage.flagged ? "Flagged by instructor" : "No manual flag"}
-        </Badge>
-        <Badge>
-          {data.triage.watchlisted ? "On watchlist" : "Not on watchlist"}
-        </Badge>
-        <Badge>{label(data.triage.priority)} priority</Badge>
-        <small>Instructor markers do not change the risk score.</small>
-      </div>
+      {flash && (
+        <div
+          className="success-message"
+          role="status"
+          ref={savedMessage}
+          tabIndex={-1}
+        >
+          {flash}
+        </div>
+      )}
+      <InstructorActions
+        data={data}
+        course={course}
+        csrf={csrf}
+        saved={saved}
+      />
       {(!usable || data.analysis?.output.abstain) && (
         <Notice>
           {data.analysis?.output.abstain
@@ -139,107 +169,25 @@ export function StudentProfile({
             key={name}
             aria-current={tab === name ? "page" : undefined}
             className={tab === name ? "selected" : ""}
-            onClick={() => setTab(name)}
+            onClick={() => {
+              if (guard.leave()) setTab(name);
+            }}
           >
             {name}
           </button>
         ))}
       </nav>
       {tab === "Evidence" && <Evidence data={data} usable={usable} />}
-      {tab === "Academic records" && <Academic data={data} />}
-      {tab === "Risk history" && (
-        <Panel
-          title="Saved risk-score history"
-          note="Historical results. Different model or policy revisions must not be treated as a continuous comparable trend."
-        >
-          <div
-            className="table-scroll"
-            tabIndex={0}
-            role="region"
-            aria-label="Risk history"
-          >
-            <table>
-              <thead>
-                <tr>
-                  <th>Week</th>
-                  <th>Risk score</th>
-                  <th>Support level</th>
-                  <th>Model</th>
-                  <th>Policy</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.history.map((h) => (
-                  <tr key={h.checkpoint_week}>
-                    <td>{h.checkpoint_week}</td>
-                    <td>{score(h.risk_score)}</td>
-                    <td>{band(h.risk_band)}</td>
-                    <td>{h.model_version}</td>
-                    <td>Revision {h.policy_version}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {!data.history.length && (
-            <p className="empty">
-              No saved model results. Missing points are not zero.
-            </p>
-          )}
-        </Panel>
-      )}
+      {tab === "Academic records" && <AcademicRecords data={data} />}
+      {tab === "Risk history" && <RiskHistory data={data} />}
       {tab === "Support record" && (
-        <Panel
-          title="Current instructor support history"
-          note="Recorded actions persist even when you open an earlier evidence checkpoint. This foundation view is read-only; editing remains in Streamlit."
-        >
-          <div className="timeline">
-            {data.current_case?.events.map((event, i) => (
-              <article key={String(event.id ?? i)}>
-                <span className="timeline-dot" />
-                <small>
-                  Course day {String(event.occurred_day ?? "unknown")} ·
-                  evidence week{" "}
-                  {String(
-                    event.evidence_checkpoint_week ??
-                      event.checkpoint_week ??
-                      "unknown",
-                  )}
-                </small>
-                <h3>
-                  {label(String(event.action ?? "note"))}{" "}
-                  <Badge>
-                    {label(String(event.action_state ?? "unknown"))}
-                  </Badge>
-                </h3>
-                <p>{String(event.note ?? "No note recorded")}</p>
-                <p className="fineprint">
-                  Case: {label(String(event.status ?? "unknown"))} · next
-                  follow-up:{" "}
-                  {event.follow_up_day == null
-                    ? "not scheduled"
-                    : `day ${event.follow_up_day}`}
-                </p>
-                {Array.isArray(event.resource_ids) &&
-                  event.resource_ids.length > 0 && (
-                    <p className="fineprint">
-                      Resources: {event.resource_ids.join(", ")}
-                    </p>
-                  )}
-              </article>
-            ))}
-          </div>
-          {!data.current_case?.events.length && (
-            <p className="empty">
-              No instructor actions recorded for this student.
-            </p>
-          )}
-          <Notice>
-            Planned actions are not completed contact. No messages are sent by
-            this interface. Action editing and before/after comparisons are
-            scheduled for the next migration phase.
-          </Notice>
-        </Panel>
+        <SupportRecord
+          data={data}
+          course={course}
+          week={week}
+          csrf={csrf}
+          saved={saved}
+        />
       )}
     </>
   );
@@ -423,63 +371,6 @@ function Evidence({ data, usable }: { data: LearnerDetail; usable: boolean }) {
             </table>
           </div>
         </details>
-      </Panel>
-    </>
-  );
-}
-
-function Academic({ data }: { data: LearnerDetail }) {
-  const facts = data.snapshot?.features ?? {};
-  return (
-    <>
-      <Panel
-        title="Academic evidence at this checkpoint"
-        note="Course records available by the cutoff. Grade percentages are not risk scores."
-      >
-        <div className="academic-grid">
-          {[
-            "weighted_grade_percent",
-            "assessments_missed",
-            "completion_percent",
-            "active_days_last_7",
-          ].map((key) => (
-            <div key={key}>
-              <small>{label(key)}</small>
-              <strong>
-                {facts[key] ? value(facts[key]) : "Not available"}
-              </strong>
-              <small>
-                {facts[key] ? label(facts[key].status) : "Not supported"}
-              </small>
-            </div>
-          ))}
-        </div>
-        <Notice>
-          Detailed grade/resource charts and practice-versus-assessed views are
-          in the next parity phase. Original records remain accessible below;
-          this page does not invent summaries.
-        </Notice>
-      </Panel>
-      <Panel
-        title="Recorded learning events"
-        note={`${data.events.length} events available by this checkpoint`}
-      >
-        {data.events.length === 0 ? (
-          <p className="empty">No available learning events.</p>
-        ) : (
-          <div className="record-list">
-            {data.events.map((event, i) => (
-              <details key={String(event.event_id ?? i)}>
-                <summary>
-                  <FileText size={15} />
-                  Day {String(event.course_day ?? "?")} ·{" "}
-                  {label(String(event.event_type ?? "event"))}
-                </summary>
-                <pre>{JSON.stringify(event, null, 2)}</pre>
-              </details>
-            ))}
-          </div>
-        )}
       </Panel>
     </>
   );

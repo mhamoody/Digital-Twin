@@ -24,6 +24,7 @@ import { Overview } from "./pages/Overview";
 import { initialFilters, StudentFilters, Students } from "./pages/Students";
 import type { Filters } from "./pages/Students";
 import { StudentProfile } from "./pages/StudentProfile";
+import { EditGuard, useEditGuard } from "./hooks/editGuard";
 
 type Page = "overview" | "students" | "support" | "settings" | "health";
 const navigation = [
@@ -71,13 +72,15 @@ export function App() {
       />
     );
   return (
-    <WorkspaceApp
-      session={session}
-      signedOut={() => {
-        setSession(null);
-        setProblem("");
-      }}
-    />
+    <EditGuard>
+      <WorkspaceApp
+        session={session}
+        signedOut={() => {
+          setSession(null);
+          setProblem("");
+        }}
+      />
+    </EditGuard>
   );
 }
 
@@ -139,7 +142,7 @@ function Login({
             <span>03</span>Record human support
           </div>
         </div>
-        <small>React migration · local foundation preview</small>
+        <small>React migration · local instructor-workflow preview</small>
       </section>
       <section className="login-form">
         <ShieldCheck size={30} />
@@ -187,6 +190,7 @@ function WorkspaceApp({
   session: Session;
   signedOut: () => void;
 }) {
+  const guard = useEditGuard();
   const [revision, setRevision] = useState(0);
   const { data: courses, error } = useResource(
     "v2/courses",
@@ -211,23 +215,30 @@ function WorkspaceApp({
       ? selectedWeek
       : Math.max(...(course?.checkpoints ?? [0]));
   function navigate(value: Page) {
+    if (!guard.leave()) return;
     setPage(value);
     setStudent(null);
     setMenu(false);
-    window.location.hash = value;
+    window.history.pushState(null, "", `#${value}`);
   }
   useEffect(() => {
     const change = () => {
-      const value = window.location.hash.slice(1);
+      const value = window.location.hash.slice(1) || "overview";
       if (navigation.some((n) => n.id === value)) {
+        if (!guard.leave()) {
+          window.history.replaceState(null, "", `#${page}`);
+          return;
+        }
         setPage(value as Page);
         setStudent(null);
       }
     };
-    change();
+    if (window.location.hash.slice(1) !== page) change();
     window.addEventListener("hashchange", change);
-    return () => window.removeEventListener("hashchange", change);
-  }, []);
+    return () => {
+      window.removeEventListener("hashchange", change);
+    };
+  }, [guard, page]);
   useEffect(() => {
     if (menu) dialog.current?.showModal();
     else dialog.current?.close();
@@ -236,6 +247,7 @@ function WorkspaceApp({
     document.getElementById("main-content")?.focus({ preventScroll: true });
   }, [page, student]);
   async function logout() {
+    if (!guard.leave()) return;
     try {
       await request("browser/logout", z.object({ signed_out: z.boolean() }), {
         body: {},
@@ -350,9 +362,9 @@ function WorkspaceApp({
         </header>
         <main id="main-content" tabIndex={-1}>
           <div className="migration-banner">
-            <span>REACT PREVIEW</span> Read-only foundation. Editing, analysis
-            controls and full feature parity follow in the next phases;
-            Streamlit remains operational.
+            <span>REACT PREVIEW</span> Instructor markers and support records
+            now save to the selected database. Course-policy editing and model
+            controls remain in Streamlit until their migration gates pass.
           </div>
           {logoutError && <Notice error>{logoutError}</Notice>}
           {error ? (
@@ -374,7 +386,9 @@ function WorkspaceApp({
                   <p>Understand what changed. Decide who needs support.</p>
                 </div>
                 <button
-                  onClick={() => setRevision((v) => v + 1)}
+                  onClick={() => {
+                    if (guard.leave()) setRevision((v) => v + 1);
+                  }}
                   title="Reload saved data. Does not import records or rerun the model."
                 >
                   <RefreshCw size={16} />
@@ -388,6 +402,7 @@ function WorkspaceApp({
                     aria-label="Course"
                     value={course.presentation_id}
                     onChange={(e) => {
+                      if (!guard.leave()) return;
                       setCourseId(e.target.value);
                       setWeek(null);
                       setStudent(null);
@@ -407,6 +422,7 @@ function WorkspaceApp({
                     aria-label="Checkpoint"
                     value={week}
                     onChange={(e) => {
+                      if (!guard.leave()) return;
                       setWeek(Number(e.target.value));
                       setFilters({ ...filters, offset: 0 });
                     }}
@@ -424,6 +440,7 @@ function WorkspaceApp({
                     aria-label="Student identity"
                     value={privacy}
                     onChange={(e) => {
+                      if (!guard.leave()) return;
                       setPrivacy(e.target.value as Privacy);
                       setFilters({ ...filters, query: "", offset: 0 });
                     }}
@@ -462,7 +479,10 @@ function WorkspaceApp({
                   week={week}
                   privacy={privacy}
                   revision={revision}
-                  back={() => setStudent(null)}
+                  csrf={session.csrf_token}
+                  back={() => {
+                    if (guard.leave()) setStudent(null);
+                  }}
                 />
               ) : (
                 <CoursePage
@@ -526,7 +546,12 @@ function CoursePage({
     params.set("priority", filters.priority);
     if (filters.attention) params.set(filters.attention, "true");
   }
-  if (page === "support") params.set("active_cases", "true");
+  const closedCases =
+    page === "support" && ["resolved", "dismissed"].includes(filters.status);
+  if (page === "support") {
+    if (closedCases) params.delete("active_cases");
+    else params.set("active_cases", "true");
+  }
   const { data, error } = useResource(
     `v2/courses/${encodeURIComponent(course.presentation_id)}/workspace?${params}`,
     workspaceSchema,
@@ -561,8 +586,11 @@ function CoursePage({
           />
           {page === "support" && (
             <p className="fineprint">
-              Active support cases: new, reviewed and ongoing. Open Students to
-              inspect resolved or dismissed records.
+              {closedCases
+                ? `Showing ${filters.status} support cases.`
+                : "Active support cases: new, reviewed and ongoing."}{" "}
+              Choose Resolved or Dismissed in the status filter to inspect
+              closed records.
             </p>
           )}
           <p className="fineprint">
