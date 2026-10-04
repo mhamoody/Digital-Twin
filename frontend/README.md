@@ -3,11 +3,12 @@
 The real frontend migration, on branch **reactvite**. This is not the earlier
 in-memory mock under `artifacts/react-focus-demo`.
 
-**Current gate: instructor workflow (Phase 2).** Login, reads and instructor
+**Current gate: policies and model operations (Phase 3).** Login, reads and instructor
 edits use FastAPI and its real authorization/database. Flags, watchlists,
 priority, audited support actions, follow-ups, resources and academic/risk
-charts are implemented. Policy editing and model operations remain the next
-phase. Streamlit remains the hosted operational interface; React has not been
+charts, course-policy editing, analysis queue/automation controls and safe
+diagnostics are implemented locally. Full parity/usability is the next gate.
+Streamlit remains the hosted operational interface; React has not been
 deployed to Lobot.
 
 ## Code map
@@ -24,6 +25,16 @@ deployed to Lobot.
 - `src/pages/AcademicRecords.tsx`, `RiskHistory.tsx`: publication-safe grades,
   practice/assessed distinction, required-due resource completion and versioned
   risk history. `supportComparison.ts` rejects incompatible before/after facts.
+- `src/pages/CourseSettings.tsx`, `src/api/policyContracts.ts`: all course-policy
+  fields, draft-only presets, validation, revision conflicts and audited saves.
+- `src/pages/ModelHealth.tsx`, `AnalysisControls.tsx`: actual model/worker/course
+  state, learner/week/all-week queues, explicit retries, auto-discovery and resume.
+- `src/hooks/useAnalysisStatus.ts`: sequential, visible-page progress polling;
+  failed reads hide previously displayed counts. No implicit mutation.
+- `src/hooks/useOperation.ts`, `src/components/OperationDialog.tsx`: confirmation
+  and single-flight requests for operations without an idempotency guarantee.
+- `src/pages/AnalysisProvenance.tsx`, `DemoGuide.tsx`: safe validation traces,
+  historical/baseline distinctions and verified synthetic scenario navigation.
 - `src/pages/`: overview, roster and student evidence/history screens.
 - `src/styles.css`: responsive design tokens and page/component styling.
 - `vite.config.ts`: Vite build and optional development API proxy.
@@ -122,7 +133,11 @@ python -m pytest tests/test_browser_auth.py tests/test_workspace_security.py tes
 python tests/check_react_foundation.py
 python tests/check_react_instructor_actions.py
 python tests/check_react_phase2_edges.py
+python tests/check_react_phase3_browser.py
 node tests/check_react_academic_semantics.mjs
+node tests/check_react_policy_semantics.mjs
+node tests/check_react_phase3_semantics.mjs
+python -m pytest tests/test_workspace_policy_v3.py tests/test_analysis_automation.py tests/test_analysis_diagnostics.py tests/test_inference_reliability.py -q
 ```
 
 Run Python commands from the repository root; browser checks need the isolated
@@ -137,6 +152,22 @@ earlier evidence. Planned actions require explicit completion/cancellation;
 case closure does not silently finish plans. Follow-up scheduling/clearing is
 explicit. If a save response is lost, the editor freezes that request and lets
 the instructor retry its exact idempotency key or inspect history first.
+
+Policy, automation and course-resume operations do **not** use that retry
+contract. A lost response freezes the request and asks for a saved-state read
+before another decision. Policy edits retain historical assessments; saved
+results do not become current until reassessed under the new policy.
+
+Progress polls every ten seconds after the previous read finishes, while the
+page is visible. Queueing is not completed inference; refreshing is not an LMS
+import. Model availability does not prove successful inference. Course resume
+does not start a worker or clear a shared-service pause. Pre-inference quality
+abstention, validated model output and predictive accuracy remain distinct.
+
+Phase 3 browser checks change settings/automation and queue synthetic records
+only in the isolated preview. No worker is started; pause/failure displays use
+controlled HTTP fixtures. Live Qwen inference and hosted deployment verification
+remain a later gate, not something these local checks establish.
 
 Implementation references: [Vite backend integration](https://vite.dev/guide/backend-integration),
 [FastAPI static files](https://fastapi.tiangolo.com/tutorial/static-files/), and

@@ -1,5 +1,49 @@
 @layer base, components, responsive;
 @layer components {
+  .operation-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 18px 0 12px;
+  }
+  .runtime-status,
+  .course-pause,
+  .automation-card {
+    padding: 20px 0;
+    border-top: 1px solid var(--line);
+    margin-top: 20px;
+  }
+  .analysis-failures {
+    margin: 24px 0;
+  }
+  .analysis-failures article {
+    padding-bottom: 14px;
+  }
+  .diagnostic-sample {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin: 12px 0;
+    overflow-wrap: anywhere;
+  }
+  .analysis-metrics strong {
+    font-size: clamp(22px, 2vw, 32px);
+  }
+  .analysis-metrics small {
+    display: block;
+  }
+  .policy-weekdays {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+  }
+  .editor-form legend {
+    font-weight: 650;
+    color: var(--teal);
+    padding: 12px 0;
+    max-width: 100%;
+    white-space: normal;
+  }
   .instructor-actions {
     display: flex;
     flex-wrap: wrap;
@@ -55,7 +99,11 @@
   }
   .editor-form {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 16px;
+  }
+  .editor-form > * {
+    min-width: 0;
   }
   .editor-form > p {
     color: var(--muted);

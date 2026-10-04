@@ -124,7 +124,47 @@ blocking and academic/editor mobile layouts. Local screenshots and machine-
 readable check results are under `artifacts/react-migration/`. No live model,
 real course or hosted database was changed.
 
+Phase 3 implemented locally: full course-policy editor with six teaching-style
+starting points, configurable inactivity/corroboration/grade settings, teaching
+weekdays, break ranges and revision-aware saves. Presets change the draft only.
+Policy changes preserve old assessments and require reassessment under the new
+revision. Blank or invalid values are not silently replaced by zero.
+
+Model operations include per-learner/per-week/all-week queueing, explicit failed
+job retries, versioned auto-discovery settings and course-only resume requests.
+Queue actions preserve server-side reuse, retry limits and protective pauses.
+Unlike idempotent support entries, uncertain policy/automation/resume responses
+freeze and require a saved-state check, not a blind repeat of the request.
+
+Course-wide progress polls sequentially every ten seconds while visible. The
+interface separates student counts from student-checkpoint counts, queued jobs
+from completed results, model availability from successful inference, and a
+course resume request from worker acknowledgement. A shared-service pause is
+not cleared by a course resume. Read failures hide unconfirmed progress counts.
+Background polling does not discard an open confirmation or uncertainty dialog.
+
+Provenance shows current versus historical results, model identity, pre-inference
+quality abstention, first-pass validation, bounded model correction and audited
+format normalization. Failure samples show bounded, server-sanitized field
+diagnostics, not raw model replies. The synthetic scenario guide checks that the
+actual learner/checkpoint exists before opening it and never queues analysis.
+
+Phase 3 verification: production build and 94 focused Python tests passed; npm
+audit reported zero vulnerabilities. Five policy and fifteen provenance/guide/
+operations semantic-check groups passed, alongside the ten earlier academic
+groups. The earlier 10 foundation, 7 instructor-action and 4 edge-case browser
+checks passed again. All twelve new browser check groups passed with no
+JavaScript errors. They exercise real isolated policy and
+automation saves, lost successful responses, queue deduplication, polling,
+safe diagnostics and narrow-screen forms. A policy-table min-content overflow
+found at 320px was fixed so scrolling stays within the table, not the editor.
+
+No model or backend prediction change was made in Phase 3. The local queue test
+uses 240 synthetic student-checkpoint records with no inference worker running.
+Failure/pause states are controlled HTTP fixtures; these checks do not establish
+live Qwen accuracy, hosted operation or recovery from a real model incident.
+
 Full Streamlit parity and hosted React deployment are **not** complete. Next:
-Phase 3 course policies and analysis controls, then the full parity/usability
-gate before parallel Lobot deployment. Do not replace the operational UI yet.
+Phase 4 full parity/usability (including legacy v1 support history), then Phase 5
+parallel Lobot deployment. Do not replace the operational UI yet.
 See `frontend/README.md` for running the preview and pilot session limits.

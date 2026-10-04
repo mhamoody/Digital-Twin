@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { AcademicRecords } from "./AcademicRecords";
 import { RiskHistory } from "./RiskHistory";
+import { AnalysisControls } from "./AnalysisControls";
+import { AnalysisProvenance } from "./AnalysisProvenance";
 import { detailSchema } from "../api/contracts";
 import type { Fact, LearnerDetail, Privacy } from "../api/contracts";
 import { useResource } from "../hooks/useResource";
@@ -177,7 +179,20 @@ export function StudentProfile({
           </button>
         ))}
       </nav>
-      {tab === "Evidence" && <Evidence data={data} usable={usable} />}
+      {tab === "Evidence" && (
+        <>
+          <Evidence data={data} usable={usable} />
+          <AnalysisProvenance data={data} />
+          {data.snapshot && (
+            <AnalysisControls
+              course={course}
+              week={week}
+              learner={id}
+              csrf={csrf}
+            />
+          )}
+        </>
+      )}
       {tab === "Academic records" && <AcademicRecords data={data} />}
       {tab === "Risk history" && <RiskHistory data={data} />}
       {tab === "Support record" && (

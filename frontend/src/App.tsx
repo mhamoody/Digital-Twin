@@ -17,9 +17,12 @@ import {
 } from "lucide-react";
 import { request } from "./api/client";
 import { coursesSchema, sessionSchema, workspaceSchema } from "./api/contracts";
-import type { Course, Privacy, Session, Workspace } from "./api/contracts";
+import type { Course, Privacy, Session } from "./api/contracts";
 import { useResource } from "./hooks/useResource";
-import { Badge, label, Loading, Notice, Panel } from "./components/ui";
+import { Badge, label, Loading, Notice } from "./components/ui";
+import { CourseSettings } from "./pages/CourseSettings";
+import { ModelHealth } from "./pages/ModelHealth";
+import { DemoGuide } from "./pages/DemoGuide";
 import { Overview } from "./pages/Overview";
 import { initialFilters, StudentFilters, Students } from "./pages/Students";
 import type { Filters } from "./pages/Students";
@@ -362,9 +365,9 @@ function WorkspaceApp({
         </header>
         <main id="main-content" tabIndex={-1}>
           <div className="migration-banner">
-            <span>REACT PREVIEW</span> Instructor markers and support records
-            now save to the selected database. Course-policy editing and model
-            controls remain in Streamlit until their migration gates pass.
+            <span>REACT PREVIEW</span> Instructor records, course expectations
+            and analysis controls use the selected database. This local
+            migration is not yet the hosted replacement.
           </div>
           {logoutError && <Notice error>{logoutError}</Notice>}
           {error ? (
@@ -490,11 +493,18 @@ function WorkspaceApp({
                   week={week}
                   privacy={privacy}
                   revision={revision}
+                  csrf={session.csrf_token}
                   page={page}
                   filters={filters}
                   setFilters={setFilters}
                   openList={openList}
                   openStudent={setStudent}
+                  openDemo={(id, selected) => {
+                    if (guard.leave()) {
+                      setWeek(selected);
+                      setStudent(id);
+                    }
+                  }}
                 />
               )}
             </>
@@ -514,22 +524,28 @@ function CoursePage({
   week,
   privacy,
   revision,
+  csrf,
   page,
   filters,
   setFilters,
   openList,
   openStudent,
+  openDemo,
 }: {
   course: Course;
   week: number;
   privacy: Privacy;
   revision: number;
+  csrf: string;
   page: Page;
   filters: Filters;
   setFilters: (v: Filters) => void;
   openList: (filter?: string) => void;
   openStudent: (id: string) => void;
+  openDemo: (id: string, week: number) => void;
 }) {
+  const [localRevision, setLocalRevision] = useState(0);
+  const [settingsRead, setSettingsRead] = useState(false);
   const isList = page === "students" || page === "support";
   const params = new URLSearchParams({
     week: String(week),
@@ -555,7 +571,7 @@ function CoursePage({
   const { data, error } = useResource(
     `v2/courses/${encodeURIComponent(course.presentation_id)}/workspace?${params}`,
     workspaceSchema,
-    revision,
+    revision + localRevision,
   );
   let content: ReactNode;
   if (error) content = <Notice error>{error}</Notice>;
@@ -573,8 +589,28 @@ function CoursePage({
     content = (
       <Overview data={data} openList={openList} openStudent={openStudent} />
     );
-  else if (page === "settings") content = <PolicyView data={data} />;
-  else content = <HealthView data={data} />;
+  else if (page === "settings")
+    content = (
+      <CourseSettings
+        data={data}
+        course={course.presentation_id}
+        csrf={csrf}
+        saved={() => {
+          setSettingsRead(true);
+          setLocalRevision((v) => v + 1);
+        }}
+      />
+    );
+  else
+    content = (
+      <ModelHealth
+        key={course.presentation_id}
+        data={data}
+        course={course.presentation_id}
+        csrf={csrf}
+        revision={revision}
+      />
+    );
   return (
     <>
       {isList && (
@@ -600,104 +636,20 @@ function CoursePage({
         </>
       )}
       {content}
-    </>
-  );
-}
-
-function PolicyView({ data }: { data: Workspace }) {
-  const p = data.policy;
-  return (
-    <>
-      <Notice>
-        Current saved policy, revision {p.version}. Editing and preset selection
-        remain in Streamlit until the policy migration gate passes.
-      </Notice>
-      <Panel
-        title="What counts as concerning in this course?"
-        note="Course expectations are configurable, not a permanently fixed seven-day rule."
-      >
-        <dl className="settings-grid">
-          <dt>Learning mode</dt>
-          <dd>{label(p.learning_mode)}</dd>
-          <dt>Inactivity monitoring</dt>
-          <dd>
-            {p.inactivity_monitoring_enabled
-              ? "Enabled"
-              : "Disabled — offline or milestone-based work is allowed"}
-          </dd>
-          <dt>Warning / escalation</dt>
-          <dd>
-            {p.inactivity_warning_days} / {p.inactivity_high_days} {p.day_basis}{" "}
-            days
-            {!p.inactivity_monitoring_enabled &&
-              " (not applied while monitoring is disabled)"}
-          </dd>
-          <dt>Teaching weekdays</dt>
-          <dd>
-            {p.teaching_weekdays
-              .map((i) => ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i])
-              .join(", ")}
-          </dd>
-          <dt>Breaks</dt>
-          <dd>
-            {p.break_ranges
-              .map(([a, b]) => `Course days ${a}–${b}`)
-              .join("; ") || "No configured breaks"}
-          </dd>
-          <dt>Academic corroboration</dt>
-          <dd>
-            {p.require_academic_corroboration ? "Required" : "Not required"}
-          </dd>
-          <dt>Low-grade reference</dt>
-          <dd>{p.low_grade_percent}%</dd>
-        </dl>
-        <p className="fineprint">
-          Policy changes retain historical assessments. Results must be
-          reassessed before being presented as current under a new revision.
-        </p>
-      </Panel>
-    </>
-  );
-}
-function HealthView({ data }: { data: Workspace }) {
-  return (
-    <>
-      <Panel
-        title="Checkpoint data & analysis"
-        note="Counts are unique students at the selected checkpoint, not the course-wide job queue."
-      >
-        <div className="health-grid">
-          {[
-            ["Not analyzed / outdated", data.summary.not_run],
-            ["Queued / running", data.summary.queued],
-            ["Failed analysis", data.summary.failed],
-            ["Insufficient evidence", data.summary.insufficient_data],
-          ].map(([name, value]) => (
-            <div key={name}>
-              <small>{name}</small>
-              <strong>{value}</strong>
-            </div>
-          ))}
+      {page === "settings" && settingsRead && data && (
+        <div className="success-message" role="status">
+          Latest saved course settings loaded: revision {data.policy.version}.
+          Check the values above before making another change.
         </div>
-      </Panel>
-      <Panel
-        title="Saved result sources"
-        note="A temporary baseline is not an LLM result. Model versions are kept visible."
-      >
-        <dl className="settings-grid">
-          {Object.entries(data.model_counts).map(([name, count]) => (
-            <div key={name}>
-              <dt>{name}</dt>
-              <dd>{count} students</dd>
-            </div>
-          ))}
-        </dl>
-      </Panel>
-      <Notice>
-        Course-wide queue controls, live model/worker readiness and detailed
-        failure diagnostics remain available in Streamlit. They will be migrated
-        together; this view does not resume, retry or start inference.
-      </Notice>
+      )}
+      {page === "overview" && (
+        <DemoGuide
+          key={course.presentation_id}
+          course={course}
+          privacy={privacy}
+          open={openDemo}
+        />
+      )}
     </>
   );
 }
