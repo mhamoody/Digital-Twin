@@ -14,7 +14,7 @@ class ValidationResult:
  causal_claim_count:int=0; no_causal_claim_valid: bool=False
  missingness_violation_count:int=0; not_due_violation_count:int=0; awaiting_marking_violation_count:int=0
  missing_feed_violation_count:int=0; extension_violation_count:int=0; optional_resource_violation_count:int=0
- policy_threshold_violation_count:int=0; conflict_detected:bool=False; insufficient_evidence_detected:bool=False
+ policy_threshold_violation_count:int=0; missing_feed_detected:bool=False; conflict_detected:bool=False; insufficient_evidence_detected:bool=False
  semantic_evaluable:bool=False; semantic_evidence_valid:bool=False; unsupported_claim_count:int=0; contradiction_count:int=0
  validator_codes:list[str]=None
  def __post_init__(self):
@@ -51,7 +51,7 @@ def deterministic_output_validation(model_output:dict, model_input:dict)->Valida
  if due and cp<due and re.search(r"overdue|late|missed deadline|failed to submit",alltext,re.I):r.not_due_violation_count+=1
  awaiting=any(e.get("value",{}).get("status")=="awaiting_marking" for e in evidence.values() if isinstance(e.get("value"),dict))
  if awaiting and re.search(r"zero|failed|non-submission|missed assessment",alltext,re.I):r.awaiting_marking_violation_count+=1
- feed=any(e.get("evidence_type")=="activity" and e.get("observed") is False for e in evidence.values())
+ feed=any(e.get("evidence_type")=="activity" and e.get("observed") is False for e in evidence.values()); r.missing_feed_detected=feed
  if feed and re.search(r"inactiv|no activity|inactive",alltext,re.I):r.missing_feed_violation_count+=1
  extension=next((e for e in evidence.values() if e.get("evidence_type")=="extension" and isinstance(e.get("value"),dict) and e["value"].get("approved")),None)
  if extension and extension.get("value",{}).get("new_due_time") and cp<extension["value"]["new_due_time"] and re.search(r"overdue|late|missed deadline",alltext,re.I):r.extension_violation_count+=1
@@ -68,8 +68,9 @@ def reference_scoring(validation_result:ValidationResult, model_output:dict, eva
  abstain=model_output.get("abstain") if isinstance(model_output,dict) else None
  predicted="abstention_expected" if abstain is True else "assessment_allowed" if abstain is False else None
  expected=evaluation_reference.get("expected_behavior_class")
- checks={"cite_only_permitted_ids":validation_result.citation_valid,"no_future_observation":validation_result.no_future_observation_valid,"no_causal_claim":validation_result.no_causal_claim_valid,"do_not_treat_missing_as_zero":validation_result.missingness_violation_count==0,"do_not_treat_not_due_as_missing":validation_result.not_due_violation_count==0,"do_not_treat_awaiting_marking_as_failure":validation_result.awaiting_marking_violation_count==0,"missing_feed_requires_abstention":not validation_result.missing_feed_violation_count or abstain is True,"conflict_requires_abstention":not validation_result.conflict_detected or abstain is True,"insufficient_evidence_requires_abstention":not validation_result.insufficient_evidence_detected or abstain is True,"respect_approved_extension":validation_result.extension_violation_count==0,"respect_optional_resource":validation_result.optional_resource_violation_count==0}
+ checks={"cite_only_permitted_ids":validation_result.citation_valid,"no_future_observation":validation_result.no_future_observation_valid,"no_causal_claim":validation_result.no_causal_claim_valid,"do_not_treat_missing_as_zero":validation_result.missingness_violation_count==0,"do_not_treat_not_due_as_missing":validation_result.not_due_violation_count==0,"do_not_treat_awaiting_marking_as_failure":validation_result.awaiting_marking_violation_count==0,"missing_feed_requires_abstention":not validation_result.missing_feed_detected or abstain is True,"conflict_requires_abstention":not validation_result.conflict_detected or abstain is True,"insufficient_evidence_requires_abstention":not validation_result.insufficient_evidence_detected or abstain is True,"respect_approved_extension":validation_result.extension_violation_count==0,"respect_optional_resource":validation_result.optional_resource_violation_count==0}
  unknown=set(evaluation_reference.get("expected_evidence_constraints",[]))-CONSTRAINTS
  if unknown: raise ValueError(f"UNKNOWN_CONSTRAINT:{sorted(unknown)}")
  return {"predicted_behavior_class":predicted,"behavior_correct":predicted==expected if predicted is not None else None,"expected_evidence_constraint_valid":all(checks[c] for c in evaluation_reference.get("expected_evidence_constraints",[])),"constraint_results":checks}
+
 
