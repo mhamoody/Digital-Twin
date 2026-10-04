@@ -30,7 +30,9 @@ def test_generation_request_and_metadata():
         if r.url.path=="/api/tags": return httpx.Response(200,json=tags())
         body=json.loads(r.content)
         assert body["model"]=="qwen2.5:7b"
-        assert body["options"]=={"temperature":0.0,"top_p":1.0,"seed":42,"num_predict":512,"num_ctx":8192}
+        assert body["options"]=={"temperature":0.0,"seed":42,"num_predict":1200,"num_ctx":8192}
+        assert "top_p" not in body["options"]
+        assert body["keep_alive"] == "10m"
         return httpx.Response(200,json={"model":"qwen2.5:7b","response":"{\"accepted\":true}"})
     a=ResearchModelAdapter(endpoint="http://127.0.0.1:11434",model_name="qwen2.5:7b",transport=transport(route))
     out=a.generate({"case_id":"x"},schema={"type":"object"})

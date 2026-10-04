@@ -33,7 +33,7 @@ class ResearchModelAdapter:
         self.runtime = ResearchRuntime(
             endpoint or os.getenv("DIGITAL_TWIN_RESEARCH_MODEL_URL"),
             model_name or os.getenv("DIGITAL_TWIN_RESEARCH_MODEL_NAME"),
-            generation or {"temperature": 0.0, "top_p": 1.0, "seed": 42, "num_predict": 512, "num_ctx": 8192},
+            generation or {"temperature": 0.0, "seed": 42, "num_ctx": 8192, "num_predict": 1200},
         )
         self.transport = transport
         self.expected_digest = expected_digest
@@ -92,7 +92,7 @@ class ResearchModelAdapter:
             raise RuntimeError("BLOCKED BY MODEL ACCESS")
         meta = self.metadata()
         started = time.perf_counter()
-        payload = {"model": self.runtime.model_name, "system": system, "prompt": prompt if prompt is not None else json.dumps(case, sort_keys=True), "stream": False, "options": dict(self.runtime.generation)}
+        payload = {"model": self.runtime.model_name, "system": system, "prompt": prompt if prompt is not None else json.dumps(case, sort_keys=True), "stream": False, "keep_alive": "10m", "options": dict(self.runtime.generation)}
         if schema is not None:
             payload["format"] = schema
         body = self._request("POST", "/api/generate", json=payload)
