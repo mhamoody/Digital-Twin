@@ -96,6 +96,19 @@ export function AnalysisProvenance({ data }: { data: LearnerDetail }) {
             failure. Formatting normalization, model correction and evidence
             validation are separate checks.
           </p>
+          {Array.isArray(analysis.data_limitations) &&
+            analysis.data_limitations.length > 0 && (
+              <Notice>
+                <strong>Evidence limitations recorded with this result</strong>
+                <ul>
+                  {analysis.data_limitations
+                    .filter((item): item is string => typeof item === "string")
+                    .map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                </ul>
+              </Notice>
+            )}
           <details>
             <summary>Saved model identity and contract</summary>
             <div

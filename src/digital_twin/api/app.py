@@ -10,7 +10,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, sta
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from sqlalchemy import Engine
+from sqlalchemy import Engine, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from digital_twin.persistence import create_twin_engine
@@ -160,6 +160,25 @@ def create_app(*, database_url: str | None = None, engine: Engine | None = None)
         raise HTTPException(
             410, "The experimental endpoint is retired. Use the course-scoped v2 analysis jobs."
         )
+
+    @app.get(
+        "/api/v1/presentations", tags=["presentations"]
+    )
+    def legacy_presentations(service: ServiceDependency, identity: IdentityDependency):
+        """Discover existing legacy courses within current grants, independently of v2."""
+        from digital_twin.persistence.models import CoursePresentation
+
+        statement = select(
+            CoursePresentation.presentation_id, CoursePresentation.module_code,
+            CoursePresentation.presentation_code, CoursePresentation.data_origin,
+        ).order_by(CoursePresentation.presentation_id)
+        if identity.allowed_presentations is not None:
+            statement = statement.where(CoursePresentation.presentation_id.in_(identity.allowed_presentations))
+        try:
+            with service.engine.connect() as connection:
+                return {"items": [dict(row) for row in connection.execute(statement).mappings()]}
+        except SQLAlchemyError as error:
+            raise HTTPException(503, "Earlier support records are temporarily unavailable.") from error
 
     @app.get(
         "/api/v1/presentations/{presentation_id}/overview",

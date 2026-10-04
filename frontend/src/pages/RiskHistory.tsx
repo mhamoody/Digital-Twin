@@ -1,6 +1,9 @@
 import { useId } from "react";
 import type { LearnerDetail } from "../api/contracts";
-import { band, Notice, Panel, score } from "../components/ui";
+import { band, Notice, Panel } from "../components/ui";
+
+const preciseScore = (value: number | null) =>
+  value == null ? "Not assessed" : `${Number((value * 100).toFixed(6))} / 100`;
 
 type History = LearnerDetail["history"][number];
 const provenance = [
@@ -134,7 +137,7 @@ export function RiskHistory({ data }: { data: LearnerDetail }) {
                     stroke="white"
                     strokeWidth={1.5}
                   >
-                    <title>{`Week ${row.checkpoint_week}: ${score(row.risk_score)} · ${row.model_version} · policy ${row.policy_version}`}</title>
+                    <title>{`Week ${row.checkpoint_week}: ${preciseScore(row.risk_score)} · ${row.model_version} · policy ${row.policy_version}`}</title>
                   </circle>
                 ))}
                 {ticks.map((tick) => (
@@ -192,7 +195,7 @@ export function RiskHistory({ data }: { data: LearnerDetail }) {
                     <td>{row.checkpoint_week}</td>
                     <td>
                       {validScore(row)
-                        ? score(row.risk_score)
+                        ? preciseScore(row.risk_score)
                         : "No published risk score"}
                     </td>
                     <td>
@@ -209,6 +212,12 @@ export function RiskHistory({ data }: { data: LearnerDetail }) {
                       <details>
                         <summary>Inspect versions</summary>
                         <dl className="key-values">
+                          <dt>Stored risk score · 0–1 scale</dt>
+                          <dd>
+                            {row.risk_score === null
+                              ? "No published risk score"
+                              : String(row.risk_score)}
+                          </dd>
                           {provenance.map((key) => (
                             <div key={key}>
                               <dt>{key.replaceAll("_", " ")}</dt>

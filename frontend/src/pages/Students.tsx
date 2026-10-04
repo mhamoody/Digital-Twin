@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Bookmark,
   Flag,
@@ -17,6 +18,9 @@ export type Filters = {
   sort: string;
   priority: string;
   offset: number;
+  dueOnly: boolean;
+  activeOnly: boolean;
+  includeClosed: boolean;
 };
 export const initialFilters: Filters = {
   query: "",
@@ -26,19 +30,37 @@ export const initialFilters: Filters = {
   sort: "attention",
   priority: "",
   offset: 0,
+  dueOnly: false,
+  activeOnly: false,
+  includeClosed: false,
 };
 
 export function StudentFilters({
   filters,
   setFilters,
   idOnly,
+  casesOnly = false,
 }: {
   filters: Filters;
   setFilters: (v: Filters) => void;
   idOnly: boolean;
+  casesOnly?: boolean;
 }) {
   function update(key: keyof Filters, value: string) {
-    setFilters({ ...filters, [key]: value, offset: 0 });
+    const closed =
+      key === "status" && ["resolved", "dismissed"].includes(value);
+    setFilters({
+      ...filters,
+      [key]: value,
+      offset: 0,
+      ...(closed
+        ? {
+            activeOnly: false,
+            attention:
+              filters.attention === "active_cases" ? "" : filters.attention,
+          }
+        : {}),
+    });
   }
   return (
     <div className="filters">
@@ -154,6 +176,48 @@ export function StudentFilters({
           ))}
         </select>
       </label>
+      <label className="check-field">
+        <input
+          type="checkbox"
+          checked={filters.dueOnly}
+          onChange={(e) =>
+            setFilters({ ...filters, dueOnly: e.target.checked, offset: 0 })
+          }
+        />
+        Follow-up due only
+      </label>
+      {casesOnly ? (
+        <label className="check-field">
+          <input
+            type="checkbox"
+            checked={filters.includeClosed}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                includeClosed: e.target.checked,
+                offset: 0,
+              })
+            }
+          />
+          Include students without an active case
+        </label>
+      ) : (
+        <label className="check-field">
+          <input
+            type="checkbox"
+            checked={filters.activeOnly}
+            disabled={["resolved", "dismissed"].includes(filters.status)}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                activeOnly: e.target.checked,
+                offset: 0,
+              })
+            }
+          />
+          Active cases only
+        </label>
+      )}
       <button
         className="text-button"
         onClick={() => setFilters(initialFilters)}
@@ -175,6 +239,15 @@ export function Students({
   setFilters: (v: Filters) => void;
   open: (id: string) => void;
 }) {
+  const lastOffset = Math.max(0, Math.floor((data.total - 1) / 25) * 25);
+  const beyondLastPage = filters.offset > lastOffset;
+  useEffect(() => {
+    if (beyondLastPage) setFilters({ ...filters, offset: lastOffset });
+  }, [beyondLastPage, lastOffset, filters, setFilters]);
+  if (beyondLastPage)
+    return (
+      <p role="status">The list changed. Loading the last available page…</p>
+    );
   return (
     <section className="panel roster-panel">
       <div className="panel-heading">

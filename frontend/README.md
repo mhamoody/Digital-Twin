@@ -3,13 +3,14 @@
 The real frontend migration, on branch **reactvite**. This is not the earlier
 in-memory mock under `artifacts/react-focus-demo`.
 
-**Current gate: policies and model operations (Phase 3).** Login, reads and instructor
+**Current gate: parity/usability (Phase 4), parallel rollout candidate.** Login, reads and instructor
 edits use FastAPI and its real authorization/database. Flags, watchlists,
 priority, audited support actions, follow-ups, resources and academic/risk
 charts, course-policy editing, analysis queue/automation controls and safe
-diagnostics are implemented locally. Full parity/usability is the next gate.
-Streamlit remains the hosted operational interface; React has not been
-deployed to Lobot.
+diagnostics are implemented. Remaining list, empty-course and diagnostic gaps
+are checked. Earlier v1 support episodes are separately readable; older editing
+remains explicitly available in Streamlit, not silently removed or merged.
+See `docs/23_react_lobot.md` for the parallel 8502 deployment and rollback.
 
 ## Code map
 
@@ -35,6 +36,8 @@ deployed to Lobot.
   and single-flight requests for operations without an idempotency guarantee.
 - `src/pages/AnalysisProvenance.tsx`, `DemoGuide.tsx`: safe validation traces,
   historical/baseline distinctions and verified synthetic scenario navigation.
+- `src/pages/LegacyHistory.tsx`: authorized, separate read-only v1 case history;
+  older case editing remains in the original Streamlit workspace.
 - `src/pages/`: overview, roster and student evidence/history screens.
 - `src/styles.css`: responsive design tokens and page/component styling.
 - `vite.config.ts`: Vite build and optional development API proxy.
@@ -134,6 +137,8 @@ python tests/check_react_foundation.py
 python tests/check_react_instructor_actions.py
 python tests/check_react_phase2_edges.py
 python tests/check_react_phase3_browser.py
+python tests/check_react_phase4_browser.py
+python -m pytest tests/test_react_legacy_discovery.py tests/test_react_release.py -q
 node tests/check_react_academic_semantics.mjs
 node tests/check_react_policy_semantics.mjs
 node tests/check_react_phase3_semantics.mjs

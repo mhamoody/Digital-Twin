@@ -164,7 +164,23 @@ uses 240 synthetic student-checkpoint records with no inference worker running.
 Failure/pause states are controlled HTTP fixtures; these checks do not establish
 live Qwen accuracy, hosted operation or recovery from a real model incident.
 
-Full Streamlit parity and hosted React deployment are **not** complete. Next:
-Phase 4 full parity/usability (including legacy v1 support history), then Phase 5
-parallel Lobot deployment. Do not replace the operational UI yet.
+Phase 4 closes remaining current-workspace gaps: independent due/active filters,
+list-context resets and pagination recovery, no invalid cutoff for empty courses,
+profile error remediation/evidence limitations, and higher precision history
+with the exact stored risk score available. Authenticated legacy discovery uses
+actual v1 presentations within current grants, not v2 course IDs or prefixes.
+Earlier support episodes and audit history are readable separately; old edits,
+alerts and activity intentionally remain in the explicitly linked Streamlit
+Student support workflow. No history is silently merged or retired.
+
+Seven new read-only browser groups cover those list/empty/legacy behaviors,
+including closed episodes, wrong-course rejection, escaped notes and 320–1440px
+reflow. Three legacy discovery API tests cover authorization, grant changes and
+outages. This is a practical pilot gate, not complete accessibility certification.
+
+Phase 5 uses a separate source worktree and loopback 8502 API/static process,
+sharing existing data/auth/model configuration without restarting the original
+services or starting another worker. Deployment and rollback steps are in
+`docs/23_react_lobot.md`. Hosted verification is recorded separately after the
+actual rollout; do not describe local checks as hosted or live-model results.
 See `frontend/README.md` for running the preview and pilot session limits.

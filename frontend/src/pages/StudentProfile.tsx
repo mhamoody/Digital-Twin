@@ -4,6 +4,7 @@ import { AcademicRecords } from "./AcademicRecords";
 import { RiskHistory } from "./RiskHistory";
 import { AnalysisControls } from "./AnalysisControls";
 import { AnalysisProvenance } from "./AnalysisProvenance";
+import { failureSchema } from "../api/analysisContracts";
 import { detailSchema } from "../api/contracts";
 import type { Fact, LearnerDetail, Privacy } from "../api/contracts";
 import { useResource } from "../hooks/useResource";
@@ -72,6 +73,7 @@ export function StudentProfile({
     data.snapshot?.is_fresh === true &&
     data.analysis?.policy_version === data.current_policy_version;
   const output = usable ? data.analysis?.output : null;
+  const failure = failureSchema.safeParse(data.job_error_detail);
   const tabs = [
     "Evidence",
     "Academic records",
@@ -163,6 +165,13 @@ export function StudentProfile({
             </span>
           )}{" "}
           Saved evidence remains available below.
+        </Notice>
+      )}
+      {!usable && failure.success && (
+        <Notice error>
+          <strong>{failure.data.title}</strong>
+          <p>{failure.data.detail}</p>
+          <p>Next step: {failure.data.action}</p>
         </Notice>
       )}
       <nav className="profile-tabs" aria-label="Student sections">

@@ -23,19 +23,22 @@ import { Badge, label, Loading, Notice } from "./components/ui";
 import { CourseSettings } from "./pages/CourseSettings";
 import { ModelHealth } from "./pages/ModelHealth";
 import { DemoGuide } from "./pages/DemoGuide";
+import { LegacyHistory } from "./pages/LegacyHistory";
 import { Overview } from "./pages/Overview";
 import { initialFilters, StudentFilters, Students } from "./pages/Students";
 import type { Filters } from "./pages/Students";
 import { StudentProfile } from "./pages/StudentProfile";
 import { EditGuard, useEditGuard } from "./hooks/editGuard";
 
-type Page = "overview" | "students" | "support" | "settings" | "health";
+type Page =
+  "overview" | "students" | "support" | "settings" | "health" | "legacy";
 const navigation = [
   { id: "overview", title: "Overview", icon: LayoutDashboard },
   { id: "students", title: "Students", icon: Users },
   { id: "support", title: "Support cases", icon: HeartHandshake },
   { id: "settings", title: "Course settings", icon: Settings2 },
   { id: "health", title: "Data & model", icon: Activity },
+  { id: "legacy", title: "Earlier support history", icon: BookOpen },
 ] as const;
 
 export function App() {
@@ -145,7 +148,7 @@ function Login({
             <span>03</span>Record human support
           </div>
         </div>
-        <small>React migration · local instructor-workflow preview</small>
+        <small>React migration · instructor-workflow candidate</small>
       </section>
       <section className="login-form">
         <ShieldCheck size={30} />
@@ -216,9 +219,13 @@ function WorkspaceApp({
   const week =
     selectedWeek !== null && course?.checkpoints.includes(selectedWeek)
       ? selectedWeek
-      : Math.max(...(course?.checkpoints ?? [0]));
-  function navigate(value: Page) {
+      : course?.checkpoints.length
+        ? Math.max(...course.checkpoints)
+        : null;
+  function navigate(value: Page, listFilters?: Filters) {
     if (!guard.leave()) return;
+    if (listFilters) setFilters(listFilters);
+    else if (value !== page) setFilters(initialFilters);
     setPage(value);
     setStudent(null);
     setMenu(false);
@@ -300,12 +307,11 @@ function WorkspaceApp({
     </>
   );
   function openList(filter = "") {
-    setFilters({
+    navigate(filter === "active_cases" ? "support" : "students", {
       ...initialFilters,
       attention: filter === "high" ? "" : filter,
       risk: filter === "high" ? "high" : "",
     });
-    navigate(filter === "active_cases" ? "support" : "students");
   }
   return (
     <div className="app-shell">
@@ -365,12 +371,23 @@ function WorkspaceApp({
         </header>
         <main id="main-content" tabIndex={-1}>
           <div className="migration-banner">
-            <span>REACT PREVIEW</span> Instructor records, course expectations
-            and analysis controls use the selected database. This local
-            migration is not yet the hosted replacement.
+            <span>REACT CANDIDATE</span> Instructor records, course expectations
+            and analysis controls use the connected database. Changes here are
+            saved. The original Streamlit workspace remains available.
           </div>
           {logoutError && <Notice error>{logoutError}</Notice>}
-          {error ? (
+          {page === "legacy" ? (
+            <>
+              <div className="page-heading">
+                <h1>Earlier support history</h1>
+                <button onClick={() => setRevision((v) => v + 1)}>
+                  <RefreshCw size={16} />
+                  Refresh data
+                </button>
+              </div>
+              <LegacyHistory revision={revision} />
+            </>
+          ) : error ? (
             <Notice error>{error}</Notice>
           ) : !courses ? (
             <Loading />
@@ -423,13 +440,17 @@ function WorkspaceApp({
                   Checkpoint
                   <select
                     aria-label="Checkpoint"
-                    value={week}
+                    value={week ?? ""}
+                    disabled={week === null}
                     onChange={(e) => {
                       if (!guard.leave()) return;
                       setWeek(Number(e.target.value));
-                      setFilters({ ...filters, offset: 0 });
+                      setFilters(initialFilters);
                     }}
                   >
+                    {week === null && (
+                      <option value="">No prepared checkpoints</option>
+                    )}
                     {course.checkpoints.map((w) => (
                       <option key={w} value={w}>
                         Week {w}
@@ -457,7 +478,9 @@ function WorkspaceApp({
                 <strong>{course.title ?? course.presentation_id}</strong>
                 <span>{course.presentation_id}</span>
                 <Badge tone="lilac">{label(course.data_origin)} data</Badge>
-                <span>Evidence through day {week * 7 - 1}</span>
+                {week !== null && (
+                  <span>Evidence through day {week * 7 - 1}</span>
+                )}
               </div>
               {["synthetic", "manual_test"].includes(course.data_origin) && (
                 <p className="fineprint">
@@ -472,7 +495,7 @@ function WorkspaceApp({
                   student.
                 </Notice>
               )}
-              {!course.checkpoints.length ? (
+              {week === null ? (
                 <Notice>No prepared checkpoints for this course.</Notice>
               ) : student ? (
                 <StudentProfile
@@ -511,7 +534,7 @@ function WorkspaceApp({
           )}
           <footer className="workspace-footer">
             <span>Course Twin · Evidence-grounded instructor support</span>
-            <span>Local migration · no automated student contact</span>
+            <span>React migration · no automated student contact</span>
           </footer>
         </main>
       </div>
@@ -561,11 +584,13 @@ function CoursePage({
     params.set("sort", filters.sort);
     params.set("priority", filters.priority);
     if (filters.attention) params.set(filters.attention, "true");
+    if (filters.dueOnly) params.set("due", "true");
+    if (filters.activeOnly) params.set("active_cases", "true");
   }
   const closedCases =
     page === "support" && ["resolved", "dismissed"].includes(filters.status);
   if (page === "support") {
-    if (closedCases) params.delete("active_cases");
+    if (closedCases || filters.includeClosed) params.delete("active_cases");
     else params.set("active_cases", "true");
   }
   const { data, error } = useResource(
@@ -619,12 +644,15 @@ function CoursePage({
             filters={filters}
             setFilters={setFilters}
             idOnly={privacy === "id_only"}
+            casesOnly={page === "support"}
           />
           {page === "support" && (
             <p className="fineprint">
               {closedCases
                 ? `Showing ${filters.status} support cases.`
-                : "Active support cases: new, reviewed and ongoing."}{" "}
+                : filters.includeClosed
+                  ? "Showing all matching students, including closed cases and students with no case."
+                  : "Active support cases: new, reviewed and ongoing."}{" "}
               Choose Resolved or Dismissed in the status filter to inspect
               closed records.
             </p>
