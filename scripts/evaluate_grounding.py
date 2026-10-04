@@ -4,14 +4,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from digital_twin.evaluation.research_adapter import ResearchModelAdapter, ResearchModelError, EXPECTED_DIGEST
 
-PROTOCOL_SHA = "220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E"
+PROTOCOL_SHA = "13A6FA0B05455EB81BB1B2A4979A1396AAC9EF9D4621239CD8D2E71989CD25F1"
+LEGACY_WINDOWS_CRLF_SHA = "220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E"
 SCHEMA = {"type":"object","required":["assessment","claims","abstain"],"properties":{"assessment":{"type":"string"},"claims":{"type":"array"},"abstain":{"type":"boolean"},"uncertainty_note":{"type":"string"}},"additionalProperties":True}
-FIELDS = ["case_id","scenario_family","checkpoint","variant","model_name","model_digest","runtime","generation_parameters","schema_valid","evidence_valid","unsupported_claim_count","contradiction_count","accepted","abstained","correction_required","correction_attempted","correction_success","latency_ms","failure_reason","protocol_sha256","evaluation_git_commit","run_id","timestamp"]
+FIELDS = ["case_id","scenario_family","checkpoint","variant","model_name","model_digest","runtime","generation_parameters","schema_valid","evidence_valid","unsupported_claim_count","contradiction_count","accepted","abstained","correction_required","correction_attempted","correction_success","latency_ms","failure_reason","protocol_version","protocol_sha256","legacy_windows_crlf_sha256","case_count","evaluation_git_commit","run_id","timestamp"]
 
 def git_commit():
     return subprocess.run(["git","rev-parse","HEAD"],capture_output=True,text=True).stdout.strip() or "unknown"
 def protocol(path):
-    raw=Path(path).read_bytes(); digest=hashlib.sha256(raw).hexdigest().upper()
+    raw=Path(path).read_bytes(); canonical=raw.decode("utf-8").replace("\r\n","\n").replace("\r","\n").encode("utf-8"); digest=hashlib.sha256(canonical).hexdigest().upper()
     if digest != PROTOCOL_SHA: raise SystemExit(f"PROTOCOL_HASH_MISMATCH:{digest}")
     doc=json.loads(raw)
     if len(doc.get("cases",[])) != 48: raise SystemExit("PROTOCOL_CASE_COUNT_MISMATCH")
@@ -33,7 +34,7 @@ def validate(parsed, case):
 def run_case(adapter, case, variant, model_digest, run_id, commit, protocol_sha):
     base={"case":case,"task":"Assess only the supplied case. Do not infer causes. Cite only permitted evidence categories."}
     schema=SCHEMA if variant != "plain_llm" else None
-    row={"case_id":case["case_id"],"scenario_family":case["scenario_family"],"checkpoint":case["checkpoint"],"variant":variant,"model_name":adapter.runtime.model_name,"model_digest":model_digest,"runtime":"ollama","generation_parameters":json.dumps(adapter.runtime.generation,sort_keys=True),"schema_valid":False,"evidence_valid":False,"unsupported_claim_count":0,"contradiction_count":0,"accepted":False,"abstained":False,"correction_required":False,"correction_attempted":False,"correction_success":False,"latency_ms":"","failure_reason":"","protocol_sha256":protocol_sha,"evaluation_git_commit":commit,"run_id":run_id,"timestamp":datetime.now(timezone.utc).isoformat()}
+    row={"case_id":case["case_id"],"scenario_family":case["scenario_family"],"checkpoint":case["checkpoint"],"variant":variant,"model_name":adapter.runtime.model_name,"model_digest":model_digest,"runtime":"ollama","generation_parameters":json.dumps(adapter.runtime.generation,sort_keys=True),"schema_valid":False,"evidence_valid":False,"unsupported_claim_count":0,"contradiction_count":0,"accepted":False,"abstained":False,"correction_required":False,"correction_attempted":False,"correction_success":False,"latency_ms":"","failure_reason":"","protocol_version":"v1","protocol_sha256":protocol_sha,"legacy_windows_crlf_sha256":LEGACY_WINDOWS_CRLF_SHA,"case_count":48,"evaluation_git_commit":commit,"run_id":run_id,"timestamp":datetime.now(timezone.utc).isoformat()}
     try:
         result=adapter.generate(base,prompt=json.dumps(base,sort_keys=True),system="Return the requested assessment.",schema=schema)
         parsed=result["parsed"]; sv,ev,uc,cc=validate(parsed,case); row.update(schema_valid=sv,evidence_valid=ev,unsupported_claim_count=uc,contradiction_count=cc,latency_ms=result["metadata"].get("latency_ms",""))
@@ -65,7 +66,7 @@ def main(argv=None):
             for case in doc["cases"]:
                 w.writerow(run_case(adapter,case,variant,meta["digest"],run_id,commit,psha)); h.flush()
         rows=list(csv.DictReader(path.open(encoding="utf-8"))); total=len(rows)
-        summary={"run_id":run_id,"variant":variant,"total_cases":48,"completed_cases":sum(not r["failure_reason"] for r in rows),"failed_cases":sum(bool(r["failure_reason"]) for r in rows),"schema_valid_rate":sum(r["schema_valid"]=="True" for r in rows)/total,"evidence_valid_rate":sum(r["evidence_valid"]=="True" for r in rows)/total,"accepted_rate":sum(r["accepted"]=="True" for r in rows)/total,"abstention_rate":sum(r["abstained"]=="True" for r in rows)/total,"unsupported_claim_rate":sum(int(r["unsupported_claim_count"])>0 for r in rows)/total,"contradiction_rate":sum(int(r["contradiction_count"])>0 for r in rows)/total,"model":meta,"protocol_sha256":psha,"scenario_family":{}}
+        summary={"run_id":run_id,"variant":variant,"total_cases":48,"completed_cases":sum(not r["failure_reason"] for r in rows),"failed_cases":sum(bool(r["failure_reason"]) for r in rows),"schema_valid_rate":sum(r["schema_valid"]=="True" for r in rows)/total,"evidence_valid_rate":sum(r["evidence_valid"]=="True" for r in rows)/total,"accepted_rate":sum(r["accepted"]=="True" for r in rows)/total,"abstention_rate":sum(r["abstained"]=="True" for r in rows)/total,"unsupported_claim_rate":sum(int(r["unsupported_claim_count"])>0 for r in rows)/total,"contradiction_rate":sum(int(r["contradiction_count"])>0 for r in rows)/total,"model":meta,"protocol_version":"v1","protocol_sha256":psha,"legacy_windows_crlf_sha256":LEGACY_WINDOWS_CRLF_SHA,"case_count":48,"scenario_family":{}}
         for family in sorted({r["scenario_family"] for r in rows}): summary["scenario_family"][family]={"total":sum(r["scenario_family"]==family for r in rows),"accepted":sum(r["accepted"]=="True" and r["scenario_family"]==family for r in rows)}
         if variant=="evidence_first_full":
             attempts=sum(r["correction_attempted"]=="True" for r in rows); success=sum(r["correction_success"]=="True" for r in rows); summary.update(correction_attempt_count=attempts,correction_success_count=success,correction_success_rate=success/attempts if attempts else 0,post_correction_acceptance=sum(r["correction_success"]=="True" for r in rows)/total)

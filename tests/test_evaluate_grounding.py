@@ -1,11 +1,26 @@
 ﻿import json
 from pathlib import Path
-from scripts.evaluate_grounding import protocol, PROTOCOL_SHA, run_case
+from scripts.evaluate_grounding import protocol, PROTOCOL_SHA, LEGACY_WINDOWS_CRLF_SHA, run_case
+import hashlib
 from digital_twin.evaluation.research_adapter import ResearchRuntime
 
 def test_runner_verifies_frozen_protocol():
     doc, digest = protocol(Path("evaluation/protocols/e2_grounding_heldout_v1.json"))
     assert digest == PROTOCOL_SHA and len(doc["cases"]) == 48
+
+def test_lf_and_crlf_have_same_canonical_hash_and_content():
+    raw = Path("evaluation/protocols/e2_grounding_heldout_v1.json").read_bytes()
+    lf = raw.decode().replace("\r\n", "\n").replace("\r", "\n").encode()
+    crlf = lf.replace(b"\n", b"\r\n")
+    assert hashlib.sha256(lf).hexdigest().upper() == PROTOCOL_SHA
+    assert hashlib.sha256(crlf).hexdigest().upper() == LEGACY_WINDOWS_CRLF_SHA
+    assert json.loads(lf) == json.loads(crlf)
+
+def test_canonical_hash_changes_for_content_modification():
+    raw = Path("evaluation/protocols/e2_grounding_heldout_v1.json").read_bytes()
+    canonical = raw.decode().replace("\r\n", "\n").replace("\r", "\n").encode()
+    changed = canonical.replace(b'"checkpoint":  3', b'"checkpoint":  4', 1)
+    assert hashlib.sha256(changed).hexdigest().upper() != PROTOCOL_SHA
 
 def test_runner_variant_schema_separation():
     class Fake:
