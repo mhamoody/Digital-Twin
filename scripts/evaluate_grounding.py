@@ -67,7 +67,12 @@ def run_case(adapter, case, variant, model_digest, run_id, commit, protocol_sha,
             row["correction_required"]=True; row["correction_attempted"]=True
             feedback={"case":visible,"prior_output":parsed,"validator_feedback":{"unsupported_claim_count":uc,"contradiction_count":cc},"instruction":"Correct only evidence references and unsupported claims using the same permitted evidence. Return the same JSON schema. Do not invent evidence."}
             corrected=adapter.generate(feedback,prompt=json.dumps(feedback,sort_keys=True),system=OUTPUT_CONTRACT,schema=SCHEMA)
-            csvv=corrected["parsed"]; sv2,ev2,uc2,cc2=validate(csvv,case); clat=corrected["metadata"].get("latency_ms",""); row.update(schema_valid=sv2,evidence_diagnostic_evaluable=True,evidence_valid=ev2,unsupported_claim_count=uc2,contradiction_count=cc2,correction_success=bool(sv2 and ev2),correction_latency_ms=clat,total_latency_ms=(row["initial_latency_ms"] or 0)+(clat or 0),latency_ms=(row["initial_latency_ms"] or 0)+(clat or 0),raw_response=corrected.get("raw","")[:65536])
+            csvv=corrected["parsed"]; clat=corrected["metadata"].get("latency_ms","");
+            if "model_input" in case:
+                vr2=deterministic_output_validation(csvv,visible); row.update(vr2.to_dict()); row.update(reference_scoring(vr2,csvv,case["evaluation_reference"])); row["validator_codes"]=json.dumps(vr2.validator_codes); sv2,ev2=vr2.schema_valid,vr2.semantic_evidence_valid
+            else:
+                sv2,ev2,uc2,cc2=validate(csvv,case); row.update(schema_valid=sv2,evidence_valid=ev2,unsupported_claim_count=uc2,contradiction_count=cc2)
+            row.update(evidence_diagnostic_evaluable=True,correction_success=bool(sv2 and ev2),correction_latency_ms=clat,total_latency_ms=(row["initial_latency_ms"] or 0)+(clat or 0),latency_ms=(row["initial_latency_ms"] or 0)+(clat or 0),raw_response=corrected.get("raw","")[:65536])
         final_parsed = csvv if variant=="evidence_first_full" and row["correction_attempted"] else parsed
         expected,predicted,behavior_correct,constraint_correct=reference_scores(final_parsed,case); row.update(predicted_behavior_class=predicted or "",behavior_correct="" if behavior_correct is None else behavior_correct,expected_evidence_constraint_valid="" if constraint_correct is None else constraint_correct)
         row["abstained"]=bool(isinstance(final_parsed,dict) and final_parsed.get("abstain") is True)
@@ -102,6 +107,7 @@ def main(argv=None):
             attempts=sum(r["correction_attempted"]=="True" for r in rows); success=sum(r["correction_success"]=="True" for r in rows); summary.update(correction_attempt_count=attempts,correction_success_count=success,correction_success_rate=success/attempts if attempts else 0,post_correction_acceptance=sum(r["correction_success"]=="True" for r in rows)/total)
         summary_path=outdir/f"e2_grounding_{variant}_{run_id}_summary.json"; summary_path.write_text(json.dumps(summary,indent=2),encoding="utf-8"); print(f"[E2][{variant}] summary={summary_path}", flush=True)
 if __name__=="__main__": main()
+
 
 
 
