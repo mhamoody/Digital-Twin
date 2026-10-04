@@ -10,14 +10,14 @@ LEGACY_WINDOWS_CRLF_SHA = "220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF9
 V2_PROTOCOL_SHA = "6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D"
 SCHEMA = {"type":"object","required":["assessment","claims","abstain"],"properties":{"assessment":{"type":"string"},"claims":{"type":"array"},"abstain":{"type":"boolean"},"uncertainty_note":{"type":"string"}},"additionalProperties":True}
 OUTPUT_CONTRACT = "Return JSON with fields assessment (string), claims (array of evidence claims with evidence_ids), abstain (boolean), and optional uncertainty_note. Do not infer causes or psychological states."
-FIELDS = ["case_id","scenario_family","checkpoint","variant","model_name","model_digest","runtime","generation_parameters","schema_valid","json_parse_valid","model_call_succeeded","evidence_diagnostic_evaluable","evidence_valid","citation_valid","semantic_evidence_valid","validator_codes","unsupported_claim_count","contradiction_count","accepted","abstained","correction_required","correction_attempted","correction_success","initial_latency_ms","correction_latency_ms","total_latency_ms","latency_ms","failure_reason","protocol_version","protocol_sha256","legacy_windows_crlf_sha256","case_count","evaluation_git_commit","run_id","timestamp","raw_response","expected_behavior_class","predicted_behavior_class","behavior_correct","expected_evidence_constraint_valid","constraint_results"]
-MODEL_VISIBLE_FIELDS = ["checkpoint", "course_policy", "permitted_evidence"]
+FIELDS = ["case_id","scenario_family","checkpoint","variant","model_name","model_digest","runtime","generation_parameters","schema_valid","json_parse_valid","citation_evaluable","citation_valid","unknown_evidence_ids","missing_evidence_reference_count","malformed_claim_count","temporal_evaluable","future_observation_reference_count","no_future_observation_valid","causal_claim_count","no_causal_claim_valid","missingness_violation_count","not_due_violation_count","awaiting_marking_violation_count","missing_feed_violation_count","extension_violation_count","optional_resource_violation_count","policy_threshold_violation_count","conflict_detected","insufficient_evidence_detected","semantic_evaluable","semantic_evidence_valid","model_call_succeeded","evidence_diagnostic_evaluable","evidence_valid","citation_valid","semantic_evidence_valid","validator_codes","unsupported_claim_count","contradiction_count","accepted","abstained","correction_required","correction_attempted","correction_success","initial_latency_ms","correction_latency_ms","total_latency_ms","latency_ms","failure_reason","protocol_version","protocol_sha256","legacy_windows_crlf_sha256","case_count","evaluation_git_commit","run_id","timestamp","raw_response","expected_behavior_class","predicted_behavior_class","behavior_correct","expected_evidence_constraint_valid","constraint_results"]
+MODEL_VISIBLE_FIELDS = ["checkpoint", "course_policy", "evidence"]
 EVALUATION_ONLY_FIELDS = ["case_id", "scenario_family", "expected_behavior_class", "expected_evidence_constraints"]
 
 def model_visible_case(case):
     if "model_input" in case:
         return case["model_input"]
-    return {key: case[key] for key in MODEL_VISIBLE_FIELDS}
+    return {key: case[key] for key in ("checkpoint", "course_policy", "permitted_evidence") if key in case}
 
 def git_commit():
     return subprocess.run(["git","rev-parse","HEAD"],capture_output=True,text=True).stdout.strip() or "unknown"
@@ -43,7 +43,7 @@ def validate(parsed, case):
     evidence_valid=unsupported==0 and contradiction==0
     return True,evidence_valid,unsupported,contradiction
 def reference_scores(parsed, case):
-    predicted = parsed.get("behavior_class") if isinstance(parsed, dict) else None
+    predicted = ("abstention_expected" if isinstance(parsed, dict) and parsed.get("abstain") is True else "assessment_allowed" if isinstance(parsed, dict) and parsed.get("abstain") is False else None) if "model_input" in case else (parsed.get("behavior_class") if isinstance(parsed, dict) else None)
     reference=case.get("evaluation_reference",case)
     expected = reference.get("expected_behavior_class")
     constraints = parsed.get("evidence_constraints") if isinstance(parsed, dict) else None
@@ -94,14 +94,19 @@ def main(argv=None):
                 w.writerow(run_case(adapter,case,variant,meta["digest"],run_id,commit,psha,doc.get("protocol_version","v1"))); h.flush()
                 print(f"[E2][{variant}] {index}/48 {case['case_id']} completed", flush=True)
         rows=list(csv.DictReader(path.open(encoding="utf-8"))); total=len(rows)
-        evaluable=[r for r in rows if r["evidence_diagnostic_evaluable"]=="True"]; summary={"run_id":run_id,"variant":variant,"total_cases":48,"completed_cases":sum(r["model_call_succeeded"]=="True" for r in rows),"failed_cases":sum(bool(r["failure_reason"]) for r in rows),"model_call_success_count":sum(r["model_call_succeeded"]=="True" for r in rows),"json_parseable_count":sum(r["json_parse_valid"]=="True" for r in rows),"evidence_evaluable_count":len(evaluable),"failed_inference_count":sum(bool(r["failure_reason"]) for r in rows),"schema_valid_rate":sum(r["schema_valid"]=="True" for r in rows)/total,"evidence_valid_rate":sum(r["evidence_valid"]=="True" for r in evaluable)/len(evaluable) if evaluable else None,"accepted_rate":sum(r["accepted"]=="True" for r in rows)/total,"abstention_rate":sum(r["abstained"]=="True" for r in rows)/total,"unsupported_claim_rate":sum(int(r["unsupported_claim_count"])>0 for r in evaluable)/len(evaluable) if evaluable else None,"contradiction_rate":sum(int(r["contradiction_count"])>0 for r in evaluable)/len(evaluable) if evaluable else None,"model":meta,"protocol_version":"v1","protocol_sha256":psha,"legacy_windows_crlf_sha256":LEGACY_WINDOWS_CRLF_SHA,"case_count":48,"scenario_family":{}}
+        evaluable=[r for r in rows if r["evidence_diagnostic_evaluable"]=="True"]; summary={"run_id":run_id,"variant":variant,"protocol_version":doc.get("protocol_version","v1"),"total_cases":len(doc["cases"]),"completed_cases":sum(r["model_call_succeeded"]=="True" for r in rows),"failed_cases":sum(bool(r["failure_reason"]) for r in rows),"model_call_success_count":sum(r["model_call_succeeded"]=="True" for r in rows),"json_parseable_count":sum(r["json_parse_valid"]=="True" for r in rows),"evidence_evaluable_count":len(evaluable),"failed_inference_count":sum(bool(r["failure_reason"]) for r in rows),"schema_valid_rate":sum(r["schema_valid"]=="True" for r in rows)/total,"evidence_valid_rate":sum(r["evidence_valid"]=="True" for r in evaluable)/len(evaluable) if evaluable else None,"accepted_rate":sum(r["accepted"]=="True" for r in rows)/total,"abstention_rate":sum(r["abstained"]=="True" for r in rows)/total,"unsupported_claim_rate":sum(int(r["unsupported_claim_count"])>0 for r in evaluable)/len(evaluable) if evaluable else None,"contradiction_rate":sum(int(r["contradiction_count"])>0 for r in evaluable)/len(evaluable) if evaluable else None,"model":meta,"protocol_version":doc.get("protocol_version","v1"),"protocol_sha256":psha,"legacy_windows_crlf_sha256":LEGACY_WINDOWS_CRLF_SHA,"case_count":48,"scenario_family":{}}
         behavior=[r for r in rows if r["behavior_correct"] in {"True","False"}]; constraints=[r for r in rows if r["expected_evidence_constraint_valid"] in {"True","False"}]
-        summary.update(model_visible_fields=MODEL_VISIBLE_FIELDS,evaluation_only_fields=EVALUATION_ONLY_FIELDS,behavior_accuracy=sum(r["behavior_correct"]=="True" for r in behavior)/len(behavior) if behavior else None,behavior_correct_count=sum(r["behavior_correct"]=="True" for r in behavior),evidence_constraint_accuracy=sum(r["expected_evidence_constraint_valid"]=="True" for r in constraints)/len(constraints) if constraints else None)
+        summary.update(model_visible_fields=(MODEL_VISIBLE_FIELDS if doc.get("protocol_version")=="v2" else ["checkpoint","course_policy","permitted_evidence"]),evaluation_only_fields=EVALUATION_ONLY_FIELDS,behavior_accuracy=sum(r["behavior_correct"]=="True" for r in behavior)/len(behavior) if behavior else None,behavior_correct_count=sum(r["behavior_correct"]=="True" for r in behavior),evidence_constraint_accuracy=sum(r["expected_evidence_constraint_valid"]=="True" for r in constraints)/len(constraints) if constraints else None)
         for family in sorted({r["scenario_family"] for r in rows}): summary["scenario_family"][family]={"total":sum(r["scenario_family"]==family for r in rows),"accepted":sum(r["accepted"]=="True" and r["scenario_family"]==family for r in rows)}
         if variant=="evidence_first_full":
             attempts=sum(r["correction_attempted"]=="True" for r in rows); success=sum(r["correction_success"]=="True" for r in rows); summary.update(correction_attempt_count=attempts,correction_success_count=success,correction_success_rate=success/attempts if attempts else 0,post_correction_acceptance=sum(r["correction_success"]=="True" for r in rows)/total)
         summary_path=outdir/f"e2_grounding_{variant}_{run_id}_summary.json"; summary_path.write_text(json.dumps(summary,indent=2),encoding="utf-8"); print(f"[E2][{variant}] summary={summary_path}", flush=True)
 if __name__=="__main__": main()
+
+
+
+
+
 
 
 
