@@ -184,3 +184,36 @@ services or starting another worker. Deployment and rollback steps are in
 `docs/23_react_lobot.md`. Hosted verification is recorded separately after the
 actual rollout; do not describe local checks as hosted or live-model results.
 See `frontend/README.md` for running the preview and pilot session limits.
+
+## Phase 5 hosted acceptance (5 October 2026)
+
+React is deployed at `/user/group-digi2026-g12/proxy/8502/` from application
+commit `21c347ed1d73d9cfef45d089fc20e19aeeb2e7ab`. The existing Streamlit/API/worker
+checkout remains on `agent/align-strong-llm` at `82a1b81`, with the same running
+processes and database. Release integrity was verified before installation.
+
+Fifteen hosted read-only check groups passed after actual instructor sign-in:
+authorized courses, release identity, overview, roster and student evidence,
+academic/score/support history, policy-editor open/cancel, model progress,
+earlier history, and mobile navigation. Layout checks covered 320, 390, 768 and
+1440px widths. No JavaScript errors and no modifying requests occurred during
+these checks. Authenticated API responses retain `Cache-Control: no-store`
+and CSP through the HTTPS proxy. Local save/conflict/retry tests remain the
+evidence for modifying workflows; real instructor records were not changed
+merely to demonstrate a save. This is not full accessibility certification.
+
+Deployment exposed and fixed a pre-exec process-identity race, missing Python
+pidfd wrappers in Lobot's Conda build, and a TIME_WAIT restart-probe false alarm.
+Eight deployment/release tests pass; glibc pidfds preserve identity-safe stop.
+Previous frontend bundles were retained for rollback, not deleted.
+
+Qwen2.5:7b reported ready, the original worker was idle, and saved real inference
+metadata used prompt `course-risk-qwen-v3.3`. This rollout did not run new
+inference or evaluate accuracy. Twelve existing failed analysis jobs remain
+unchanged: CS110 original (7), CS110 v2 (4), ED220 original (1). They are not
+hidden or counted as completed LLM analysis. ED220 v2 has 1,920 validated saved
+checkpoints; these are synthetic demonstration records, not accuracy results.
+
+Local ignored evidence: `artifacts/react-migration/hosted-checks.json`,
+`hosted-operator-check.txt` and hosted screenshots. Instructor review is next;
+Streamlit remains the operational fallback and the editor for earlier v1 cases.
