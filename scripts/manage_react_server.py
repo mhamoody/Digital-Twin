@@ -148,6 +148,10 @@ def main():
         if not Path(os.environ["DIGITAL_TWIN_AUTH_FILE"]).is_file():
             raise RuntimeError("Existing instructor accounts are unavailable.")
         with socket.socket() as probe:
+            # Match Uvicorn's reuse setting: a stopped service's TIME_WAIT
+            # connections must not be mistaken for another listening service.
+            # This does not use SO_REUSEPORT or displace an active listener.
+            probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             probe.bind(("127.0.0.1", PORT))
         command = [sys.executable, "-m", "uvicorn", "digital_twin.api.app:app",
                    "--app-dir", str(root / "src"), "--host", "127.0.0.1", "--port", str(PORT),
