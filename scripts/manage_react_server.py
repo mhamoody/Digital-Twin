@@ -37,6 +37,25 @@ def matches(record):
     return identity is not None and all(identity[k] == record[k] for k in identity)
 
 
+def started_identity(process, command):
+    """Wait for exec to publish the child argv before recording its identity.
+
+    Immediately after Popen, /proc can still expose the parent's pre-exec argv.
+    Never persist that transient hash or adopt an exited/reused child PID.
+    """
+    expected = hashlib.sha256(b"\0".join(os.fsencode(part) for part in command) + b"\0").hexdigest()
+    for _ in range(100):
+        if process.poll() is not None:
+            raise RuntimeError("React process exited at startup. Inspect var/log/react-api.log.")
+        identity = process_identity(process.pid)
+        if identity and identity["command_hash"] == expected:
+            if process.poll() is None:
+                return identity
+            break
+        time.sleep(.05)
+    raise RuntimeError("React child did not establish its expected command identity; inspect var/log/react-api.log.")
+
+
 def stop_owned(record):
     if not matches(record):
         raise RuntimeError("Saved PID does not match the React process. Refusing to signal it.")
@@ -108,9 +127,7 @@ def main():
         with (logs / "react-api.log").open("ab") as output:
             process = subprocess.Popen(command, cwd=shared, stdin=subprocess.DEVNULL,
                                        stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
-        identity = process_identity(process.pid)
-        if identity is None:
-            raise RuntimeError("React process exited at startup. Inspect var/log/react-api.log.")
+        identity = started_identity(process, command)
         record = {"pid": process.pid, **identity, "root": str(root), "shared": str(shared)}
         temporary = run / "react-api.json.new"
         temporary.write_text(json.dumps(record))

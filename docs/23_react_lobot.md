@@ -16,6 +16,7 @@ In the Lobot terminal, with the original project already configured:
 
 ```bash
 cd ~/Digital-Twin
+git remote set-branches --add origin reactvite
 git fetch origin reactvite
 git worktree add --track -b reactvite ../Digital-Twin-react origin/reactvite
 cd ~/Digital-Twin-react
@@ -23,6 +24,8 @@ cd ~/Digital-Twin-react
 
 Run the worktree command only once; if that path or branch already exists,
 inspect it rather than deleting or recreating it.
+The additional fetch branch is needed for the original single-branch clone;
+it does not switch the operational checkout away from `agent/align-strong-llm`.
 
 ### Build choices
 
