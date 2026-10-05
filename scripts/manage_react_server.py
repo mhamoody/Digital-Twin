@@ -6,6 +6,7 @@ PID file from stopping an unrelated process. No migrations, model or worker laun
 from __future__ import annotations
 
 import argparse
+import ctypes
 import hashlib
 import json
 import os
@@ -56,16 +57,44 @@ def started_identity(process, command):
     raise RuntimeError("React child did not establish its expected command identity; inspect var/log/react-api.log.")
 
 
+def libc_pidfd(function_name, argtypes, *args):
+    # Some Conda Python builds omit pidfd wrappers although Linux/glibc supports
+    # them. Use the same kernel identity mechanism; never fall back to kill(pid).
+    library = ctypes.CDLL(None, use_errno=True)
+    function = getattr(library, function_name, None)
+    if function is None:
+        raise RuntimeError("Safe pidfd signalling unavailable. Operator intervention required.")
+    function.argtypes = argtypes
+    function.restype = ctypes.c_int
+    result = function(*args)
+    if result == -1:
+        error = ctypes.get_errno()
+        raise OSError(error, os.strerror(error))
+    return result
+
+
+def open_pidfd(pid):
+    if hasattr(os, "pidfd_open"):
+        return os.pidfd_open(pid)
+    return libc_pidfd("pidfd_open", [ctypes.c_int, ctypes.c_uint], pid, 0)
+
+
+def signal_pidfd(fd):
+    if hasattr(signal, "pidfd_send_signal"):
+        signal.pidfd_send_signal(fd, signal.SIGTERM)
+    else:
+        libc_pidfd("pidfd_send_signal", [ctypes.c_int, ctypes.c_int, ctypes.c_void_p, ctypes.c_uint],
+                   fd, signal.SIGTERM, None, 0)
+
+
 def stop_owned(record):
     if not matches(record):
         raise RuntimeError("Saved PID does not match the React process. Refusing to signal it.")
-    if not hasattr(os, "pidfd_open") or not hasattr(signal, "pidfd_send_signal"):
-        raise RuntimeError("Safe pidfd signalling unavailable. Operator intervention required.")
-    fd = os.pidfd_open(record["pid"])
+    fd = open_pidfd(record["pid"])
     try:
         if not matches(record):
             raise RuntimeError("Process identity changed. No signal sent.")
-        signal.pidfd_send_signal(fd, signal.SIGTERM)
+        signal_pidfd(fd)
     finally:
         os.close(fd)
     for _ in range(50):

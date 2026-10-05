@@ -81,6 +81,10 @@ bash deploy/lobot/react.sh stop
 signalling to avoid acting on a reused PID. It never stops port 8000, port 8501,
 Ollama or the worker. A failed start cleans up only the new React process.
 Keep logs private: they can contain authorized course/learner identifiers.
+The launcher waits for the child command to finish its initial exec transition
+before recording its identity. On Lobot's Conda Python, which omits Python pidfd
+wrappers, it calls glibc's pidfd functions instead; it never falls back to an
+unverified process-number kill.
 
 ## Update and rollback
 
