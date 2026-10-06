@@ -53,7 +53,7 @@ def reference_scores(parsed, case):
     return expected, predicted, (predicted == expected if predicted is not None else None), constraint_ok if constraints is not None else None
 def run_case(adapter, case, variant, model_digest, run_id, commit, protocol_sha, protocol_version="v1"):
     visible=model_visible_case(case); base={"case":visible,"task":"Assess only the supplied case. Do not infer causes. Cite only permitted evidence categories.","output_contract":OUTPUT_CONTRACT}
-    schema=e2_schema() if variant == "schema_only" else None
+    schema=e2_schema() if variant != "plain_llm" else None
     reference=case.get("evaluation_reference",case); checkpoint=case.get("checkpoint"); checkpoint=checkpoint if checkpoint is not None else model_visible_case(case).get("checkpoint",{}).get("week") if isinstance(model_visible_case(case).get("checkpoint",{}),dict) else model_visible_case(case).get("checkpoint"); row={"case_id":case["case_id"],"scenario_family":case["scenario_family"],"checkpoint":checkpoint,"variant":variant,"model_name":adapter.runtime.model_name,"model_digest":model_digest,"runtime":"ollama","generation_parameters":json.dumps(adapter.runtime.generation,sort_keys=True),"schema_valid":False,"json_parse_valid":False,"model_call_succeeded":False,"evidence_diagnostic_evaluable":False,"evidence_valid":False,"unsupported_claim_count":"","contradiction_count":"","accepted":False,"abstained":False,"correction_required":False,"correction_attempted":False,"correction_success":False,"initial_latency_ms":"","correction_latency_ms":"","total_latency_ms":"","latency_ms":"","failure_reason":"","protocol_version":protocol_version,"protocol_sha256":protocol_sha,"legacy_windows_crlf_sha256":LEGACY_WINDOWS_CRLF_SHA,"case_count":48,"evaluation_git_commit":commit,"run_id":run_id,"timestamp":datetime.now(timezone.utc).isoformat(),"raw_response":"","expected_behavior_class":reference.get("expected_behavior_class"),"predicted_behavior_class":"","behavior_correct":"","expected_evidence_constraint_valid":""}
     try:
         result=adapter.generate(base,prompt=json.dumps(base,sort_keys=True),system=OUTPUT_CONTRACT,schema=schema,allow_non_json=(variant=="plain_llm"))
@@ -67,7 +67,7 @@ def run_case(adapter, case, variant, model_digest, run_id, commit, protocol_sha,
         if variant=="evidence_first_full" and not ev:
             row["correction_required"]=True; row["correction_attempted"]=True
             feedback={"case":visible,"prior_output":parsed,"validator_feedback":{"unsupported_claim_count":uc,"contradiction_count":cc},"instruction":"Correct only evidence references and unsupported claims using the same permitted evidence. Return the same JSON schema. Do not invent evidence."}
-            corrected=adapter.generate(feedback,prompt=json.dumps(feedback,sort_keys=True),system=OUTPUT_CONTRACT,schema=SCHEMA)
+            corrected=adapter.generate(feedback,prompt=json.dumps(feedback,sort_keys=True),system=OUTPUT_CONTRACT,schema=e2_schema())
             csvv=corrected["parsed"]; clat=corrected["metadata"].get("latency_ms","");
             if "model_input" in case:
                 vr2=deterministic_output_validation(csvv,visible); row.update(vr2.to_dict()); row.update(reference_scoring(vr2,csvv,case["evaluation_reference"])); row["validator_codes"]=json.dumps(vr2.validator_codes); sv2,ev2=vr2.schema_valid,vr2.semantic_evidence_valid
@@ -108,6 +108,7 @@ def main(argv=None):
             attempts=sum(r["correction_attempted"]=="True" for r in rows); success=sum(r["correction_success"]=="True" for r in rows); summary.update(correction_attempt_count=attempts,correction_success_count=success,correction_success_rate=success/attempts if attempts else 0,post_correction_acceptance=sum(r["correction_success"]=="True" for r in rows)/total)
         summary_path=outdir/f"e2_grounding_{variant}_{run_id}_summary.json"; summary_path.write_text(json.dumps(summary,indent=2),encoding="utf-8"); print(f"[E2][{variant}] summary={summary_path}", flush=True)
 if __name__=="__main__": main()
+
 
 
 
