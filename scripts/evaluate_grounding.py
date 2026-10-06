@@ -4,11 +4,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from digital_twin.evaluation.research_adapter import ResearchModelAdapter, ResearchModelError, EXPECTED_DIGEST
 from digital_twin.evaluation.grounding_v2 import deterministic_output_validation, reference_scoring
+from digital_twin.evaluation.grounding_schema_v2 import schema as e2_schema
 
 PROTOCOL_SHA = "13A6FA0B05455EB81BB1B2A4979A1396AAC9EF9D4621239CD8D2E71989CD25F1"
 LEGACY_WINDOWS_CRLF_SHA = "220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E"
 V2_PROTOCOL_SHA = "6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D"
-SCHEMA = {"type":"object","required":["assessment","claims","abstain"],"properties":{"assessment":{"type":"string"},"claims":{"type":"array"},"abstain":{"type":"boolean"},"uncertainty_note":{"type":"string"}},"additionalProperties":True}
+SCHEMA=e2_schema()
 OUTPUT_CONTRACT = "Return JSON with fields assessment (string), claims (array of evidence claims with evidence_ids), abstain (boolean), and optional uncertainty_note. Do not infer causes or psychological states."
 FIELDS = ["case_id","scenario_family","checkpoint","variant","model_name","model_digest","runtime","generation_parameters","schema_valid","json_parse_valid","citation_evaluable","citation_valid","unknown_evidence_ids","missing_evidence_reference_count","malformed_claim_count","temporal_evaluable","future_observation_reference_count","no_future_observation_valid","causal_claim_count","no_causal_claim_valid","missingness_violation_count","not_due_violation_count","awaiting_marking_violation_count","missing_feed_violation_count","extension_violation_count","optional_resource_violation_count","policy_threshold_violation_count","missing_feed_detected","conflict_detected","insufficient_evidence_detected","semantic_evaluable","semantic_evidence_valid","model_call_succeeded","evidence_diagnostic_evaluable","evidence_valid","citation_valid","semantic_evidence_valid","validator_codes","unsupported_claim_count","contradiction_count","accepted","abstained","correction_required","correction_attempted","correction_success","initial_latency_ms","correction_latency_ms","total_latency_ms","latency_ms","failure_reason","protocol_version","protocol_sha256","legacy_windows_crlf_sha256","case_count","evaluation_git_commit","run_id","timestamp","raw_response","expected_behavior_class","predicted_behavior_class","behavior_correct","expected_evidence_constraint_valid","constraint_results"]
 MODEL_VISIBLE_FIELDS = ["checkpoint", "course_policy", "evidence"]
@@ -52,7 +53,7 @@ def reference_scores(parsed, case):
     return expected, predicted, (predicted == expected if predicted is not None else None), constraint_ok if constraints is not None else None
 def run_case(adapter, case, variant, model_digest, run_id, commit, protocol_sha, protocol_version="v1"):
     visible=model_visible_case(case); base={"case":visible,"task":"Assess only the supplied case. Do not infer causes. Cite only permitted evidence categories.","output_contract":OUTPUT_CONTRACT}
-    schema=SCHEMA if variant != "plain_llm" else None
+    schema=e2_schema() if variant == "schema_only" else None
     reference=case.get("evaluation_reference",case); checkpoint=case.get("checkpoint"); checkpoint=checkpoint if checkpoint is not None else model_visible_case(case).get("checkpoint",{}).get("week") if isinstance(model_visible_case(case).get("checkpoint",{}),dict) else model_visible_case(case).get("checkpoint"); row={"case_id":case["case_id"],"scenario_family":case["scenario_family"],"checkpoint":checkpoint,"variant":variant,"model_name":adapter.runtime.model_name,"model_digest":model_digest,"runtime":"ollama","generation_parameters":json.dumps(adapter.runtime.generation,sort_keys=True),"schema_valid":False,"json_parse_valid":False,"model_call_succeeded":False,"evidence_diagnostic_evaluable":False,"evidence_valid":False,"unsupported_claim_count":"","contradiction_count":"","accepted":False,"abstained":False,"correction_required":False,"correction_attempted":False,"correction_success":False,"initial_latency_ms":"","correction_latency_ms":"","total_latency_ms":"","latency_ms":"","failure_reason":"","protocol_version":protocol_version,"protocol_sha256":protocol_sha,"legacy_windows_crlf_sha256":LEGACY_WINDOWS_CRLF_SHA,"case_count":48,"evaluation_git_commit":commit,"run_id":run_id,"timestamp":datetime.now(timezone.utc).isoformat(),"raw_response":"","expected_behavior_class":reference.get("expected_behavior_class"),"predicted_behavior_class":"","behavior_correct":"","expected_evidence_constraint_valid":""}
     try:
         result=adapter.generate(base,prompt=json.dumps(base,sort_keys=True),system=OUTPUT_CONTRACT,schema=schema,allow_non_json=(variant=="plain_llm"))
@@ -107,6 +108,7 @@ def main(argv=None):
             attempts=sum(r["correction_attempted"]=="True" for r in rows); success=sum(r["correction_success"]=="True" for r in rows); summary.update(correction_attempt_count=attempts,correction_success_count=success,correction_success_rate=success/attempts if attempts else 0,post_correction_acceptance=sum(r["correction_success"]=="True" for r in rows)/total)
         summary_path=outdir/f"e2_grounding_{variant}_{run_id}_summary.json"; summary_path.write_text(json.dumps(summary,indent=2),encoding="utf-8"); print(f"[E2][{variant}] summary={summary_path}", flush=True)
 if __name__=="__main__": main()
+
 
 
 
