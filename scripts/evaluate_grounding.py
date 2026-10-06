@@ -86,8 +86,8 @@ def run_case(adapter, case, variant, model_digest, run_id, commit, protocol_sha,
         row["failure_reason"]=type(exc).__name__
     return row
 def main(argv=None):
-    p=argparse.ArgumentParser(); p.add_argument("--scenarios",default="evaluation/protocols/e2_grounding_heldout_v1.json"); p.add_argument("--variant",choices=["plain_llm","schema_only","evidence_first_full"]); p.add_argument("--model",required=True); p.add_argument("--output-dir",default="evaluation/results"); p.add_argument("--run-id"); p.add_argument("--all-variants",action="store_true"); a=p.parse_args(argv)
-    variants=["plain_llm","schema_only","evidence_first_full"] if a.all_variants else [a.variant]
+    p=argparse.ArgumentParser(); p.add_argument("--scenarios",default="evaluation/protocols/e2_grounding_heldout_v1.json"); p.add_argument("--variant",choices=["plain_llm","schema_only","evidence_first_full","evidence_first_full_v2"]); p.add_argument("--model",required=True); p.add_argument("--output-dir",default="evaluation/results"); p.add_argument("--run-id"); p.add_argument("--all-variants",action="store_true"); a=p.parse_args(argv)
+    variants=["plain_llm","schema_only","evidence_first_full","evidence_first_full_v2"] if a.all_variants else [a.variant]
     if not a.all_variants and not a.variant: p.error("--variant or --all-variants is required")
     doc,psha=protocol(a.scenarios); adapter=ResearchModelAdapter(); readiness=adapter.readiness(verify_generation=True)
     if readiness.get("inference_verified") is not True: raise SystemExit("MODEL_NOT_READY")
@@ -110,6 +110,7 @@ def main(argv=None):
             attempts=sum(r["correction_attempted"]=="True" for r in rows); success=sum(r["correction_success"]=="True" for r in rows); summary.update(correction_attempt_count=attempts,correction_success_count=success,correction_success_rate=success/attempts if attempts else 0,post_correction_acceptance=sum(r["correction_success"]=="True" for r in rows)/total)
         summary_path=outdir/f"e2_grounding_{variant}_{run_id}_summary.json"; summary_path.write_text(json.dumps(summary,indent=2),encoding="utf-8"); print(f"[E2][{variant}] summary={summary_path}", flush=True)
 if __name__=="__main__": main()
+
 
 
 
