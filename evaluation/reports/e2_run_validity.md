@@ -23,3 +23,7 @@ The preserved r2 generation is clean and leakage-free: 48/48 model calls complet
 ## Evidence-first full r1 tooling status
 
 `lobot-e2-v2-evidence-first-full-r1` is an **INCOMPLETE TOOLING RUN — NOT A SCIENTIFIC RESULT**. The live CSV writer used a stale field list and failed after 32 completed cases when structural diagnostics were added. The partial artifact is not resumed, spliced, or used for metrics. The next official run is a fresh `lobot-e2-v2-evidence-first-full-r2`.
+
+## Evidence-first full v2
+
+`evidence_first_full_v2` is a post-hoc corrective treatment created after implementation defects were identified in the original evidence-first treatment. It preserves the frozen protocol/model/schema and changes correction diagnostics and deterministic final-output selection only. Its results must not be presented as a pre-specified treatment.
