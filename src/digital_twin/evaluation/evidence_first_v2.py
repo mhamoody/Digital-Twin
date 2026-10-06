@@ -10,8 +10,12 @@ def quality(v, output):
     required=(not v.missing_feed_detected and not v.conflict_detected and not v.insufficient_evidence_detected) or abstain
     return (bool(v.full_output_contract_valid),bool(v.citation_valid),bool(v.semantic_evidence_valid),required,-v.contradiction_count,-v.unsupported_claim_count)
 
+def correction_required(v):
+    return (not v.semantic_evidence_valid) or v.missing_feed_detected or v.conflict_detected or v.insufficient_evidence_detected
+
 def select(initial, corrected, model_input):
     vi=deterministic_output_validation(initial,model_input); vc=deterministic_output_validation(corrected,model_input)
     qi,qc=quality(vi,initial),quality(vc,corrected)
     if qc>qi: return corrected,'corrected',True,qi,qc
     return initial,'initial','no_strict_improvement',qi,qc
+

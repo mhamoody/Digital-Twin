@@ -6,13 +6,14 @@ from digital_twin.evaluation.research_adapter import ResearchModelAdapter, Resea
 from digital_twin.evaluation.grounding_v2 import deterministic_output_validation, reference_scoring
 from digital_twin.evaluation.grounding_schema_v2 import schema as e2_schema
 from digital_twin.evaluation.e2_results import RESULT_FIELDS
+from digital_twin.evaluation.evidence_first_v2 import correction_required
 
 PROTOCOL_SHA = "13A6FA0B05455EB81BB1B2A4979A1396AAC9EF9D4621239CD8D2E71989CD25F1"
 LEGACY_WINDOWS_CRLF_SHA = "220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E"
 V2_PROTOCOL_SHA = "6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D"
 SCHEMA=e2_schema()
 OUTPUT_CONTRACT = "Return JSON with fields assessment (string), claims (array of evidence claims with evidence_ids), abstain (boolean), and optional uncertainty_note. Do not infer causes or psychological states."
-FIELDS = ["case_id","scenario_family","checkpoint","variant","model_name","model_digest","runtime","generation_parameters","schema_valid","json_parse_valid","citation_evaluable","citation_valid","unknown_evidence_ids","missing_evidence_reference_count","malformed_claim_count","temporal_evaluable","future_observation_reference_count","no_future_observation_valid","causal_claim_count","no_causal_claim_valid","missingness_violation_count","not_due_violation_count","awaiting_marking_violation_count","missing_feed_violation_count","extension_violation_count","optional_resource_violation_count","policy_threshold_violation_count","missing_feed_detected","conflict_detected","insufficient_evidence_detected","semantic_evaluable","semantic_evidence_valid","model_call_succeeded","evidence_diagnostic_evaluable","evidence_valid","citation_valid","semantic_evidence_valid","validator_codes","unsupported_claim_count","contradiction_count","accepted","abstained","correction_required","correction_attempted","correction_success","initial_latency_ms","correction_latency_ms","total_latency_ms","latency_ms","failure_reason","protocol_version","protocol_sha256","legacy_windows_crlf_sha256","case_count","evaluation_git_commit","run_id","timestamp","raw_response","expected_behavior_class","predicted_behavior_class","behavior_correct","expected_evidence_constraint_valid","constraint_results"]
+FIELDS = ["case_id","scenario_family","checkpoint","variant","model_name","model_digest","runtime","generation_parameters","schema_valid","json_parse_valid","citation_evaluable","citation_valid","unknown_evidence_ids","missing_evidence_reference_count","malformed_claim_count","temporal_evaluable","future_observation_reference_count","no_future_observation_valid","causal_claim_count","no_causal_claim_valid","missingness_violation_count","not_due_violation_count","awaiting_marking_violation_count","missing_feed_violation_count","extension_violation_count","optional_resource_violation_count","policy_threshold_violation_count","missing_feed_detected","conflict_detected","insufficient_evidence_detected","semantic_evaluable","semantic_evidence_valid","model_call_succeeded","evidence_diagnostic_evaluable","evidence_valid","citation_valid","semantic_evidence_valid","validator_codes","unsupported_claim_count","contradiction_count","accepted","abstained","treatment_version","treatment_status","initial_raw_response","initial_json_parse_valid","initial_top_level_schema_valid","initial_claim_schema_valid","initial_full_output_contract_valid","initial_citation_valid","initial_semantic_evidence_valid","initial_unsupported_claim_count","initial_contradiction_count","initial_abstained","selected_output_source","selection_reason","correction_improved_validation","correction_required","correction_attempted","correction_success","initial_latency_ms","correction_latency_ms","total_latency_ms","latency_ms","failure_reason","protocol_version","protocol_sha256","legacy_windows_crlf_sha256","case_count","evaluation_git_commit","run_id","timestamp","raw_response","expected_behavior_class","predicted_behavior_class","behavior_correct","expected_evidence_constraint_valid","constraint_results"]
 FIELDS=list(dict.fromkeys(RESULT_FIELDS + FIELDS))
 MODEL_VISIBLE_FIELDS = ["checkpoint", "course_policy", "evidence"]
 EVALUATION_ONLY_FIELDS = ["case_id", "scenario_family", "expected_behavior_class", "expected_evidence_constraints"]
@@ -66,7 +67,7 @@ def run_case(adapter, case, variant, model_digest, run_id, commit, protocol_sha,
             vr=deterministic_output_validation(parsed, visible); scored=reference_scoring(vr, parsed, case["evaluation_reference"]); sv=vr.schema_valid; ev=vr.semantic_evidence_valid; uc=vr.unsupported_claim_count; cc=vr.contradiction_count; row.update(schema_valid=sv,evidence_diagnostic_evaluable=vr.semantic_evaluable,evidence_valid=ev,unsupported_claim_count=uc,contradiction_count=cc,validator_codes=json.dumps(vr.validator_codes),citation_valid=vr.citation_valid,semantic_evidence_valid=vr.semantic_evidence_valid,**scored)
         else:
             sv,ev,uc,cc=validate(parsed,case); row.update(schema_valid=sv,evidence_diagnostic_evaluable=True,evidence_valid=ev,unsupported_claim_count=uc,contradiction_count=cc)
-        if variant=="evidence_first_full" and not ev:
+        if variant in ("evidence_first_full","evidence_first_full_v2") and not ev:
             row["correction_required"]=True; row["correction_attempted"]=True
             feedback={"case":visible,"prior_output":parsed,"validator_feedback":{"unsupported_claim_count":uc,"contradiction_count":cc},"instruction":"Correct only evidence references and unsupported claims using the same permitted evidence. Return the same JSON schema. Do not invent evidence."}
             corrected=adapter.generate(feedback,prompt=json.dumps(feedback,sort_keys=True),system=OUTPUT_CONTRACT,schema=e2_schema())
@@ -110,6 +111,7 @@ def main(argv=None):
             attempts=sum(r["correction_attempted"]=="True" for r in rows); success=sum(r["correction_success"]=="True" for r in rows); summary.update(correction_attempt_count=attempts,correction_success_count=success,correction_success_rate=success/attempts if attempts else 0,post_correction_acceptance=sum(r["correction_success"]=="True" for r in rows)/total)
         summary_path=outdir/f"e2_grounding_{variant}_{run_id}_summary.json"; summary_path.write_text(json.dumps(summary,indent=2),encoding="utf-8"); print(f"[E2][{variant}] summary={summary_path}", flush=True)
 if __name__=="__main__": main()
+
 
 
 
