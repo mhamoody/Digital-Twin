@@ -1,6 +1,6 @@
-﻿RESULT_FIELDS=['case_id','scenario_family','checkpoint','variant','model_name','model_digest','runtime','generation_parameters','schema_valid','top_level_schema_valid','claim_schema_valid','full_output_contract_valid','json_parse_valid','model_call_succeeded','citation_evaluable','citation_valid','semantic_evaluable','semantic_evidence_valid','missing_feed_detected','behavior_correct','expected_evidence_constraint_valid','accepted','abstained','raw_response','failure_reason','protocol_version','protocol_sha256','source_run_id','rescoring_git_commit']
-from __future__ import annotations
+﻿from __future__ import annotations
 
+RESULT_FIELDS=['case_id','scenario_family','checkpoint','variant','model_name','model_digest','runtime','generation_parameters','schema_valid','top_level_schema_valid','claim_schema_valid','full_output_contract_valid','json_parse_valid','model_call_succeeded','citation_evaluable','citation_valid','semantic_evaluable','semantic_evidence_valid','missing_feed_detected','behavior_correct','expected_evidence_constraint_valid','accepted','abstained','raw_response','failure_reason','protocol_version','protocol_sha256','source_run_id','rescoring_git_commit']
 def parse_bool(value):
     if value is True or value is False: return value
     if value is None or value == "": return None
@@ -21,4 +21,5 @@ def build_e2_summary(rows, meta=None, protocol_version="v2", protocol_sha256="",
     attempts=count("correction_attempted")
     if variant=="evidence_first_full": s.update(correction_attempt_count=attempts,correction_success_count=count("correction_success"),correction_success_rate=rate_with_denominator([r for r in rows if b(r,"correction_attempted") is True],"correction_success"))
     return s
+
 
