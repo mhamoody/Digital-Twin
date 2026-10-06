@@ -15,3 +15,7 @@ The initially recorded v2 canonical hash (`300636...`) was incorrect. Direct LF-
 ## `lobot-e2-v2-r2` status
 
 The preserved r2 generation is clean and leakage-free: 48/48 model calls completed, all responses were JSON-parseable, and behavior scoring is valid at 24/48 (0.50) because `plain_llm` never abstained. The original r2 citation, semantic, and constraint summary fields are not final because diagnostic persistence, summary aggregation, and missing-feed condition scoring were incomplete in that runner revision. Raw responses are retained and can be deterministically rescored offline with `scripts/rescore_e2_v2.py`; no new model generation is required.
+
+## Schema-only treatment validity
+
+`lobot-e2-v2-schema-only-r1` is an **INVALID TREATMENT RUN**. Ollama `format` was transmitted, but the schema constrained only the top-level object; `claims.items` was absent. Therefore `evidence_ids` plural was not required and `evidence_id` singular was structurally permitted. This is a treatment-integrity failure, not a model-quality conclusion. The next valid candidate is `lobot-e2-v2-schema-only-r2`.
