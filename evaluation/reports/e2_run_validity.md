@@ -19,3 +19,7 @@ The preserved r2 generation is clean and leakage-free: 48/48 model calls complet
 ## Schema-only treatment validity
 
 `lobot-e2-v2-schema-only-r1` is an **INVALID TREATMENT RUN**. Ollama `format` was transmitted, but the schema constrained only the top-level object; `claims.items` was absent. Therefore `evidence_ids` plural was not required and `evidence_id` singular was structurally permitted. This is a treatment-integrity failure, not a model-quality conclusion. The next valid candidate is `lobot-e2-v2-schema-only-r2`.
+
+## Evidence-first full r1 tooling status
+
+`lobot-e2-v2-evidence-first-full-r1` is an **INCOMPLETE TOOLING RUN — NOT A SCIENTIFIC RESULT**. The live CSV writer used a stale field list and failed after 32 completed cases when structural diagnostics were added. The partial artifact is not resumed, spliced, or used for metrics. The next official run is a fresh `lobot-e2-v2-evidence-first-full-r2`.
