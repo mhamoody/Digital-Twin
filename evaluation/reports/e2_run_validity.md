@@ -31,3 +31,22 @@ The preserved r2 generation is clean and leakage-free: 48/48 model calls complet
 ## Evidence-first full v2 r1 dispatch status
 
 `lobot-e2-v2-evidence-first-full-v2-r1` is an **INVALID TREATMENT RUN — EVIDENCE_FIRST_FULL_V2 DISPATCH/INTEGRATION DEFECT**. Its rows identify the variant but do not contain v2 treatment/provenance fields or correction attempts. It is preserved for audit and is not resumed or spliced. The next official run is a fresh `lobot-e2-v2-evidence-first-full-v2-r2`.
+
+## Frozen primary E2 analysis
+
+The primary comparison is frozen to the two valid, comparable treatments:
+
+| Treatment | Scientific status | Primary use |
+|---|---|---|
+| `plain_llm` v2 (`lobot-e2-v2-r2`) | Valid baseline | Included |
+| `schema_only` v2 (`lobot-e2-v2-schema-only-r2`) | Valid structural treatment | Included |
+| original `evidence_first_full` | Implementation-defective treatment | Excluded |
+| `evidence_first_full_v2` | Incomplete post-hoc corrective engineering treatment | Excluded |
+
+The evidence-first v2 work is deferred. It may be revisited as future/post-hoc engineering work, but it is not required for the current primary E2 conclusion.
+
+### Primary conclusion
+
+Schema-constrained generation substantially improves structural and citation compliance, but does not by itself improve selective abstention or behavioral decision accuracy. This conclusion is based only on the valid `plain_llm` and `schema_only` v2 treatments; excluded evidence-first treatments do not contribute to the primary comparison.
+
+No further evidence-first functionality or inference is required for the frozen primary analysis.
