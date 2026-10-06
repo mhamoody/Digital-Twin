@@ -8,7 +8,7 @@ CONSTRAINTS={"cite_only_permitted_ids","no_future_observation","no_causal_claim"
 CAUSAL=re.compile(r"unmotivated|lazy|does not care|lack of engagement caused|because the (?:student|learner) is|motivation explains",re.I)
 @dataclass
 class ValidationResult:
- schema_valid: bool=False; citation_evaluable: bool=False; citation_valid: bool=False
+ schema_valid: bool=False; top_level_schema_valid: bool=False; claim_schema_valid: bool=False; full_output_contract_valid: bool=False; citation_evaluable: bool=False; citation_valid: bool=False
  unknown_evidence_ids:int=0; missing_evidence_reference_count:int=0; malformed_claim_count:int=0
  temporal_evaluable: bool=False; future_observation_reference_count:int=0; no_future_observation_valid: bool=False
  causal_claim_count:int=0; no_causal_claim_valid: bool=False
@@ -24,7 +24,7 @@ class ValidationResult:
 def _text(claim): return str(claim.get("claim","")) if isinstance(claim,dict) else ""
 def deterministic_output_validation(model_output:dict, model_input:dict)->ValidationResult:
  r=ValidationResult(); evidence={e.get("evidence_id"):e for e in model_input.get("evidence",[]) if isinstance(e,dict)}; claims=model_output.get("claims") if isinstance(model_output,dict) else None
- r.schema_valid=isinstance(model_output,dict) and isinstance(model_output.get("assessment"),str) and isinstance(claims,list) and isinstance(model_output.get("abstain"),bool)
+ r.top_level_schema_valid=isinstance(model_output,dict) and isinstance(model_output.get("assessment"),str) and isinstance(claims,list) and isinstance(model_output.get("abstain"),bool); r.schema_valid=r.top_level_schema_valid; r.claim_schema_valid=bool(r.top_level_schema_valid and all(isinstance(c,dict) and isinstance(c.get("claim"),str) and isinstance(c.get("evidence_ids"),list) and all(isinstance(x,str) for x in c.get("evidence_ids",[])) and bool(c.get("evidence_ids")) and "evidence_id" not in c for c in claims)); r.full_output_contract_valid=r.top_level_schema_valid and r.claim_schema_valid
  if not r.schema_valid:r.validator_codes.append("SCHEMA_INVALID"); return r
  r.citation_evaluable=True; refs=[]
  for c in claims:
@@ -72,5 +72,6 @@ def reference_scoring(validation_result:ValidationResult, model_output:dict, eva
  unknown=set(evaluation_reference.get("expected_evidence_constraints",[]))-CONSTRAINTS
  if unknown: raise ValueError(f"UNKNOWN_CONSTRAINT:{sorted(unknown)}")
  return {"predicted_behavior_class":predicted,"behavior_correct":predicted==expected if predicted is not None else None,"expected_evidence_constraint_valid":all(checks[c] for c in evaluation_reference.get("expected_evidence_constraints",[])),"constraint_results":checks}
+
 
 
