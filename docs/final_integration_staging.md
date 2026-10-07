@@ -43,3 +43,26 @@ TEAM already equivalent: workspace UI/client/API, state builder, support workflo
 Port required: empirical runtime verification of API-derived current risk distribution (72/26/274/11) and launcher/environment settings from runtime-final. These should be ported as targeted tests/configuration, never by copying the runtime API wholesale.
 
 Do not port: old duplicated APIs, production data/volumes, E1/E2/E4 artifacts, or any Qwen result into the empirical predictor path.
+
+## Staging acceptance gates
+
+TEAM hosted authentication was tested with an ephemeral staging-only scrypt account and a separate 32-byte staging signing key. Production auth/signing material was not used. Read-only requests used X-Instructor-ID, X-Instructor-Role, X-Dashboard-Timestamp, and X-Dashboard-Signature. The timestamp was current and the signature covered method, path, identity, role, and empty-body hash.
+
+Authenticated read-only results:
+
+- GET /api/v2/courses: 200, valid empty Workspace course list for the restored empirical-only database.
+- GET /api/v1/presentations/oulad:AAA:2013J/overview: 200.
+- GET /api/v1/presentations/oulad:AAA:2013J/learners (paginated): 200, 383 learners.
+- GET /api/v1/presentations/oulad:AAA:2013J/learners/oulad:101781: 200, features and prediction timeline returned.
+- GET /api/v1/presentations/oulad:AAA:2013J/support-cases: 200.
+- GET /api/v1/support-cases/case:a49697dfb12b4c30939ae442734c534f: 200, preserved case and one action returned.
+
+The Workspace course endpoint is not applicable to the restored OULAD presentation because /api/v2/courses is correctly empty; no synthetic Workspace course was fabricated. Triage tables therefore remain empty without being conflated with empirical learner risk.
+
+The API-derived current learner distribution is High 72, Medium 26, Low 274, Unassessed 11 (total 383). This was calculated from the paginated learner endpoint's selected current state and its exactly bound prediction, not by aggregating historical prediction rows. Raw historical rows remain 142 high, 75 medium, and 1247 low.
+
+Binding checks sampled High, Medium, Low, and Unassessed learners plus a learner with four checkpoints. All bound records satisfied prediction_state_id == state_id; Unassessed had no state or prediction. No independent latest-state/latest-prediction fallback was observed.
+
+Empirical screens worked without Ollama/Qwen. The empirical source remains simple-rules-v1 and operational/uncalibrated. Optional Workspace analysis was not invoked.
+
+Acceptance gate: PASS. Production database, ports, volumes, support records, and configuration were untouched.
