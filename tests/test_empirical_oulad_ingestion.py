@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 
@@ -6,18 +7,32 @@ from datetime import UTC, datetime
 from digital_twin.schemas import DataOrigin
 from digital_twin.state import build_weekly_states
 
-from scripts.ingest_oulad_empirical import validate_prepared
+from scripts.ingest_oulad_empirical import REQUIRED, validate_prepared
 
 
 def test_manifest_validation_accepts_verified_empirical_fixture(tmp_path: Path):
-    source = Path(r"G:\Queen's\Graduation Project\Digital-Twin-runtime\data\processed\oulad_runtime_AAA_2013J_v3")
     target = tmp_path / "prepared"
     target.mkdir()
-    manifest = json.loads((source / "manifest.json").read_text(encoding="utf-8"))
+
+    outputs = {}
+    for name in REQUIRED:
+        if name == "manifest.json":
+            continue
+        payload = f"fixture:{name}\n".encode()
+        (target / name).write_bytes(payload)
+        outputs[name] = {"sha256": hashlib.sha256(payload).hexdigest()}
+
+    manifest = {
+        "module": "AAA",
+        "presentation": "2013J",
+        "presentation_id": "oulad:AAA:2013J",
+        "data_origin": "empirical",
+        "outputs": outputs,
+    }
     (target / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
-    for name in manifest["outputs"]:
-        (target / name).write_bytes((source / name).read_bytes())
+
     result = validate_prepared(target)
+
     assert result["presentation_id"] == "oulad:AAA:2013J"
     assert result["data_origin"] == "empirical"
 
