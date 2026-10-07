@@ -2,6 +2,15 @@
 
 ## Project definition
 
+### Current product and research boundary
+
+The currently verified product is a single empirical OULAD presentation
+(`oulad:AAA:2013J`) with temporal state, evidence, an uncalibrated
+`simple-rules-v1` operational score, and instructor workflow. It does not
+claim a calibrated failure probability. Controlled Qwen/E2 work remains a
+separate research path and does not generate live empirical risk. Multi-course
+generalization and educator validation remain future evaluation work.
+
 This project builds a **course-level digital twin for instructor decision support**. The twin is a timestamped, queryable, and historized representation of observable student activity and academic progress. It is refreshed as new LMS evidence arrives and preserves the state that was known at each weekly checkpoint.
 
 For this project, the term does **not** mean a simulation of a student's mind. The system observes LMS interactions, submissions, assessment results, and—only when authentic or appropriately labelled data are available—student-authored text. It may estimate risk, but it must not claim to measure motivation, understanding, or causality directly.

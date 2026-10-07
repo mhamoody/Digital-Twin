@@ -2,6 +2,15 @@
 
 ## Solution in one sentence
 
+### Current implementation boundary
+
+The live empirical product currently uses OULAD temporal states,
+`simple-rules-v1` uncalibrated operational/demo scores, evidence, and human
+workflow. It does not present those scores as failure probabilities. Qwen and
+other LLM experiments remain controlled research/workspace capabilities, never
+an implicit replacement for the empirical predictor. Cross-course empirical
+generalization and formal educator validation remain future work.
+
 Build weekly, leakage-free student states from empirical learning data; use a
 strong LLM as the primary model for grounded risk prediction; compare and
 calibrate it against classical baselines; persist the states, evidence,

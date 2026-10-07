@@ -66,3 +66,24 @@ Binding checks sampled High, Medium, Low, and Unassessed learners plus a learner
 Empirical screens worked without Ollama/Qwen. The empirical source remains simple-rules-v1 and operational/uncalibrated. Optional Workspace analysis was not invoked.
 
 Acceptance gate: PASS. Production database, ports, volumes, support records, and configuration were untouched.
+
+## Phase 2 final-demo hardening
+
+The unified worktree now includes `start-digital-twin.ps1` and its batch
+wrapper. The launcher resolves the repository root from its location, selects
+an interpreter from an explicit environment override, active Conda/venv,
+PATH, or the Python launcher, and verifies required application imports. It
+requires an explicitly supplied database URL, checks existing API/dashboard
+ports before starting anything, polls health with bounded retries, and never
+creates, resets, migrates, or stops a database or an unknown process.
+
+The launcher was rehearsed only against the disposable staging PostgreSQL
+database on port 55435, using API/dashboard ports 8002/8502 and temporary
+staging-only credentials. Both health checks returned 200. The empirical path
+remained operational without Ollama or Qwen. The TEAM test suite passed: 66
+passed, with two external dependency deprecation warnings.
+
+Dashboard wording was audited rather than broadly redesigned: Workspace
+already labels risk outputs as uncalibrated and separates model risk from
+instructor triage/support. Documentation now states the verified single-course
+empirical boundary and keeps Qwen/E2 work separate from live empirical risk.
