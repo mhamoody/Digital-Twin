@@ -43,6 +43,7 @@ Thumbs.db
 /var/models/
 /var/tools/
 /var/downloads/
+/.staging-secrets/
 
 # Local datasets and generated artifacts
 /OULAD/

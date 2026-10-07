@@ -2,6 +2,14 @@
 
 ## Priority order
 
+### Status interpretation
+
+The product demo and the research programme are reported separately. The
+current empirical runtime demonstrates OULAD state, evidence, workflow and an
+uncalibrated operational/demo score. It does not establish a calibrated LLM
+predictor, multi-course empirical performance, or completed educator study.
+Qwen evaluation remains controlled research rather than a live risk service.
+
 The project is now organized around one research thread and one demonstrable system. A lower item must not delay a higher one.
 
 | Priority | Deliverable | Why it is essential |
