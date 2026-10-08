@@ -28,6 +28,7 @@ import { Overview } from "./pages/Overview";
 import { initialFilters, StudentFilters, Students } from "./pages/Students";
 import type { Filters } from "./pages/Students";
 import { StudentProfile } from "./pages/StudentProfile";
+import type { ProfileTab } from "./pages/StudentProfile";
 import { EditGuard, useEditGuard } from "./hooks/editGuard";
 
 type Page =
@@ -208,6 +209,9 @@ function WorkspaceApp({
   const [privacy, setPrivacy] = useState<Privacy>("name_id");
   const [page, setPage] = useState<Page>("overview");
   const [student, setStudent] = useState<string | null>(null);
+  // Navigation survives a data refresh or checkpoint change. Learner payloads
+  // still unmount/reload on context changes; no old evidence is kept on screen.
+  const [studentTab, setStudentTab] = useState<ProfileTab>("Evidence");
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [menu, setMenu] = useState(false);
   const [logoutError, setLogoutError] = useState("");
@@ -380,15 +384,20 @@ function WorkspaceApp({
             <>
               <div className="page-heading">
                 <h1>Earlier support history</h1>
-                <button onClick={() => setRevision((v) => v + 1)}>
+                <button onClick={() => { if (guard.leave()) setRevision((v) => v + 1); }}>
                   <RefreshCw size={16} />
                   Refresh data
                 </button>
               </div>
-              <LegacyHistory revision={revision} />
+              <LegacyHistory revision={revision} csrf={session.csrf_token} />
             </>
           ) : error ? (
-            <Notice error>{error}</Notice>
+            <Notice error>
+              {error}
+              <button onClick={() => { if (guard.leave()) setRevision((v) => v + 1); }}>
+                Retry course loading
+              </button>
+            </Notice>
           ) : !courses ? (
             <Loading />
           ) : !course ? (
@@ -506,6 +515,8 @@ function WorkspaceApp({
                   privacy={privacy}
                   revision={revision}
                   csrf={session.csrf_token}
+                  tab={studentTab}
+                  setTab={setStudentTab}
                   back={() => {
                     if (guard.leave()) setStudent(null);
                   }}
@@ -521,10 +532,14 @@ function WorkspaceApp({
                   filters={filters}
                   setFilters={setFilters}
                   openList={openList}
-                  openStudent={setStudent}
+                  openStudent={(id) => {
+                    setStudentTab("Evidence");
+                    setStudent(id);
+                  }}
                   openDemo={(id, selected) => {
                     if (guard.leave()) {
                       setWeek(selected);
+                      setStudentTab("Evidence");
                       setStudent(id);
                     }
                   }}

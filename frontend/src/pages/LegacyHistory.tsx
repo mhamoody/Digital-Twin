@@ -1,358 +1,182 @@
-import { useEffect, useState } from "react";
-import { z } from "zod";
+import { useEffect, useRef, useState } from "react";
+import { legacyActive, legacyCaseDetailSchema, legacyIndexSchema } from "../api/legacyContracts";
+import type { LegacyCase, LegacyMutation } from "../api/legacyContracts";
+import type { LegacyAlertDetail } from "../api/legacyEvidenceContracts";
 import { useResource } from "../hooks/useResource";
+import { useLegacyCases } from "../hooks/useLegacyCases";
+import { useEditGuard } from "../hooks/editGuard";
+import { EditDialog } from "../components/EditDialog";
 import { Badge, label, Loading, Notice, Panel } from "../components/ui";
-
-const indexSchema = z.object({
-  items: z.array(
-    z.object({
-      presentation_id: z.string(),
-      module_code: z.string(),
-      presentation_code: z.string(),
-      data_origin: z.string(),
-    }),
-  ),
-});
-const caseSchema = z.object({
-  case_id: z.string(),
-  presentation_id: z.string(),
-  learner_id: z.string(),
-  data_origin: z.string(),
-  status: z.string(),
-  opened_at: z.string(),
-  last_action_at: z.string(),
-  follow_up_due_at: z.string().nullable(),
-  closed_at: z.string().nullable(),
-  version: z.number().int(),
-});
-const casesSchema = z.object({
-  items: z.array(caseSchema),
-  total: z.number().int().nonnegative(),
-  limit: z.number().int().positive(),
-  offset: z.number().int().nonnegative(),
-});
-const detailSchema = z.object({
-  case: caseSchema,
-  actions: z.array(
-    z.object({
-      action_id: z.string(),
-      action_type: z.string(),
-      actor_id: z.string(),
-      actor_role: z.string(),
-      created_at: z.string(),
-      resulting_version: z.number().int(),
-      note: z.string().nullable(),
-      previous_status: z.string().nullable(),
-      new_status: z.string().nullable(),
-      previous_follow_up_due_at: z.string().nullable(),
-      new_follow_up_due_at: z.string().nullable(),
-      linked_alert_id: z.string().nullable(),
-    }),
-  ),
-  linked_alerts: z.array(
-    z.object({
-      alert_id: z.string(),
-      prediction_id: z.string(),
-      state_id: z.string(),
-      checkpoint: z.number().int(),
-      risk_band: z.string().nullable(),
-      linked_at: z.string(),
-      link_reason: z.string(),
-    }),
-  ),
-});
+import { LegacyAlertEvidence, LegacyAlerts, LegacyLearners } from "./LegacyLearners";
+import { LegacyAlertReview, LegacyCaseAction, LegacyCreateCase } from "./LegacyCaseActions";
 
 export function legacyDashboardPath(path: string) {
   const match = path.match(/^(\/user\/[^/]+\/)proxy\/8502\/$/);
   return match ? `${match[1]}proxy/8501/` : null;
 }
 
-export function LegacyHistory({ revision }: { revision: number }) {
-  const { data, error } = useResource(
-    "v1/presentations",
-    indexSchema,
-    revision,
-  );
+export function LegacyHistory({ revision, csrf }: { revision: number; csrf: string }) {
+  const guard = useEditGuard();
+  const { data, error } = useResource("v1/presentations", legacyIndexSchema, revision);
   const [selected, setSelected] = useState("");
-  const course =
-    data?.items.find((c) => c.presentation_id === selected) ?? data?.items[0];
+  const confirmedCourse = data?.items.find((item) => item.presentation_id === selected) ?? data?.items[0];
+  const [previousCourse, setPreviousCourse] = useState<typeof confirmedCourse>();
+  useEffect(() => {
+    if (data) setPreviousCourse(confirmedCourse);
+  }, [data, confirmedCourse]);
+  // Keep local navigation mounted while revalidating grants, but hide it until
+  // discovery succeeds. Empty/revoked courses and read failures unmount it.
+  const course = data ? confirmedCourse : previousCourse;
   const legacyLink = legacyDashboardPath(window.location.pathname);
-  return (
-    <>
-      <Panel
-        title="Earlier support history"
-        note="Separate v1 support episodes — not the current course-operation cases."
-      >
-        <Notice>
-          These records have not been merged into current support cases or used
-          as new model evidence. This view is read-only. Older case editing,
-          alerts and learner activity remain available in Streamlit: select
-          Student support in its Workspace selector.
-        </Notice>
-        {legacyLink && (
-          <p>
-            <a href={legacyLink} target="_blank" rel="noopener noreferrer">
-              Open the earlier support workspace ↗
-            </a>{" "}
-            · uses its own instructor sign-in
-          </p>
-        )}
-        <p className="fineprint">
-          Student IDs are shown here. Instructor-authored notes can contain
-          identifying information; use care when sharing your screen.
-        </p>
-        {error ? (
-          <Notice error>{error}</Notice>
-        ) : !data ? (
-          <Loading />
-        ) : !course ? (
-          <p>
-            No earlier support courses are assigned to this account. Current
-            course operations remain separate.
-          </p>
-        ) : (
-          <>
-            <label>
-              Earlier course
-              <select
-                aria-label="Earlier course"
-                value={course.presentation_id}
-                onChange={(e) => setSelected(e.target.value)}
-              >
-                {data.items.map((c) => (
-                  <option key={c.presentation_id} value={c.presentation_id}>
-                    {c.module_code} / {c.presentation_code} ·{" "}
-                    {c.presentation_id}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <Badge>{label(course.data_origin)} data</Badge>
-          </>
-        )}
-      </Panel>
-      {!error && course && (
-        <LegacyCases
-          key={course.presentation_id}
-          course={course.presentation_id}
-          revision={revision}
-        />
-      )}
-    </>
-  );
+  return <>
+    <Panel title="Earlier support workspace" note="Separate v1 learner records and support episodes — not current course-operation cases.">
+      <Notice>Earlier case actions and alert reviews below save to the original v1 records. They do not copy episodes into current cases, generate predictions or turn instructor notes into model evidence. No student messages are sent.</Notice>
+      {legacyLink && <p><a href={legacyLink} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!guard.leave()) event.preventDefault(); }}>Open the earlier Streamlit workspace ↗</a> · uses its own instructor sign-in. Its active Student support view provides case editing and linked evidence; not all timeline or alert-review controls are exposed there.</p>}
+      <p className="fineprint">Student IDs are shown here. Instructor-authored notes may contain identifying information; use care when sharing your screen. Follow-up entry uses UTC explicitly.</p>
+      {error ? <Notice error>{error}</Notice> : !data ? <Loading /> : !course ? <p>No earlier support courses are assigned to this account. Current course operations remain separate.</p> : <>
+        <label>Earlier course<select aria-label="Earlier course" value={course.presentation_id} onChange={(event) => { if (guard.leave()) setSelected(event.target.value); }}>
+          {data.items.map((item) => <option key={item.presentation_id} value={item.presentation_id}>{item.module_code} / {item.presentation_code} · {item.presentation_id}</option>)}
+        </select></label>
+        <Badge>{label(course.data_origin)} data</Badge>
+      </>}
+    </Panel>
+    {!error && course && <div hidden={!data} style={{ overflowWrap: "anywhere" }}>
+      <LegacyCourseWorkspace key={`${course.presentation_id}:${course.data_origin}`} course={course.presentation_id} dataOrigin={course.data_origin} revision={revision} csrf={csrf} />
+    </div>}
+  </>;
 }
 
-function LegacyCases({
-  course,
-  revision,
-}: {
-  course: string;
-  revision: number;
+type CaseReference = Pick<LegacyCase, "case_id" | "presentation_id" | "learner_id" | "data_origin">;
+type Editor =
+  | { kind: "create"; learner: string; alertId?: string }
+  | { kind: "case"; record: LegacyCase }
+  | { kind: "review"; detail: LegacyAlertDetail };
+
+function LegacyCourseWorkspace({ course, dataOrigin, revision, csrf }: {
+  course: string; dataOrigin: string; revision: number; csrf: string;
 }) {
+  const guard = useEditGuard();
+  const [localRevision, setLocalRevision] = useState(0);
   const [offset, setOffset] = useState(0);
   const [scope, setScope] = useState("all");
-  const [selected, setSelected] = useState<string | null>(null);
-  const params = new URLSearchParams({ limit: "25", offset: String(offset) });
-  if (scope !== "all") params.set("active", String(scope === "active"));
-  const { data, error } = useResource(
-    `v1/presentations/${encodeURIComponent(course)}/support-cases?${params}`,
-    casesSchema,
-    revision,
-  );
-  const lastOffset = data
-    ? Math.max(0, Math.floor((data.total - 1) / 25) * 25)
-    : offset;
+  const [dueOnly, setDueOnly] = useState(false);
+  const [focus, setFocus] = useState<{ learner: string; alertId?: string } | null>(null);
+  const [selected, setSelected] = useState<CaseReference | null>(null);
+  const [editor, setEditor] = useState<Editor | null>(null);
+  const [message, setMessage] = useState("");
+  const statusRef = useRef<HTMLDivElement>(null);
+  const refresh = revision + localRevision;
+  const cases = useLegacyCases({ course, dataOrigin, learner: focus?.learner ?? "", scope, dueOnly, offset, revision: refresh });
   useEffect(() => {
-    if (offset > lastOffset) setOffset(lastOffset);
-  }, [offset, lastOffset]);
-  return (
-    <>
-      <Panel
-        title="Earlier support episodes"
-        note="All statuses are included by default, including resolved and dismissed cases."
-      >
-        <label>
-          Case scope
-          <select
-            aria-label="Earlier case scope"
-            value={scope}
-            onChange={(e) => {
-              setScope(e.target.value);
-              setOffset(0);
-              setSelected(null);
-            }}
-          >
-            <option value="all">All episodes</option>
-            <option value="active">Active episodes</option>
-            <option value="closed">Closed episodes</option>
-          </select>
-        </label>
-        {error ? (
-          <Notice error>{error}</Notice>
-        ) : !data || offset > lastOffset ? (
-          <Loading />
-        ) : data.items.some((c) => c.presentation_id !== course) ? (
-          <Notice error>
-            The earlier-case response does not match the selected course.
-          </Notice>
-        ) : (
-          <>
-            <div
-              className="table-scroll"
-              tabIndex={0}
-              role="region"
-              aria-label="Earlier support cases"
-            >
-              <table>
-                <thead>
-                  <tr>
-                    <th>Student ID</th>
-                    <th>Status</th>
-                    <th>Last action</th>
-                    <th>Follow-up due</th>
-                    <th>History</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.items.map((c) => (
-                    <tr key={c.case_id}>
-                      <td>{c.learner_id}</td>
-                      <td>{label(c.status)}</td>
-                      <td>{c.last_action_at}</td>
-                      <td>{c.follow_up_due_at ?? "Not scheduled"}</td>
-                      <td>
-                        <button
-                          onClick={() => setSelected(c.case_id)}
-                          aria-label={`Open earlier case ${c.case_id}`}
-                        >
-                          Open history
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {!data.total && (
-              <p>
-                No support episodes match this scope. Absence of a case is not
-                evidence of low risk.
-              </p>
-            )}
-            <div className="pagination">
-              <span>
-                {data.total ? offset + 1 : 0}–
-                {Math.min(offset + 25, data.total)} of {data.total} episodes
-              </span>
-              <div>
-                <button
-                  disabled={!offset}
-                  onClick={() => {
-                    setOffset(Math.max(0, offset - 25));
-                    setSelected(null);
-                  }}
-                >
-                  Previous episodes
-                </button>
-                <button
-                  disabled={offset + 25 >= data.total}
-                  onClick={() => {
-                    setOffset(offset + 25);
-                    setSelected(null);
-                  }}
-                >
-                  Next episodes
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-      </Panel>
-      {selected && (
-        <LegacyCase
-          key={selected}
-          course={course}
-          id={selected}
-          revision={revision}
-        />
-      )}
-    </>
-  );
-}
-function LegacyCase({
-  course,
-  id,
-  revision,
-}: {
-  course: string;
-  id: string;
-  revision: number;
-}) {
-  const { data, error } = useResource(
-    `v1/support-cases/${encodeURIComponent(id)}`,
-    detailSchema,
-    revision,
-  );
-  return (
-    <Panel
-      title="Earlier case audit history"
-      note="Original timestamps, notes and revisions are retained; no current model score is inferred from these records."
-    >
-      {error ? (
-        <Notice error>{error}</Notice>
-      ) : !data ? (
-        <Loading />
-      ) : data.case.case_id !== id || data.case.presentation_id !== course ? (
-        <Notice error>This case does not match the selected course.</Notice>
-      ) : (
-        <>
-          <p>
-            Student {data.case.learner_id} · {label(data.case.status)} ·
-            revision {data.case.version}
-          </p>
-          <p>
-            Opened {data.case.opened_at} · closed{" "}
-            {data.case.closed_at ?? "Not closed"}
-          </p>
-          {data.actions.length ? (
-            data.actions.map((a) => (
-              <article className="diagnostic-sample" key={a.action_id}>
-                <h3>
-                  {label(a.action_type)} · revision {a.resulting_version}
-                </h3>
-                <p>
-                  {a.created_at} · {a.actor_id} ({a.actor_role})
-                </p>
-                {a.note && <p className="preserve-lines">{a.note}</p>}
-                {(a.previous_status || a.new_status) && (
-                  <p>
-                    Status: {label(a.previous_status)} → {label(a.new_status)}
-                  </p>
-                )}
-                {(a.previous_follow_up_due_at || a.new_follow_up_due_at) && (
-                  <p>
-                    Follow-up: {a.previous_follow_up_due_at ?? "Not scheduled"}{" "}
-                    → {a.new_follow_up_due_at ?? "Cleared"}
-                  </p>
-                )}
-                {a.linked_alert_id && <p>Linked alert: {a.linked_alert_id}</p>}
-              </article>
-            ))
-          ) : (
-            <p>No action history was returned.</p>
-          )}
-          <details>
-            <summary>Original linked alert references</summary>
-            {data.linked_alerts.map((a) => (
-              <p key={a.alert_id}>
-                Week {a.checkpoint} · alert {a.alert_id} · prediction{" "}
-                {a.prediction_id} · state {a.state_id} · {a.link_reason}. Linked{" "}
-                {a.linked_at}.
-              </p>
-            ))}
-          </details>
-        </>
-      )}
+    if (cases.data && offset > 0 && offset >= cases.data.total) {
+      setOffset(Math.max(0, Math.ceil(cases.data.total / 25) - 1) * 25);
+      setSelected(null);
+    }
+  }, [cases.data, offset]);
+  useEffect(() => {
+    if (message) statusRef.current?.focus();
+  }, [message]);
+  function focusLearner(learner: string, alertId?: string) {
+    if (!guard.leave()) return;
+    setFocus({ learner, alertId }); setOffset(0); setScope("all"); setDueOnly(false); setSelected(null); setMessage("");
+  }
+  function openEditor(next: Editor) {
+    if (guard.leave()) setEditor(next);
+  }
+  function saved(result?: LegacyMutation) {
+    if (result && editor?.kind === "create") {
+      setSelected({ case_id: result.case_id, presentation_id: course, learner_id: editor.learner, data_origin: dataOrigin });
+    }
+    setMessage(result ? `Saved earlier support action ${result.action_id}; episode revision ${result.resulting_version}.` : "Saved earlier alert review. Support-case status is unchanged.");
+    setEditor(null); setLocalRevision((value) => value + 1);
+  }
+  function reviewAction(detail: LegacyAlertDetail) {
+    if (!["new", "reviewed"].includes(detail.alert.status)) return <p>This alert is closed; its review history remains available.</p>;
+    return <button onClick={() => openEditor({ kind: "review", detail })}>Review earlier alert</button>;
+  }
+  return <>
+    {message && <div role="status" tabIndex={-1} ref={statusRef}><Notice>{message}</Notice></div>}
+    <LegacyLearners course={course} dataOrigin={dataOrigin} revision={refresh} onOpenCase={focusLearner} renderAlertActions={reviewAction} />
+    <LegacyAlerts course={course} dataOrigin={dataOrigin} revision={refresh} onOpenCase={focusLearner} renderAlertActions={reviewAction} />
+    <Panel title="Earlier support episodes" note="All statuses are included by default. Resolved and dismissed episodes remain in the original audit history.">
+      {focus ? <>
+        <p>Episode history for student {focus.learner}. All matching server pages are loaded before this learner's history is filtered.</p>
+        <button onClick={() => { if (guard.leave()) { setFocus(null); setOffset(0); setSelected(null); } }}>Show all earlier learners' episodes</button>
+        <button className="primary" onClick={() => openEditor({ kind: "create", learner: focus.learner, alertId: focus.alertId })}>Open or reuse earlier support case</button>
+      </> : <p>Select a learner above to review their complete episode history or open a case without an alert.</p>}
+      <label>Case scope<select aria-label="Earlier case scope" value={scope} onChange={(event) => {
+        if (!guard.leave()) return;
+        setScope(event.target.value); setOffset(0); setSelected(null);
+        if (event.target.value === "closed") setDueOnly(false);
+      }}>
+        <option value="all">All episodes</option><option value="active">Active episodes</option><option value="closed">Closed episodes</option>
+      </select></label>
+      <label className="check-field"><input type="checkbox" aria-label="Earlier follow-ups due only" checked={dueOnly} onChange={(event) => {
+        if (!guard.leave()) return;
+        setDueOnly(event.target.checked); setOffset(0); setSelected(null);
+        if (event.target.checked) setScope("active");
+      }} />Follow-ups due now (active episodes only, server UTC clock)</label>
+      <button onClick={() => { if (guard.leave()) setLocalRevision((value) => value + 1); }}>Refresh earlier records</button>
+      {cases.error ? <Notice error>{cases.error}</Notice> : !cases.data ? <Loading /> : <>
+        <div className="table-scroll" tabIndex={0} role="region" aria-label="Earlier support cases"><table>
+          <thead><tr><th>Student ID</th><th>Status</th><th>Last action</th><th>Follow-up due</th><th>History</th></tr></thead>
+          <tbody>{cases.data.items.map((record) => <tr key={record.case_id}>
+            <td>{record.learner_id}</td><td>{label(record.status)}</td><td>{record.last_action_at}</td><td>{record.follow_up_due_at ?? "Not scheduled"}</td>
+            <td><button aria-label={`Open earlier case ${record.case_id}`} onClick={() => { if (guard.leave()) setSelected(record); }}>Open history</button></td>
+          </tr>)}</tbody>
+        </table></div>
+        {!cases.data.items.length && <p>No support episodes match this page or scope. Absence of a case is not evidence of low risk.</p>}
+        <div className="pagination"><span>{cases.data.items.length ? offset + 1 : 0}–{cases.data.items.length ? offset + cases.data.items.length : 0} of {cases.data.total} episodes</span><div>
+          <button disabled={!offset} onClick={() => { if (guard.leave()) { setOffset(Math.max(0, offset - 25)); setSelected(null); } }}>Previous episodes</button>
+          <button disabled={offset + 25 >= cases.data.total} onClick={() => { if (guard.leave()) { setOffset(offset + 25); setSelected(null); } }}>Next episodes</button>
+        </div></div>
+      </>}
     </Panel>
-  );
+    {selected && <LegacyCaseHistory key={selected.case_id} selected={selected} revision={refresh}
+      edit={(record) => openEditor({ kind: "case", record })} focusLearner={focusLearner} reviewAction={reviewAction} />}
+    {editor && <EditDialog title={editor.kind === "create" ? "Open earlier support case" : editor.kind === "case" ? "Earlier support action" : "Earlier alert review"} close={() => setEditor(null)}>
+      {editor.kind === "create" ? <LegacyCreateCase course={course} learner={editor.learner} dataOrigin={dataOrigin} alertId={editor.alertId} csrf={csrf} saved={saved} />
+        : editor.kind === "case" ? <LegacyCaseAction record={editor.record} csrf={csrf} saved={saved} />
+          : <LegacyAlertReview detail={editor.detail} csrf={csrf} saved={() => saved()} />}
+    </EditDialog>}
+  </>;
+}
+
+function LegacyCaseHistory({ selected, revision, edit, focusLearner, reviewAction }: {
+  selected: CaseReference; revision: number; edit: (record: LegacyCase) => void;
+  focusLearner: (learner: string) => void; reviewAction: (detail: LegacyAlertDetail) => React.ReactNode;
+}) {
+  const guard = useEditGuard();
+  const [selectedAlert, setSelectedAlert] = useState("");
+  const { data, error } = useResource(`v1/support-cases/${encodeURIComponent(selected.case_id)}`, legacyCaseDetailSchema, revision);
+  const matches = data && data.case.case_id === selected.case_id &&
+    data.case.presentation_id === selected.presentation_id && data.case.learner_id === selected.learner_id &&
+    data.case.data_origin === selected.data_origin &&
+    data.actions.every((action) => action.case_id === selected.case_id);
+  const alert = matches ? data.linked_alerts.find((item) => item.alert_id === selectedAlert) : undefined;
+  return <>
+    <Panel title="Earlier case audit history" note="Original timestamps, notes and revisions are retained; no current model score is inferred from these records.">
+      {error ? <Notice error>{error}</Notice> : !data ? <Loading /> : !matches ? <Notice error>This case does not match the selected course, student or data origin.</Notice> : <>
+        <p>Student {data.case.learner_id} · {label(data.case.status)} · revision {data.case.version} · episode {data.case.case_id}</p>
+        <p>Opened {data.case.opened_at} · closed {data.case.closed_at ?? "Not closed"} · follow-up {data.case.follow_up_due_at ?? "Not scheduled"}</p>
+        <button onClick={() => focusLearner(data.case.learner_id)}>Show this learner's episode history</button>
+        {legacyActive.has(data.case.status) ? <button className="primary" onClick={() => edit(data.case)}>Manage earlier case</button> : <Notice>This episode is closed and cannot be changed. Select this learner's history to open a new episode for a later concern.</Notice>}
+        {data.actions.length ? data.actions.map((action) => <article className="diagnostic-sample" key={action.action_id}>
+          <h3>{label(action.action_type)} · revision {action.resulting_version}</h3>
+          <p>{action.created_at} · {action.actor_id} ({action.actor_role}) · action {action.action_id}</p>
+          {action.note && <p className="preserve-lines">{action.note}</p>}
+          {(action.previous_status || action.new_status) && <p>Status: {label(action.previous_status)} → {label(action.new_status)}</p>}
+          {(action.previous_follow_up_due_at || action.new_follow_up_due_at) && <p>Follow-up: {action.previous_follow_up_due_at ?? "Not scheduled"} → {action.new_follow_up_due_at ?? "Cleared"}</p>}
+          {action.linked_alert_id && <p>Linked alert: {action.linked_alert_id}</p>}
+        </article>) : <p>No action history was returned.</p>}
+        <h3>Original linked alert references</h3>
+        {data.linked_alerts.length ? data.linked_alerts.map((linked) => <article className="diagnostic-sample" key={linked.alert_id}>
+          <p>Week {linked.checkpoint} · alert {linked.alert_id} · prediction {linked.prediction_id} · state {linked.state_id} · {linked.link_reason}. Linked {linked.linked_at}.</p>
+          <button onClick={() => { if (guard.leave()) setSelectedAlert(linked.alert_id); }}>View linked alert {linked.alert_id}</button>
+        </article>) : <p>No alerts are linked to this episode.</p>}
+      </>}
+    </Panel>
+    {alert && <LegacyAlertEvidence key={alert.alert_id} course={selected.presentation_id} learner={selected.learner_id} alertId={alert.alert_id}
+      stateId={alert.state_id} dataOrigin={selected.data_origin} revision={revision}>{reviewAction}</LegacyAlertEvidence>}
+  </>;
 }

@@ -217,3 +217,62 @@ checkpoints; these are synthetic demonstration records, not accuracy results.
 Local ignored evidence: `artifacts/react-migration/hosted-checks.json`,
 `hosted-operator-check.txt` and hosted screenshots. Instructor review is next;
 Streamlit remains the operational fallback and the editor for earlier v1 cases.
+
+## Final parity candidate (8 October 2026)
+
+The new source closes the earlier v1 editing/activity gap: authorized roster,
+learner activity/evidence and prediction timelines, all historical alerts (not
+only the latest or case-linked ones), case creation/reuse, notes, transitions,
+explicit UTC follow-up scheduling/clearing, alert attachment and review. Earlier
+episodes stay separate from current v2 cases. No student communication is sent.
+Complete learner episode lookup reads every matching page and rejects changing,
+duplicate or wrongly scoped page responses instead of showing partial history.
+
+Case actions retain body idempotency keys; alert reviews retain header keys.
+Unknown save outcomes freeze the exact request; explicit retry cannot create a
+second action. Conflicts preserve the draft and do not overwrite another edit.
+Closed episodes remain terminal. Notes are escaped and ID-only screens warn
+that free-text instructor notes may contain identifying information.
+
+A real temporary-SQLite API check exposed a pre-existing linked-alert timestamp
+serialization error. The v1 support-case response now restores UTC metadata
+when SQLite returns a naive stored UTC timestamp, matching its existing
+case/action serialization. No stored timestamp or schema is changed.
+
+Profile navigation now survives Refresh data, checkpoint changes and privacy
+changes while evidence is still cleared/reloaded. An API outage removes stale
+data and provides an explicit retry. Gateway HTML/malformed JSON is shown as a
+safe actionable error, never raw returned content; API redirects are refused.
+
+The real hosted v2 support-note save on October 7 succeeded on one previously
+untouched synthetic ED220 v2 learner. It recorded a labelled test note, resolved
+the case, scheduled no follow-up and left snapshot/model data unchanged. The
+post-refresh check exposed the navigation issue above; the final persistence
+and cross-checkpoint browser gate must still be completed after deployment.
+
+The paired isolated model diagnostic is complete: on twelve saved synthetic
+failures, deployed v3.3 produced five accepted/seven rejected results; candidate
+v3.4 produced eight first-pass plus two corrected accepted results/two rejected.
+Both runs also passed 24 model-generated frozen controls and 24 separate
+pre-inference quality abstentions. This measures operational consistency, not
+predictive accuracy. The candidate remains uncommitted and excluded from the
+release. No original failed jobs, saved scores or prompt identities are changed;
+no global reanalysis or validator relaxation is performed.
+
+Local and hosted gate evidence is recorded in the resume checkpoint and ignored
+`artifacts/react-migration/`; this section does not claim the new release is
+already hosted. The October 5 deployment above remains the last verified live
+release until the final hosted gate is recorded.
+
+Local acceptance: production build/typecheck and npm audit (zero findings),
+14 legacy browser groups, 6 navigation/gateway groups, plus the existing
+foundation 10, instructor-action 7, edge 4, model-operation 12 and parity 7
+groups passed with no JavaScript errors. Thirty deterministic component groups
+cover academic, policy and provenance semantics. Sixty-six focused legacy,
+support and browser-auth API tests passed, including real idempotency, conflict,
+linked-alert UTC and grant-revocation checks against temporary SQLite.
+Legacy browser POSTs are intercepted fixtures; the new API tests perform real
+writes only in a temporary test database. They are not hosted mutation tests.
+Eight older `test_phase4_api.py` cases lack explicit course grants and fail
+under current authorization; these obsolete fixtures are not included in the
+passing count, and production authorization was not relaxed to satisfy them.

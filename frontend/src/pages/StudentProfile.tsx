@@ -21,6 +21,8 @@ import {
   score,
 } from "../components/ui";
 
+export type ProfileTab = "Evidence" | "Academic records" | "Risk history" | "Support record";
+
 export function StudentProfile({
   course,
   id,
@@ -28,6 +30,8 @@ export function StudentProfile({
   privacy,
   revision,
   csrf,
+  tab,
+  setTab,
   back,
 }: {
   course: string;
@@ -36,9 +40,10 @@ export function StudentProfile({
   privacy: Privacy;
   revision: number;
   csrf: string;
+  tab: ProfileTab;
+  setTab: (tab: ProfileTab) => void;
   back: () => void;
 }) {
-  const [tab, setTab] = useState("Evidence");
   const [savedRevision, setSavedRevision] = useState(0);
   const [flash, setFlash] = useState("");
   const savedMessage = useRef<HTMLDivElement>(null);
@@ -74,7 +79,7 @@ export function StudentProfile({
     data.analysis?.policy_version === data.current_policy_version;
   const output = usable ? data.analysis?.output : null;
   const failure = failureSchema.safeParse(data.job_error_detail);
-  const tabs = [
+  const tabs: ProfileTab[] = [
     "Evidence",
     "Academic records",
     "Risk history",

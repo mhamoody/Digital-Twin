@@ -100,10 +100,11 @@ files. Streamlit on 8501 remains the immediate operational fallback.
 
 - Verify correct asset release, protected sign-in, allowed courses, names/ID
   mode, learner evidence, settings and model/worker progress through the proxy.
-- Current course-operation workflows are migrated. Earlier **v1** support
-  episodes have a separate read-only history page; their editing, alert and
-  older activity workflows deliberately remain in Streamlit's **Student support**
-  mode, linked from that page. This is not retirement of the old interface.
+- Current course-operation workflows are migrated. The final parity candidate
+  adds separate **v1** learner activity, paginated historical alerts, case
+  creation/reuse, versioned actions, follow-ups and alert reviews under
+  **Earlier support history**. Original v1 records remain distinct from v2
+  cases. Streamlit is still a fallback, not deleted or stopped by this rollout.
 - Readiness and saved analyses are not proof of a new inference. Report any
   real model check separately, with its sample scope and validation result.
 - Institutional LTI/onQ SSO, production availability and a full accessibility
