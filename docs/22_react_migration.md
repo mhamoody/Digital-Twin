@@ -324,3 +324,37 @@ Local ignored evidence: `hosted-checks.json`, `hosted-legacy-final.json`,
 `final-services-restored.json`, `final-service-acceptance.json`, and screenshots
 under `artifacts/react-migration/`. This completes the hosted dashboard phase,
 not institutional SSO, full accessibility certification, or accuracy validation.
+
+### Bounded correction follow-up; not deployed (8 October 2026)
+
+After the dashboard gate, two isolated correction-stage experiments were run
+against the same twelve saved synthetic failures and 48 frozen controls. Both
+kept the deployed v3.3 primary request and independent validator unchanged.
+Neither changed production code, saved analyses, queue states or learner data.
+
+| Correction candidate | Twelve known-failure cases | Frozen controls |
+| --- | --- | --- |
+| Shorter evidence-focused recheck | 6 first-pass accepted; 6 rejected | 24 first-pass accepted; 24 pre-inference quality abstentions |
+| Directional examples explaining non-success risk | 7 first-pass accepted; 3 correction-stage accepted; 2 rejected | 24 first-pass accepted; 24 pre-inference quality abstentions |
+
+The final two rejections remain academic-corroboration policy conflicts. The
+other inspected failures include elevated scores citing only protective facts;
+this is not missing JSON fields or a general missing-data problem. The validator
+appropriately withheld unsupported scores. No scores were clipped, no concern
+claims were invented, and rejected outputs were not recast as model abstentions.
+
+These are development diagnostics on known failures, not held-out accuracy or
+proof of perfect reliability. First-pass outcomes varied, and the hosted Ollama
+version was 0.40.0; earlier runs cannot establish a controlled causal comparison
+across runtime changes. The control abstentions did not call the model and must
+not be counted as 48 successful generations. These controls also do not by
+themselves validate correction-stage performance on unseen cases.
+
+Neither candidate was promoted: twelve original current failed jobs remain
+visible and their scores unpublished. The final report can use the completed
+dashboard evidence and these explicitly limited model diagnostics; it must not
+claim that all model edge cases were solved. Any later correction-stage rollout
+needs its own version/request hashes and comparison safeguards while preserving
+approved primary v3.3 results, rather than triggering a whole-dataset reanalysis.
+Ignored artifacts: `compact-recheck-summary.json`, `directional-recheck-summary.json`
+and their matching `*-results.jsonl` files in `artifacts/react-migration/`.
