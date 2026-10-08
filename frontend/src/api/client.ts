@@ -26,6 +26,7 @@ export async function request<T>(
     method: options.body === undefined ? "GET" : "POST",
     credentials: "same-origin",
     cache: "no-store",
+    redirect: "error",
     signal: AbortSignal.any([
       ...(options.signal ? [options.signal] : []),
       AbortSignal.timeout(30000),
@@ -77,7 +78,24 @@ export async function request<T>(
             `The request failed (${response.status}). Try again or contact the operator.`),
     );
   }
-  const parsed = schema.safeParse(await response.json());
+  const contentType = response.headers.get("Content-Type")?.split(";")[0].trim().toLowerCase();
+  if (contentType !== "application/json" && !contentType?.endsWith("+json")) {
+    throw new ApiError(
+      502,
+      "The hosting gateway returned a page instead of API data. Reopen the dashboard to renew hosting sign-in, then check saved history before repeating an action.",
+    );
+  }
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    // A proxy HTML page or malformed JSON must never be echoed in the UI.
+    throw new ApiError(
+      502,
+      "The service returned unreadable data. Refresh and check saved history before repeating an action. No automatic retry was sent.",
+    );
+  }
+  const parsed = schema.safeParse(payload);
   if (!parsed.success) {
     // Only field paths, never response bodies, learner records or credentials in errors.
     const fields = [

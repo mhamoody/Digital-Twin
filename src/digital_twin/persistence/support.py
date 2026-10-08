@@ -215,7 +215,10 @@ class SupportStore:
             return CaseDetail(case=view(CaseView,case), actions=[view(ActionView,a) for a in actions],
                 linked_alerts=[LinkedAlertView(alert_id=a.alert_id,prediction_id=p.prediction_id,
                     state_id=s.state_id,checkpoint=s.checkpoint_week,risk_band=p.risk_band,
-                    linked_at=l.linked_at,link_reason=l.link_reason) for l,a,s,p in links])
+                    # SQLite drops timezone metadata for stored UTC timestamps,
+                    # just as for case/action dates normalized by view() above.
+                    linked_at=(l.linked_at.replace(tzinfo=UTC) if l.linked_at.tzinfo is None else l.linked_at),
+                    link_reason=l.link_reason) for l,a,s,p in links])
 
     def list(self, presentation_id, *, active=None, follow_up_due=False, limit=50, offset=0):
         self._authorize(presentation_id)

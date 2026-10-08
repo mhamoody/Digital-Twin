@@ -36,8 +36,11 @@ See `docs/23_react_lobot.md` for the parallel 8502 deployment and rollback.
   and single-flight requests for operations without an idempotency guarantee.
 - `src/pages/AnalysisProvenance.tsx`, `DemoGuide.tsx`: safe validation traces,
   historical/baseline distinctions and verified synthetic scenario navigation.
-- `src/pages/LegacyHistory.tsx`: authorized, separate read-only v1 case history;
-  older case editing remains in the original Streamlit workspace.
+- `src/pages/LegacyHistory.tsx`, `LegacyLearners.tsx`, `LegacyCaseActions.tsx`:
+  authorized, separate v1 roster/activity, historical alerts, case creation,
+  case actions, follow-ups and audit history. No v1/v2 record merging.
+- `src/hooks/useLegacySave.ts`, `useLegacyCases.ts`: exact body/header-key
+  idempotent retries, revision conflicts and complete paginated episode lookup.
 - `src/pages/`: overview, roster and student evidence/history screens.
 - `src/styles.css`: responsive design tokens and page/component styling.
 - `vite.config.ts`: Vite build and optional development API proxy.
@@ -120,10 +123,12 @@ FastAPI-served production build for acceptance checks.
   users with the same visible client address.
 - Browser data contracts reject malformed responses rather than inventing risk
   scores. Request failures do not trigger automatic mutation retries.
-- Hash navigation and relative asset/API paths support a proxy directory. For
-  Lobot later, use its exact HTTPS origin, `Secure=1`, and the assigned
-  `/user/<group>/proxy/<port>/` cookie path. A local prefix simulation passed;
-  real hosted authentication and deployment have **not** been verified yet.
+- Hash navigation and relative asset/API paths support a proxy directory. Lobot
+  uses its exact HTTPS origin, `Secure=1`, and the assigned
+  `/user/<group>/proxy/<port>/` cookie path. The parallel 8502 deployment passed
+  authenticated read-only hosted checks on October 5; see docs/22 for the
+  scope and later acceptance updates. Gateway HTML and malformed JSON never
+  appear as raw parser errors, and API requests refuse authentication redirects.
 - Pilot account login is not LTI or Brightspace/onQ SSO. These remain separate
   institution-approved integration tasks.
 
@@ -138,6 +143,9 @@ python tests/check_react_instructor_actions.py
 python tests/check_react_phase2_edges.py
 python tests/check_react_phase3_browser.py
 python tests/check_react_phase4_browser.py
+python tests/check_react_legacy_browser.py
+python tests/check_react_refresh_browser.py
+python -m pytest tests/test_react_legacy_workflows.py -q
 python -m pytest tests/test_react_legacy_discovery.py tests/test_react_release.py -q
 node tests/check_react_academic_semantics.mjs
 node tests/check_react_policy_semantics.mjs
