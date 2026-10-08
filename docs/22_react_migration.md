@@ -276,3 +276,51 @@ writes only in a temporary test database. They are not hosted mutation tests.
 Eight older `test_phase4_api.py` cases lack explicit course grants and fail
 under current authorization; these obsolete fixtures are not included in the
 passing count, and production authorization was not relaxed to satisfy them.
+
+## Final hosted dashboard acceptance (8 October 2026)
+
+The candidate above is now deployed and verified at
+`https://lobot.cs.queensu.ca/user/group-digi2026-g12/proxy/8502/`.
+Application commit: `30db8351d11049b09ae20170dafadbf8d0dcb5fc`, merging the tested
+frontend changes with the team's newer commits on `reactvite`. Release SHA-256:
+`12a1f7c7297a3c73d66d3924a5d2407713601a0977e4b8ef10e8c8dcb4b8e491`.
+
+Fifteen hosted read-only groups passed again on this exact release, plus five
+new earlier-workspace groups: original roster/alerts, real learner evidence and
+activity, case-editor open/cancel, historical alert review open/cancel, and
+responsive expanded evidence. Widths 320/390/768/1440px were checked. No browser
+JavaScript errors or modifying requests occurred in those two check suites.
+Earlier v1 edits are now available in React, not only in Streamlit.
+
+The already-saved October 7 synthetic support note was read back without another
+write. Exactly one event remains; the resolved case and note persist across
+refresh and checkpoint changes (weeks 8 and 16), with the Support record section
+retained. Its learner snapshot and model assessment are unchanged. No real
+student was contacted or given an intervention by this acceptance exercise.
+
+The original API, Streamlit and worker were found stopped after the environment
+changed. They were restored only after verifying no live duplicate worker,
+no queued/running historical jobs, no unassessed current checkpoints and the
+unchanged approved Qwen runtime. All three HTTP services returned readiness
+200; exactly one worker was running with a fresh idle heartbeat. No model jobs
+were retried or newly created by that service restoration.
+
+A private SQLite backup and prior frontend bundle were preserved in
+`var/backups/react-final-release-20261008/`. Two-direction SQL comparisons across
+all 41 tables found no data changes from deployment. After service restoration,
+only `workspace_runtime` changed for the worker heartbeat; all other tables,
+source evidence, model jobs/results, support history, accounts and environment
+configuration remained unchanged. SQLite integrity was `ok`.
+
+At this dashboard gate the seven courses contained 12,960 current validated
+assessments, 12 explicit abstentions and 12 rejected analyses among 12,984
+student-checkpoints. These are operational counts, not predictive accuracy.
+The existing rejected cases remain an independent model-correction task; this
+UI gate does not resolve or conceal them. New model experiments must remain
+separate from deployment evidence and must not invalidate approved saved work.
+
+Local ignored evidence: `hosted-checks.json`, `hosted-legacy-final.json`,
+`hosted-save-acceptance.json`, `final-deploy-result.json`,
+`final-services-restored.json`, `final-service-acceptance.json`, and screenshots
+under `artifacts/react-migration/`. This completes the hosted dashboard phase,
+not institutional SSO, full accessibility certification, or accuracy validation.

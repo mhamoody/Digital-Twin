@@ -100,8 +100,8 @@ files. Streamlit on 8501 remains the immediate operational fallback.
 
 - Verify correct asset release, protected sign-in, allowed courses, names/ID
   mode, learner evidence, settings and model/worker progress through the proxy.
-- Current course-operation workflows are migrated. The final parity candidate
-  adds separate **v1** learner activity, paginated historical alerts, case
+- Current course-operation workflows are migrated. The verified October 8 release
+  includes separate **v1** learner activity, paginated historical alerts, case
   creation/reuse, versioned actions, follow-ups and alert reviews under
   **Earlier support history**. Original v1 records remain distinct from v2
   cases. Streamlit is still a fallback, not deleted or stopped by this rollout.
@@ -109,3 +109,7 @@ files. Streamlit on 8501 remains the immediate operational fallback.
   real model check separately, with its sample scope and validation result.
 - Institutional LTI/onQ SSO, production availability and a full accessibility
   certification are not supplied by this parallel pilot deployment.
+
+The October 8 application release is `30db835`; its actual hosted acceptance and
+backup checks are recorded in `docs/22_react_migration.md`. Documentation-only
+follow-up commits do not imply a rebuilt or restarted application.

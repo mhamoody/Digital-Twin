@@ -3,13 +3,16 @@
 The real frontend migration, on branch **reactvite**. This is not the earlier
 in-memory mock under `artifacts/react-focus-demo`.
 
-**Current gate: parity/usability (Phase 4), parallel rollout candidate.** Login, reads and instructor
+**Current gate: hosted dashboard acceptance complete (8 October 2026).** Login, reads and instructor
 edits use FastAPI and its real authorization/database. Flags, watchlists,
 priority, audited support actions, follow-ups, resources and academic/risk
 charts, course-policy editing, analysis queue/automation controls and safe
 diagnostics are implemented. Remaining list, empty-course and diagnostic gaps
-are checked. Earlier v1 support episodes are separately readable; older editing
-remains explicitly available in Streamlit, not silently removed or merged.
+are checked. Earlier v1 learner evidence, historical alerts and support editing
+are available separately in React, without merging older episodes into current
+cases. Streamlit remains available as a fallback. The deployed application is
+`30db835`; see `docs/22_react_migration.md` for exact hosted evidence and the
+separate remaining model-correction limitation.
 See `docs/23_react_lobot.md` for the parallel 8502 deployment and rollback.
 
 ## Code map
