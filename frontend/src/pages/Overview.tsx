@@ -65,7 +65,7 @@ export function Overview({
         <Metric
           title="Insufficient evidence"
           value={summary.insufficient_data}
-          note="An explicit model abstention"
+          note="Assessment withheld; check evidence and quality"
           tone="lilac"
           onClick={() => openList("insufficient_data")}
         />

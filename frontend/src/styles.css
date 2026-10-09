@@ -540,21 +540,6 @@
     margin: 0 auto;
     min-width: 0;
   }
-  .migration-banner {
-    padding: 10px 14px;
-    background: #ece9f3;
-    color: #514567;
-    font-size: 12px;
-    border-radius: 7px;
-    line-height: 1.7;
-    margin-bottom: 28px;
-  }
-  .migration-banner span {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    margin-right: 10px;
-  }
   .page-heading {
     display: flex;
     justify-content: space-between;
@@ -592,6 +577,32 @@
   }
   .context-bar > label {
     min-width: 138px;
+  }
+  .course-versions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 18px;
+    font-size: 11px;
+    color: var(--muted);
+    margin: 8px 2px 14px;
+  }
+  .course-versions label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    margin: 0;
+  }
+  .course-versions input {
+    width: 16px;
+    height: 16px;
+    min-height: 0;
+    flex-shrink: 0;
+    margin: 0;
+    accent-color: var(--teal);
   }
   .course-caption {
     display: flex;
@@ -1484,10 +1495,6 @@
     }
     .workspace-shell main {
       padding: 18px 16px 0;
-    }
-    .migration-banner {
-      font-size: 11px;
-      margin-bottom: 22px;
     }
     .page-heading {
       gap: 10px;

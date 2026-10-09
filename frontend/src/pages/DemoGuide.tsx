@@ -77,7 +77,7 @@ export function DemoGuide({
       note="Fictional scenario design, not model findings or an accuracy claim."
     >
       <details onToggle={(event) => setExpanded(event.currentTarget.open)}>
-        <summary>Choose a demonstration record</summary>
+        <summary>Explore a student scenario</summary>
         {expanded && (
           <GuideSelection
             key={course.presentation_id}
@@ -91,10 +91,9 @@ export function DemoGuide({
           This guide is not sent to the predictor. Opening a record never queues
           analysis, edits data or changes course settings.
         </p>
-        <h3>Missing-feed check · separate controlled test</h3>
+        <h3>When source data is missing</h3>
         <p>
-          The main demonstration cohort has complete applicable feeds. In
-          separate missing-feed tests, absent grades or activity remain
+          This synthetic cohort has complete applicable feeds. Absent grades or activity remain
           unavailable, never zero. If essential evidence is insufficient, the
           system abstains without a risk score. Refresh does not create or
           repair missing source records.
@@ -122,9 +121,9 @@ function GuideSelection({
   return (
     <div className="editor-form">
       <label>
-        Demonstration example
+        Student scenario
         <select
-          aria-label="Demonstration example"
+          aria-label="Student scenario"
           value={selected}
           onChange={(event) => setSelected(Number(event.target.value))}
         >
@@ -147,12 +146,11 @@ function GuideSelection({
         <Loading />
       ) : !data.snapshot ? (
         <Notice>
-          This learner has no prepared snapshot for the demonstration
-          checkpoint.
+          No saved evidence snapshot is available for this student at this checkpoint.
         </Notice>
       ) : (
         <button onClick={() => open(example.learner, example.week)}>
-          Open demonstration record
+          Open student record
         </button>
       )}
     </div>

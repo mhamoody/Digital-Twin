@@ -113,3 +113,33 @@ files. Streamlit on 8501 remains the immediate operational fallback.
 The October 8 application release is `30db835`; its actual hosted acceptance and
 backup checks are recorded in `docs/22_react_migration.md`. Documentation-only
 follow-up commits do not imply a rebuilt or restarted application.
+
+## October 9 presentation cleanup
+
+The selector now shows the highest numbered **authorized synthetic course
+version** by default. “Include earlier course versions” restores the older
+offerings with explicit labels. Grouping uses the synthetic course/module/term
+identity, never its title alone. Unversioned LMS courses and different terms
+remain separate. This is navigation grouping, not a database archive or a
+change to instructor permissions; all original records remain accessible.
+
+Generated synthetic names such as `Demo learner 1-001` display as
+`learner 1-001` consistently in roster search, sorting and student profiles.
+Stored names, learner keys and all evidence are unchanged. Real/custom names
+are not rewritten; ID-only server-side filtering still applies.
+
+Obsolete React-candidate/migration labels are removed. Synthetic provenance,
+uncalibrated-score explanations, failure diagnostics and the no-automatic-contact
+boundary remain visible. The insufficient-evidence card covers both quality-gate
+and model abstentions rather than describing every abstention as a model answer.
+
+Local checks: production build/typecheck; 32 backend identity/security/instructor
+tests; version-grouping checks; 45 browser check groups (10 foundation, 7 support
+actions, 4 edge cases, 12 model controls, 6 refresh/recovery, 6 cleanup). Browser
+save/queue tests use the isolated synthetic preview only. Failure/resume edge
+states use explicit fixtures, not claimed new hosted model results.
+
+Deploy only the React process through the checked-bundle workflow above. Back up
+the shared database and old frontend first, then verify hosted course choices,
+names, core pages and service health. No data migration, reimport, model change,
+failure reset or worker restart is needed for this release.

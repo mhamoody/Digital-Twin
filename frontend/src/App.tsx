@@ -30,6 +30,7 @@ import type { Filters } from "./pages/Students";
 import { StudentProfile } from "./pages/StudentProfile";
 import type { ProfileTab } from "./pages/StudentProfile";
 import { EditGuard, useEditGuard } from "./hooks/editGuard";
+import { courseChoices } from "./courseChoices";
 
 type Page =
   "overview" | "students" | "support" | "settings" | "health" | "legacy";
@@ -149,12 +150,12 @@ function Login({
             <span>03</span>Record human support
           </div>
         </div>
-        <small>React migration · instructor-workflow candidate</small>
+        <small>Evidence, context and instructor-led support</small>
       </section>
       <section className="login-form">
         <ShieldCheck size={30} />
         <h2>Welcome back</h2>
-        <p>Sign in with your instructor pilot account.</p>
+        <p>Sign in with your instructor account.</p>
         <form onSubmit={submit}>
           <label>
             Username
@@ -182,8 +183,7 @@ function Login({
           </button>
         </form>
         <small>
-          Access is limited to your assigned courses. No institutional LMS
-          sign-in is claimed in this pilot.
+          Use your Course Twin account. Access is limited to your assigned courses.
         </small>
       </section>
     </main>
@@ -205,6 +205,7 @@ function WorkspaceApp({
     revision,
   );
   const [courseId, setCourseId] = useState("");
+  const [includeEarlier, setIncludeEarlier] = useState(false);
   const [selectedWeek, setWeek] = useState<number | null>(null);
   const [privacy, setPrivacy] = useState<Privacy>("name_id");
   const [page, setPage] = useState<Page>("overview");
@@ -217,9 +218,11 @@ function WorkspaceApp({
   const [logoutError, setLogoutError] = useState("");
   const dialog = useRef<HTMLDialogElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
-  const course =
-    courses?.items.find((c) => c.presentation_id === courseId) ??
-    courses?.items[0];
+  const choices = courseChoices(courses?.items ?? []);
+  const requestedCourse = courses?.items.find((c) => c.presentation_id === courseId);
+  const course = requestedCourse
+    ? includeEarlier ? requestedCourse : choices.replacement(requestedCourse)
+    : choices.current[0];
   const week =
     selectedWeek !== null && course?.checkpoints.includes(selectedWeek)
       ? selectedWeek
@@ -374,11 +377,6 @@ function WorkspaceApp({
           </div>
         </header>
         <main id="main-content" tabIndex={-1}>
-          <div className="migration-banner">
-            <span>REACT CANDIDATE</span> Instructor records, course expectations
-            and analysis controls use the connected database. Changes here are
-            saved. The original Streamlit workspace remains available.
-          </div>
           {logoutError && <Notice error>{logoutError}</Notice>}
           {page === "legacy" ? (
             <>
@@ -401,7 +399,7 @@ function WorkspaceApp({
           ) : !courses ? (
             <Loading />
           ) : !course ? (
-            <Notice>No prepared courses are assigned to this account.</Notice>
+            <Notice>No courses are assigned to this account.</Notice>
           ) : (
             <>
               <div className="page-heading">
@@ -438,11 +436,20 @@ function WorkspaceApp({
                       setFilters(initialFilters);
                     }}
                   >
-                    {courses.items.map((c) => (
+                    {choices.current.map((c) => (
                       <option key={c.presentation_id} value={c.presentation_id}>
-                        {c.title ?? c.presentation_id}
+                        {choices.optionLabel(c)}
                       </option>
                     ))}
+                    {includeEarlier && choices.earlier.length > 0 && (
+                      <optgroup label="Earlier course versions">
+                        {choices.earlier.map((c) => (
+                          <option key={c.presentation_id} value={c.presentation_id}>
+                            {choices.optionLabel(c)}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                 </label>
                 <label>
@@ -483,18 +490,45 @@ function WorkspaceApp({
                   </select>
                 </label>
               </div>
+              {choices.earlier.length > 0 && (
+                <div className="course-versions">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={includeEarlier}
+                      onChange={(e) => {
+                        if (!guard.leave()) return;
+                        const show = e.target.checked;
+                        setIncludeEarlier(show);
+                        // Keep the same family selected when closing its older version.
+                        if (!show && choices.earlierIds.has(course.presentation_id)) {
+                          setCourseId(choices.replacement(course).presentation_id);
+                          setWeek(null);
+                          setStudent(null);
+                          setFilters(initialFilters);
+                        }
+                      }}
+                    />
+                    Include earlier course versions
+                  </label>
+                  <span>Previous records and support history are preserved.</span>
+                </div>
+              )}
               <div className="course-caption">
                 <strong>{course.title ?? course.presentation_id}</strong>
                 <span>{course.presentation_id}</span>
                 <Badge tone="lilac">{label(course.data_origin)} data</Badge>
+                {choices.earlierIds.has(course.presentation_id) && (
+                  <Badge tone="amber">Earlier course version</Badge>
+                )}
                 {week !== null && (
                   <span>Evidence through day {week * 7 - 1}</span>
                 )}
               </div>
               {["synthetic", "manual_test"].includes(course.data_origin) && (
                 <p className="fineprint">
-                  Demonstration course: fictional students and records. These
-                  results are not evidence of predictive accuracy.
+                  Synthetic course records · fictional students. Assessment
+                  results do not establish real-world predictive accuracy.
                 </p>
               )}
               {privacy === "id_only" && (
@@ -549,7 +583,7 @@ function WorkspaceApp({
           )}
           <footer className="workspace-footer">
             <span>Course Twin · Evidence-grounded instructor support</span>
-            <span>React migration · no automated student contact</span>
+            <span>Instructor-led decisions · no automated student contact</span>
           </footer>
         </main>
       </div>

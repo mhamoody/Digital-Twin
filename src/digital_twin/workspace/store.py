@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import uuid
 from collections import Counter
 from datetime import UTC, datetime, timedelta
@@ -53,6 +54,16 @@ def now():
 
 def payload(value):
     return value.model_dump(mode="json") if hasattr(value, "model_dump") else value
+
+
+def _learner_display_name(enrolment: dict, learner_id: str) -> str:
+    """Remove the generated placeholder marker for display, never stored identity."""
+    name = enrolment.get("display_name") or learner_id
+    if enrolment.get("data_origin") == "synthetic" and re.fullmatch(
+        r"Demo learner [1-9][0-9]*-[0-9]{3,}", name
+    ):
+        return name.removeprefix("Demo ")
+    return name
 
 
 class Store(SchedulingMixin):
@@ -695,7 +706,7 @@ class Store(SchedulingMixin):
                 items.append(
                     {
                         "learner_id": enrol.learner_id,
-                        "display_name": (ep.get("display_name") or enrol.learner_id)
+                        "display_name": _learner_display_name(ep, enrol.learner_id)
                         if privacy == "name_id"
                         else enrol.learner_id,
                         "checkpoint_week": week,
@@ -906,7 +917,7 @@ class Store(SchedulingMixin):
             return identity_view(
                 {
                     "learner_id": learner_id,
-                    "display_name": enrol.payload.get("display_name") or learner_id,
+                    "display_name": _learner_display_name(enrol.payload, learner_id),
                     "privacy": privacy,
                     "current_course_day": current_course_day(course.payload),
                     "analysis_status": analysis_status,
