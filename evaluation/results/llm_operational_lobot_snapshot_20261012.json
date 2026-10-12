@@ -1,0 +1,100 @@
+{
+  "snapshot_date": "2026-10-12",
+  "source_environment": "Lobot operational workspace database",
+  "evidence_type": "operational aggregate evidence",
+  "provenance_note": "Read-only aggregate query results collected from the Lobot operational workspace database on 2026-10-12 and manually archived in the evaluation repository.",
+  "model": "qwen2.5:7b",
+  "model_digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+  "wire_contract": "risk-decision-v3",
+  "versions": {
+    "course-risk-qwen-v2.1": {
+      "analyses": 356,
+      "validation_outcome_semantics": "not recorded using modern semantics",
+      "average_latency_seconds": 7.944
+    },
+    "course-risk-qwen-v2.2": {
+      "analyses": 67,
+      "validation_outcome_semantics": "not recorded using modern semantics",
+      "average_latency_seconds": 8.030
+    },
+    "course-risk-qwen-v2.3": {
+      "first_pass_validated": 14,
+      "repaired_validated": 1,
+      "quality_abstained": 0,
+      "first_pass_share_among_validated_outputs_percent": 93.3333333333,
+      "repair_share_among_validated_outputs_percent": 6.6666666667,
+      "first_pass_average_latency_seconds": 7.894,
+      "repaired_average_latency_seconds": 13.189
+    },
+    "course-risk-qwen-v3.2": {
+      "model": "qwen2.5:7b",
+      "model_digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+      "wire_contract": "risk-decision-v3",
+      "first_pass_validated": 6914,
+      "repaired_validated": 305,
+      "quality_abstained": 0,
+      "total_saved_validated": 7219,
+      "first_pass_share_among_validated_outputs_percent": 95.7750380939,
+      "repair_share_among_validated_outputs_percent": 4.2249619061,
+      "first_pass_average_latency_seconds": 5.639,
+      "repaired_average_latency_seconds": 12.576
+    },
+    "course-risk-qwen-v3.3": {
+      "model": "qwen2.5:7b",
+      "model_digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+      "wire_contract": "risk-decision-v3",
+      "first_pass_validated": 12600,
+      "repaired_validated": 361,
+      "quality_abstained": 12,
+      "total_saved_validated": 12961,
+      "first_pass_share_among_validated_outputs_percent": 97.2147210863,
+      "repair_share_among_validated_outputs_percent": 2.7852789137,
+      "first_pass_average_latency_seconds": 5.266,
+      "repaired_average_latency_seconds": 11.115
+    }
+  },
+  "overall_job_history": {
+    "validated": 20618,
+    "abstained": 12,
+    "failed": {
+      "ANALYSIS_SUPERSEDED": 5741,
+      "MODEL_ACTION_INVALID": 149,
+      "MODEL_RISK_NOT_SUPPORTED": 64,
+      "MODEL_ACTION_NOT_SUPPORTED": 58,
+      "MODEL_SCHEMA_INVALID": 22,
+      "MODEL_POLICY_CONFLICT": 8
+    },
+    "model_or_contract_validation_failure_total_excluding_analysis_superseded": 301,
+    "analysis_superseded_interpretation": "Lifecycle/history state; not a normal model-quality failure."
+  },
+  "metadata_limitations": [
+    "workspace_analysis_job does not store prompt_version.",
+    "workspace_analysis_attempt does not store prompt_version.",
+    "No usable inference_trace table was present in the inspected live database.",
+    "Failed jobs cannot be reliably attributed to course-risk-qwen-v3.2 or course-risk-qwen-v3.3.",
+    "Prompt version must not be inferred from timestamps.",
+    "Version-specific total failure rates cannot be reliably estimated from the current database."
+  ],
+  "interpretation_boundaries": {
+    "supports": [
+      "versioned prompt evolution",
+      "fixed Qwen2.5:7b identity across mature versions",
+      "deterministic output validation",
+      "bounded repair",
+      "explicit quality abstention",
+      "rejection of unsupported, schema-invalid, or policy-conflicting outputs",
+      "auditable prompt and model provenance for saved analyses"
+    ],
+    "does_not_support": [
+      "predictive accuracy",
+      "AUROC or Average Precision",
+      "calibrated probabilities",
+      "causal correctness",
+      "educator effectiveness",
+      "real-world generalization",
+      "superiority of Qwen over Logistic Regression"
+    ],
+    "denominator_note": "First-pass and repair shares for v3.2 and v3.3 use saved validated outputs only. Abstentions and failed jobs are not included.",
+    "overall_rate_note": "No overall success percentage is reported because the available job-history categories do not establish a scientifically comparable denominator."
+  }
+}
