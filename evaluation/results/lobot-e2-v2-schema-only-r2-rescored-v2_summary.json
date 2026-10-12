@@ -1,0 +1,147 @@
+{
+  "run_id": "lobot-e2-v2-schema-only-r2-rescored-v2",
+  "variant": "schema_only",
+  "protocol_version": "v2",
+  "protocol_sha256": "6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D",
+  "total_cases": 48,
+  "completed_cases": 48,
+  "failed_cases": 0,
+  "failed_inference_count": 0,
+  "model_call_success_count": 48,
+  "json_parseable_count": 48,
+  "schema_valid_count": 48,
+  "schema_valid_rate": 1.0,
+  "top_level_schema_valid_count": 48,
+  "top_level_schema_valid_rate": 1.0,
+  "claim_schema_valid_count": 48,
+  "claim_schema_valid_rate": 1.0,
+  "full_output_contract_valid_count": 48,
+  "full_output_contract_valid_rate": 1.0,
+  "citation_evaluable_count": 48,
+  "citation_valid_count": 48,
+  "citation_valid_rate": 1.0,
+  "semantic_evaluable_count": 48,
+  "semantic_evidence_valid_count": 42,
+  "semantic_evidence_valid_rate": 0.875,
+  "unsupported_claim_case_count": 6,
+  "unsupported_claim_total": 6,
+  "unsupported_claim_rate": 0.125,
+  "contradiction_case_count": 6,
+  "contradiction_total": 6,
+  "contradiction_rate": 0.125,
+  "accepted_count": 48,
+  "accepted_rate": 1.0,
+  "abstention_count": 0,
+  "abstention_rate": 0.0,
+  "behavior_evaluable_count": 48,
+  "behavior_correct_count": 24,
+  "behavior_accuracy": 0.5,
+  "evidence_constraint_evaluable_count": 48,
+  "evidence_constraint_correct_count": 36,
+  "evidence_constraint_accuracy": 0.75,
+  "model": {
+    "model_name": "qwen2.5:7b",
+    "model_digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+    "generation_parameters": "{\"num_ctx\": 8192, \"num_predict\": 1200, \"seed\": 42, \"temperature\": 0.0}"
+  },
+  "model_visible_fields": [
+    "checkpoint",
+    "course_policy",
+    "evidence"
+  ],
+  "evaluation_only_fields": [
+    "case_id",
+    "scenario_family",
+    "expected_behavior_class",
+    "expected_evidence_constraints"
+  ],
+  "scenario_family": {
+    "approved_extension": {
+      "total": 4,
+      "behavior_accuracy": 1.0,
+      "citation_valid_rate": 1.0,
+      "semantic_evidence_valid_rate": 1.0,
+      "constraint_accuracy": 1.0
+    },
+    "awaiting_marking": {
+      "total": 4,
+      "behavior_accuracy": 0.0,
+      "citation_valid_rate": 1.0,
+      "semantic_evidence_valid_rate": 1.0,
+      "constraint_accuracy": 1.0
+    },
+    "conflicting_evidence": {
+      "total": 4,
+      "behavior_accuracy": 0.0,
+      "citation_valid_rate": 1.0,
+      "semantic_evidence_valid_rate": 1.0,
+      "constraint_accuracy": 0.0
+    },
+    "genuine_inactivity": {
+      "total": 4,
+      "behavior_accuracy": 1.0,
+      "citation_valid_rate": 1.0,
+      "semantic_evidence_valid_rate": 1.0,
+      "constraint_accuracy": 1.0
+    },
+    "grade_missing": {
+      "total": 4,
+      "behavior_accuracy": 0.0,
+      "citation_valid_rate": 1.0,
+      "semantic_evidence_valid_rate": 1.0,
+      "constraint_accuracy": 1.0
+    },
+    "insufficient_evidence": {
+      "total": 4,
+      "behavior_accuracy": 0.0,
+      "citation_valid_rate": 1.0,
+      "semantic_evidence_valid_rate": 0.5,
+      "constraint_accuracy": 0.0
+    },
+    "missing_feed": {
+      "total": 4,
+      "behavior_accuracy": 0.0,
+      "citation_valid_rate": 1.0,
+      "semantic_evidence_valid_rate": 0.0,
+      "constraint_accuracy": 0.0
+    },
+    "not_yet_due": {
+      "total": 4,
+      "behavior_accuracy": 0.0,
+      "citation_valid_rate": 1.0,
+      "semantic_evidence_valid_rate": 1.0,
+      "constraint_accuracy": 1.0
+    },
+    "optional_resource": {
+      "total": 4,
+      "behavior_accuracy": 1.0,
+      "citation_valid_rate": 1.0,
+      "semantic_evidence_valid_rate": 1.0,
+      "constraint_accuracy": 1.0
+    },
+    "real_zero_grade": {
+      "total": 4,
+      "behavior_accuracy": 1.0,
+      "citation_valid_rate": 1.0,
+      "semantic_evidence_valid_rate": 1.0,
+      "constraint_accuracy": 1.0
+    },
+    "strong_academic_low_activity": {
+      "total": 4,
+      "behavior_accuracy": 1.0,
+      "citation_valid_rate": 1.0,
+      "semantic_evidence_valid_rate": 1.0,
+      "constraint_accuracy": 1.0
+    },
+    "weak_academic_high_activity": {
+      "total": 4,
+      "behavior_accuracy": 1.0,
+      "citation_valid_rate": 1.0,
+      "semantic_evidence_valid_rate": 1.0,
+      "constraint_accuracy": 1.0
+    }
+  },
+  "source_run_id": "lobot-e2-v2-schema-only-r2",
+  "rescoring_git_commit": "6a146590be2bbaacbb39f62934f7c55425ef030c",
+  "validator_version": "grounding_v2"
+}

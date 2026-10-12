@@ -1,0 +1,605 @@
+case_id,scenario_family,checkpoint,variant,model_name,model_digest,runtime,generation_parameters,schema_valid,json_parse_valid,citation_evaluable,citation_valid,unknown_evidence_ids,missing_evidence_reference_count,malformed_claim_count,temporal_evaluable,future_observation_reference_count,no_future_observation_valid,causal_claim_count,no_causal_claim_valid,missingness_violation_count,not_due_violation_count,awaiting_marking_violation_count,missing_feed_violation_count,extension_violation_count,optional_resource_violation_count,policy_threshold_violation_count,missing_feed_detected,conflict_detected,insufficient_evidence_detected,semantic_evaluable,semantic_evidence_valid,model_call_succeeded,evidence_diagnostic_evaluable,evidence_valid,citation_valid,semantic_evidence_valid,validator_codes,unsupported_claim_count,contradiction_count,accepted,abstained,correction_required,correction_attempted,correction_success,initial_latency_ms,correction_latency_ms,total_latency_ms,latency_ms,failure_reason,protocol_version,protocol_sha256,legacy_windows_crlf_sha256,case_count,evaluation_git_commit,run_id,timestamp,raw_response,expected_behavior_class,predicted_behavior_class,behavior_correct,expected_evidence_constraint_valid,constraint_results
+heldout-e2-v2-001,strong_academic_low_activity,3,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3159.409,,3159.409,3159.409,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:18:58.153590+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not been active in the course recently."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-002,strong_academic_low_activity,5,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3278.456,,3278.456,3278.456,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:01.327746+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-003,strong_academic_low_activity,8,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3264.03,,3264.03,3264.03,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:04.620579+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-004,strong_academic_low_activity,10,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3296.649,,3296.649,3296.649,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:07.892829+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-005,weak_academic_high_activity,3,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3211.603,,3211.603,3211.603,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:11.208463+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-006,weak_academic_high_activity,5,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3205.041,,3205.041,3205.041,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:14.429522+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-007,weak_academic_high_activity,8,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3154.023,,3154.023,3154.023,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:17.644303+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-008,weak_academic_high_activity,10,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3178.576,,3178.576,3178.576,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:20.808240+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-009,real_zero_grade,3,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,4867.973,,4867.973,4867.973,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:23.999102+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not engaged in any activity in the last 9 days."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The student has scored 0 out of 100 on the most recent grade."",
+      ""evidence_ids"": [""grade_1""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-010,real_zero_grade,5,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,4869.148,,4869.148,4869.148,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:28.876512+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not engaged in the required activity within the last 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The student has not achieved the passing score of 50."",
+      ""evidence_ids"": [""grade_1""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-011,real_zero_grade,8,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,4805.235,,4805.235,4805.235,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:33.764555+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The student's grade is below the passing score of 50."",
+      ""evidence_ids"": [""grade_1""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-012,real_zero_grade,10,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,4734.802,,4734.802,4734.802,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:38.591528+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The student's grade is below the passing score of 50."",
+      ""evidence_ids"": [""grade_1""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-013,grade_missing,3,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,5499.172,,5499.172,5499.172,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:43.336117+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not engaged in any activity in the last 9 days."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""There is no available grade evidence to assess the student's performance."",
+      ""evidence_ids"": [""grade_1""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""The assessment is based on the available evidence and does not infer any causes or psychological states.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-014,grade_missing,5,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,5470.66,,5470.66,5470.66,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:48.862038+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""There is no available grade evidence to assess the student's performance."",
+      ""evidence_ids"": [""grade_1""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""The assessment is based on the available evidence and does not infer any causes or psychological states.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-015,grade_missing,8,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3245.11,,3245.11,3245.11,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:54.341253+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-016,grade_missing,10,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,5375.684,,5375.684,5375.684,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:19:57.609160+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not been active in the course recently."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The student's activity level in the last 7 days is above the required threshold."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""The grade evidence is not available, so it cannot be used in the assessment.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-017,not_yet_due,3,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3336.308,,3336.308,3336.308,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:20:02.994005+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-018,not_yet_due,5,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3182.157,,3182.157,3182.157,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:20:06.339724+00:00,"{
+  ""assessment"": ""Pass"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has been active within the required activity window."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-019,not_yet_due,8,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3315.524,,3315.524,3315.524,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:20:09.538408+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-020,not_yet_due,10,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3290.015,,3290.015,3290.015,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:20:12.870304+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-021,awaiting_marking,3,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,6284.011,,6284.011,6284.011,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:20:16.170186+00:00,"{
+  ""assessment"": ""Pending"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has submitted an assessment but it is awaiting marking."",
+      ""evidence_ids"": [""assessment_1""]
+    },
+    {
+      ""claim"": ""The student has been inactive for 9 days, with 22 events in the last 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""The assessment status is pending, and the exact impact of the student's activity and inactivity on the course policy is not clear without further marking.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-022,awaiting_marking,5,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,4428.909,,4428.909,4428.909,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:20:22.470676+00:00,"{
+  ""assessment"": ""Pending"",
+  ""claims"": [
+    {
+      ""claim"": ""Days since last activity"",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""Assessment status"",
+      ""evidence_ids"": [""assessment_1""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""The assessment is pending due to the submission awaiting marking.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-023,awaiting_marking,8,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,4521.346,,4521.346,4521.346,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:20:26.909000+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not been active in the required activity window."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The assessment has been submitted but is awaiting marking."",
+      ""evidence_ids"": [""assessment_1""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-024,awaiting_marking,10,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,5136.404,,5136.404,5136.404,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:20:31.439778+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not submitted any activity in the last 12 days, which is outside the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The assessment has been submitted but is awaiting marking."",
+      ""evidence_ids"": [""assessment_1""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-025,approved_extension,3,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,4474.496,,4474.496,4474.496,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:20:36.584917+00:00,"{
+  ""assessment"": ""Pass"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has submitted activity evidence within the required window."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The student has requested and received an extension."",
+      ""evidence_ids"": [""extension_1""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-026,approved_extension,5,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,4531.311,,4531.311,4531.311,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:20:41.068741+00:00,"{
+  ""assessment"": ""Pass"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has submitted activity within the last 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The student has requested and received an extension."",
+      ""evidence_ids"": [""extension_1""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-027,approved_extension,8,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,4825.5,,4825.5,4825.5,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:20:45.626823+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days as of the checkpoint."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The student has requested and received an extension."",
+      ""evidence_ids"": [""extension_1""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-028,approved_extension,10,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,4508.477,,4508.477,4508.477,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:20:50.462951+00:00,"{
+  ""assessment"": ""Pass"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has submitted activity within the last 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The student has requested and received an extension."",
+      ""evidence_ids"": [""extension_1""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-029,optional_resource,3,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3214.408,,3214.408,3214.408,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:20:54.983099+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has been active in the last 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-030,optional_resource,5,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3158.825,,3158.825,3158.825,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:20:58.205853+00:00,"{
+  ""assessment"": ""Pass"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has been active in the last 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-031,optional_resource,8,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3301.272,,3301.272,3301.272,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:01.373790+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-032,optional_resource,10,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3379.824,,3379.824,3379.824,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:04.684545+00:00,"{
+  ""assessment"": ""Inactivity"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not engaged in any activity in the last 12 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-033,missing_feed,3,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,False,True,True,False,True,False,[],1,1,True,False,False,False,False,3515.872,,3515.872,3515.872,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:08.084352+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""No activity recorded"",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""The assessment is based on the available evidence and does not infer any causes or psychological states.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': False, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-034,missing_feed,5,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,False,True,True,False,True,False,[],1,1,True,False,False,False,False,3523.015,,3523.015,3523.015,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:11.608381+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""No activity recorded"",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""The assessment is based on the available evidence and does not infer any causes or psychological states.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': False, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-035,missing_feed,8,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,False,True,True,False,True,False,[],1,1,True,False,False,False,False,3497.908,,3497.908,3497.908,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:15.139934+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""No activity recorded"",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""The assessment is based on the available evidence and does not infer any causes or psychological states.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': False, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-036,missing_feed,10,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,False,True,True,False,True,False,[],1,1,True,False,False,False,False,3499.894,,3499.894,3499.894,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:18.649948+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""No activity recorded"",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""The assessment is based on the available evidence and does not infer any causes or psychological states.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': False, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-037,genuine_inactivity,3,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3245.218,,3245.218,3245.218,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:22.159825+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has engaged in 38 events in the last 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-038,genuine_inactivity,5,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3078.859,,3078.859,3078.859,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:25.414839+00:00,"{
+  ""assessment"": ""Pass"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has been active in the last 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-039,genuine_inactivity,8,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3159.497,,3159.497,3159.497,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:28.503144+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-040,genuine_inactivity,10,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3149.895,,3149.895,3149.895,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:31.681359+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-041,conflicting_evidence,3,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,4772.809,,4772.809,4772.809,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:34.845332+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not engaged in the required activity within the last week."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The student has a recent activity that might indicate an ongoing commitment or conflict."",
+      ""evidence_ids"": [""activity_conflict""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': False, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-042,conflicting_evidence,5,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,5759.585,,5759.585,5759.585,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:39.628010+00:00,"{
+  ""assessment"": ""Pass"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has been active in the course recently, with 44 events in the last 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The student has no recent inactivity, with only 61 events in the last 7 days and no inactivity in the last day."",
+      ""evidence_ids"": [""activity_conflict""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': False, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-043,conflicting_evidence,8,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,5103.184,,5103.184,5103.184,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:45.397314+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not been active in the course recently."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The student has a recent activity record."",
+      ""evidence_ids"": [""activity_conflict""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""The assessment is based on the available evidence and does not infer any causes or psychological states.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': False, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-044,conflicting_evidence,10,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,4438.554,,4438.554,4438.554,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:50.511172+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""The student has not met the required activity window of 7 days."",
+      ""evidence_ids"": [""activity_week""]
+    },
+    {
+      ""claim"": ""The student has an activity conflict."",
+      ""evidence_ids"": [""activity_conflict""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': False, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-045,insufficient_evidence,3,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3507.395,,3507.395,3507.395,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:54.958216+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""Insufficient activity coverage"",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""The assessment is based on the available evidence and does not infer causes or psychological states.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': False, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-046,insufficient_evidence,5,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,False,True,True,False,True,False,[],1,1,True,False,False,False,False,2721.524,,2721.524,2721.524,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:21:58.480128+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""No activity submitted"",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": """"
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': False, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-047,insufficient_evidence,8,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,False,True,True,False,True,False,[],1,1,True,False,False,False,False,3547.421,,3547.421,3547.421,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:22:01.211676+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""No activity submitted"",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""The assessment is based solely on the provided evidence and does not infer any causes or psychological states.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': False, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-048,insufficient_evidence,10,schema_only,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,True,,,,,,,,,,,,,,,,,,,,True,True,True,True,True,True,[],0,0,True,False,False,False,False,3519.616,,3519.616,3519.616,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,2269490b108fdca92413606ab8c62a48340999df,lobot-e2-v2-schema-only-r2,2026-10-06T13:22:04.772275+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""claim"": ""Insufficient activity coverage"",
+      ""evidence_ids"": [""activity_week""]
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""The assessment is based on the available evidence and does not infer causes or psychological states.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': True, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': False, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"

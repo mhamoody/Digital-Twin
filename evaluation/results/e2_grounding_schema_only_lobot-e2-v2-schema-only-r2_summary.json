@@ -1,0 +1,100 @@
+{
+  "run_id": "lobot-e2-v2-schema-only-r2",
+  "variant": "schema_only",
+  "protocol_version": "v2",
+  "total_cases": 48,
+  "completed_cases": 48,
+  "failed_cases": 0,
+  "model_call_success_count": 48,
+  "json_parseable_count": 48,
+  "evidence_evaluable_count": 48,
+  "failed_inference_count": 0,
+  "schema_valid_rate": 1.0,
+  "evidence_valid_rate": 0.875,
+  "accepted_rate": 1.0,
+  "abstention_rate": 0.0,
+  "unsupported_claim_rate": 0.125,
+  "contradiction_rate": 0.125,
+  "model": {
+    "model_name": "qwen2.5:7b",
+    "digest": "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e",
+    "family": "qwen2",
+    "parameter_size": "7.6B",
+    "quantization": "Q4_K_M",
+    "runtime": "ollama",
+    "endpoint": "http://127.0.0.1:11434",
+    "generation": {
+      "temperature": 0.0,
+      "seed": 42,
+      "num_ctx": 8192,
+      "num_predict": 1200
+    }
+  },
+  "protocol_sha256": "6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D",
+  "legacy_windows_crlf_sha256": "220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E",
+  "case_count": 48,
+  "scenario_family": {
+    "approved_extension": {
+      "total": 4,
+      "accepted": 4
+    },
+    "awaiting_marking": {
+      "total": 4,
+      "accepted": 4
+    },
+    "conflicting_evidence": {
+      "total": 4,
+      "accepted": 4
+    },
+    "genuine_inactivity": {
+      "total": 4,
+      "accepted": 4
+    },
+    "grade_missing": {
+      "total": 4,
+      "accepted": 4
+    },
+    "insufficient_evidence": {
+      "total": 4,
+      "accepted": 4
+    },
+    "missing_feed": {
+      "total": 4,
+      "accepted": 4
+    },
+    "not_yet_due": {
+      "total": 4,
+      "accepted": 4
+    },
+    "optional_resource": {
+      "total": 4,
+      "accepted": 4
+    },
+    "real_zero_grade": {
+      "total": 4,
+      "accepted": 4
+    },
+    "strong_academic_low_activity": {
+      "total": 4,
+      "accepted": 4
+    },
+    "weak_academic_high_activity": {
+      "total": 4,
+      "accepted": 4
+    }
+  },
+  "model_visible_fields": [
+    "checkpoint",
+    "course_policy",
+    "evidence"
+  ],
+  "evaluation_only_fields": [
+    "case_id",
+    "scenario_family",
+    "expected_behavior_class",
+    "expected_evidence_constraints"
+  ],
+  "behavior_accuracy": 0.5,
+  "behavior_correct_count": 24,
+  "evidence_constraint_accuracy": null
+}

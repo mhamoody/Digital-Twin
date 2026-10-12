@@ -1,0 +1,137 @@
+{
+  "run_id": "lobot-e2-v2-r2-rescored-v1",
+  "variant": "plain_llm",
+  "protocol_version": "v2",
+  "protocol_sha256": "6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D",
+  "total_cases": 48,
+  "completed_cases": 48,
+  "failed_cases": 0,
+  "failed_inference_count": 0,
+  "model_call_success_count": 48,
+  "json_parseable_count": 48,
+  "schema_valid_count": 48,
+  "schema_valid_rate": 1.0,
+  "citation_evaluable_count": 48,
+  "citation_valid_count": 0,
+  "citation_valid_rate": 0.0,
+  "semantic_evaluable_count": 48,
+  "semantic_evidence_valid_count": 0,
+  "semantic_evidence_valid_rate": 0.0,
+  "unsupported_claim_case_count": 2,
+  "unsupported_claim_total": 2,
+  "unsupported_claim_rate": 0.041666666666666664,
+  "contradiction_case_count": 2,
+  "contradiction_total": 2,
+  "contradiction_rate": 0.041666666666666664,
+  "accepted_count": 48,
+  "accepted_rate": 1.0,
+  "abstention_count": 0,
+  "abstention_rate": 0.0,
+  "behavior_evaluable_count": 48,
+  "behavior_correct_count": 24,
+  "behavior_accuracy": 0.5,
+  "evidence_constraint_evaluable_count": 48,
+  "evidence_constraint_correct_count": 0,
+  "evidence_constraint_accuracy": 0.0,
+  "model": {},
+  "model_visible_fields": [
+    "checkpoint",
+    "course_policy",
+    "evidence"
+  ],
+  "evaluation_only_fields": [
+    "case_id",
+    "scenario_family",
+    "expected_behavior_class",
+    "expected_evidence_constraints"
+  ],
+  "scenario_family": {
+    "approved_extension": {
+      "total": 4,
+      "behavior_accuracy": 1.0,
+      "citation_valid_rate": 0.0,
+      "semantic_evidence_valid_rate": 0.0,
+      "constraint_accuracy": 0.0
+    },
+    "awaiting_marking": {
+      "total": 4,
+      "behavior_accuracy": 0.0,
+      "citation_valid_rate": 0.0,
+      "semantic_evidence_valid_rate": 0.0,
+      "constraint_accuracy": 0.0
+    },
+    "conflicting_evidence": {
+      "total": 4,
+      "behavior_accuracy": 0.0,
+      "citation_valid_rate": 0.0,
+      "semantic_evidence_valid_rate": 0.0,
+      "constraint_accuracy": 0.0
+    },
+    "genuine_inactivity": {
+      "total": 4,
+      "behavior_accuracy": 1.0,
+      "citation_valid_rate": 0.0,
+      "semantic_evidence_valid_rate": 0.0,
+      "constraint_accuracy": 0.0
+    },
+    "grade_missing": {
+      "total": 4,
+      "behavior_accuracy": 0.0,
+      "citation_valid_rate": 0.0,
+      "semantic_evidence_valid_rate": 0.0,
+      "constraint_accuracy": 0.0
+    },
+    "insufficient_evidence": {
+      "total": 4,
+      "behavior_accuracy": 0.0,
+      "citation_valid_rate": 0.0,
+      "semantic_evidence_valid_rate": 0.0,
+      "constraint_accuracy": 0.0
+    },
+    "missing_feed": {
+      "total": 4,
+      "behavior_accuracy": 0.0,
+      "citation_valid_rate": 0.0,
+      "semantic_evidence_valid_rate": 0.0,
+      "constraint_accuracy": 0.0
+    },
+    "not_yet_due": {
+      "total": 4,
+      "behavior_accuracy": 0.0,
+      "citation_valid_rate": 0.0,
+      "semantic_evidence_valid_rate": 0.0,
+      "constraint_accuracy": 0.0
+    },
+    "optional_resource": {
+      "total": 4,
+      "behavior_accuracy": 1.0,
+      "citation_valid_rate": 0.0,
+      "semantic_evidence_valid_rate": 0.0,
+      "constraint_accuracy": 0.0
+    },
+    "real_zero_grade": {
+      "total": 4,
+      "behavior_accuracy": 1.0,
+      "citation_valid_rate": 0.0,
+      "semantic_evidence_valid_rate": 0.0,
+      "constraint_accuracy": 0.0
+    },
+    "strong_academic_low_activity": {
+      "total": 4,
+      "behavior_accuracy": 1.0,
+      "citation_valid_rate": 0.0,
+      "semantic_evidence_valid_rate": 0.0,
+      "constraint_accuracy": 0.0
+    },
+    "weak_academic_high_activity": {
+      "total": 4,
+      "behavior_accuracy": 1.0,
+      "citation_valid_rate": 0.0,
+      "semantic_evidence_valid_rate": 0.0,
+      "constraint_accuracy": 0.0
+    }
+  },
+  "source_run_id": "lobot-e2-v2-r2",
+  "rescoring_git_commit": "d9da8b5bf7015898e7762ddfd855c0ce112be41d",
+  "validator_version": "grounding_v2"
+}

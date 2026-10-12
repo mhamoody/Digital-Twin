@@ -1,0 +1,607 @@
+case_id,scenario_family,checkpoint,variant,model_name,model_digest,runtime,generation_parameters,schema_valid,json_parse_valid,citation_evaluable,citation_valid,unknown_evidence_ids,missing_evidence_reference_count,malformed_claim_count,temporal_evaluable,future_observation_reference_count,no_future_observation_valid,causal_claim_count,no_causal_claim_valid,missingness_violation_count,not_due_violation_count,awaiting_marking_violation_count,missing_feed_violation_count,extension_violation_count,optional_resource_violation_count,policy_threshold_violation_count,conflict_detected,insufficient_evidence_detected,semantic_evaluable,semantic_evidence_valid,model_call_succeeded,evidence_diagnostic_evaluable,evidence_valid,citation_valid,semantic_evidence_valid,validator_codes,unsupported_claim_count,contradiction_count,accepted,abstained,correction_required,correction_attempted,correction_success,initial_latency_ms,correction_latency_ms,total_latency_ms,latency_ms,failure_reason,protocol_version,protocol_sha256,legacy_windows_crlf_sha256,case_count,evaluation_git_commit,run_id,timestamp,raw_response,expected_behavior_class,predicted_behavior_class,behavior_correct,expected_evidence_constraint_valid,constraint_results
+heldout-e2-v2-001,strong_academic_low_activity,3,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2446.018,,2446.018,2446.018,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:51:40.302350+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-002,strong_academic_low_activity,5,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2425.228,,2425.228,2425.228,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:51:42.765695+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-003,strong_academic_low_activity,8,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2429.488,,2429.488,2429.488,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:51:45.206869+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-004,strong_academic_low_activity,10,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2427.889,,2427.889,2427.889,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:51:47.649194+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-005,weak_academic_high_activity,3,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",1,1,True,False,False,False,False,3606.45,,3606.45,3606.45,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:51:50.094316+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""claim"": ""The student has been inactive for 9 days, which is close to the inactivity concern threshold of 10 days.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-006,weak_academic_high_activity,5,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2336.664,,2336.664,2336.664,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:51:53.718196+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-007,weak_academic_high_activity,8,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2318.133,,2318.133,2318.133,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:51:56.074490+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-008,weak_academic_high_activity,10,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2321.314,,2321.314,2321.314,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:51:58.409995+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-009,real_zero_grade,3,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,5342.517,,5342.517,5342.517,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:52:00.745089+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""reason"": ""The student has been inactive for 9 days, which is close to the inactivity concern threshold of 10 days.""
+    },
+    {
+      ""evidence_id"": ""grade_1"",
+      ""reason"": ""The student has not scored any points on the graded activity, indicating a lack of engagement.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-010,real_zero_grade,5,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,5709.928,,5709.928,5709.928,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:52:06.104049+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""reason"": ""The student has not been active in the course for 10 days, which is close to the inactivity concern threshold of 11 days.""
+    },
+    {
+      ""evidence_id"": ""grade_1"",
+      ""reason"": ""The student has a grade of 0 out of 100, indicating no completed required activities.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-011,real_zero_grade,8,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,5274.771,,5274.771,5274.771,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:52:11.831903+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""reason"": ""The student has been inactive for 11 days, which is outside the required activity window of 7 days.""
+    },
+    {
+      ""evidence_id"": ""grade_1"",
+      ""reason"": ""The student has not scored any points on the graded activity, indicating a lack of engagement.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-012,real_zero_grade,10,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,5893.783,,5893.783,5893.783,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:52:17.116491+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""reason"": ""The student has not been active in the course for 12 days, which is above the inactivity concern threshold of 13 days.""
+    },
+    {
+      ""evidence_id"": ""grade_1"",
+      ""reason"": ""The student has a grade of 0 out of 100, which is below the passing score of 50.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-013,grade_missing,3,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,5311.819,,5311.819,5311.819,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:52:23.026978+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""status"": ""observed"",
+      ""value"": {
+        ""days_since_last_activity"": 9,
+        ""events_last_7_days"": 14
+      }
+    },
+    {
+      ""evidence_id"": ""grade_1"",
+      ""status"": ""not_observed"",
+      ""value"": null
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-014,grade_missing,5,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,5164.67,,5164.67,5164.67,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:52:28.373743+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""reason"": ""The student has been inactive for 10 days, which is close to the inactivity concern threshold of 11 days.""
+    },
+    {
+      ""evidence_id"": ""grade_1"",
+      ""reason"": ""There is no available grade evidence to assess the student's performance.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-015,grade_missing,8,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,3507.336,,3507.336,3507.336,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:52:33.547881+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""reason"": ""Days since last activity is 11, which is outside the required activity window of 7 days.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-016,grade_missing,10,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,3421.328,,3421.328,3421.328,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:52:37.063658+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""reason"": ""Days since last activity is 12, which is more than the required 7 days.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-017,not_yet_due,3,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2450.297,,2450.297,2450.297,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:52:40.498138+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-018,not_yet_due,5,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2452.221,,2452.221,2452.221,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:52:42.956863+00:00,"{
+  ""assessment"": ""Pass"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-019,not_yet_due,8,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2485.629,,2485.629,2485.629,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:52:45.417913+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-020,not_yet_due,10,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",1,1,True,False,False,False,False,3808.811,,3808.811,3808.811,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:52:47.921286+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""claim"": ""The student has been inactive for 12 days, which is close to the inactivity concern threshold of 13 days.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-021,awaiting_marking,3,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,4409.91,,4409.91,4409.91,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:52:51.748398+00:00,"{
+  ""assessment"": ""Pending"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""type"": ""activity"",
+      ""status"": ""observed""
+    },
+    {
+      ""evidence_id"": ""assessment_1"",
+      ""type"": ""assessment_status"",
+      ""status"": ""observed""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-022,awaiting_marking,5,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,4415.011,,4415.011,4415.011,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:52:56.168484+00:00,"{
+  ""assessment"": ""Pending"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""type"": ""activity"",
+      ""status"": ""observed""
+    },
+    {
+      ""evidence_id"": ""assessment_1"",
+      ""type"": ""assessment_status"",
+      ""status"": ""observed""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-023,awaiting_marking,8,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,5395.139,,5395.139,5395.139,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:00.596532+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""reasoning"": ""The student has not been active in the course for 11 days, which is above the inactivity concern threshold of 12 days.""
+    },
+    {
+      ""evidence_id"": ""assessment_1"",
+      ""reasoning"": ""The student has submitted an assessment but it is still awaiting marking.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-024,awaiting_marking,10,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,6709.426,,6709.426,6709.426,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:06.005130+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""type"": ""activity"",
+      ""status"": ""observed"",
+      ""value"": {
+        ""days_since_last_activity"": 12,
+        ""events_last_7_days"": 28
+      }
+    },
+    {
+      ""evidence_id"": ""assessment_1"",
+      ""type"": ""assessment_status"",
+      ""status"": ""observed"",
+      ""value"": {
+        ""status"": ""awaiting_marking"",
+        ""submitted"": true
+      }
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-025,approved_extension,3,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,5549.494,,5549.494,5549.494,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:12.730222+00:00,"{
+  ""assessment"": ""Pass"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""reason"": ""The student has been active within the last 7 days, with 26 events, and has not been inactive for more than 10 days.""
+    },
+    {
+      ""evidence_id"": ""extension_1"",
+      ""reason"": ""The student has received an extension, which is within the policy respecting extensions.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-026,approved_extension,5,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,5179.229,,5179.229,5179.229,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:18.289793+00:00,"{
+  ""assessment"": ""Pass"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""reason"": ""Days since last activity is 10, which is within the required activity window of 7 days.""
+    },
+    {
+      ""evidence_id"": ""extension_1"",
+      ""reason"": ""An extension was approved, but the new due time is after the current timestamp.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-027,approved_extension,8,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,3726.287,,3726.287,3726.287,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:23.514530+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""type"": ""activity""
+    },
+    {
+      ""evidence_id"": ""extension_1"",
+      ""type"": ""extension""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-028,approved_extension,10,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,6995.899,,6995.899,6995.899,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:27.249418+00:00,"{
+  ""assessment"": ""Pass"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""evidence_type"": ""activity"",
+      ""value"": {
+        ""days_since_last_activity"": 12,
+        ""events_last_7_days"": 32
+      }
+    },
+    {
+      ""evidence_id"": ""extension_1"",
+      ""evidence_type"": ""extension"",
+      ""value"": {
+        ""approved"": true,
+        ""new_due_time"": ""2026-03-05T12:00:00Z""
+      }
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-029,optional_resource,3,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2386.341,,2386.341,2386.341,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:34.260189+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-030,optional_resource,5,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2384.107,,2384.107,2384.107,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:36.660492+00:00,"{
+  ""assessment"": ""Pass"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-031,optional_resource,8,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2381.943,,2381.943,2381.943,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:39.059877+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-032,optional_resource,10,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2486.499,,2486.499,2486.499,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:41.454787+00:00,"{
+  ""assessment"": ""Inactivity"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-033,missing_feed,3,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2658.5,,2658.5,2658.5,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:43.954114+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""Insufficient evidence to make a definitive assessment.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-034,missing_feed,5,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,3045.602,,3045.602,3045.602,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:46.622145+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""status"": ""unavailable"",
+      ""reason"": ""feed_unavailable""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-035,missing_feed,8,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2652.548,,2652.548,2652.548,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:49.675759+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": ""Insufficient evidence to make a definitive assessment.""
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-036,missing_feed,10,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,3045.127,,3045.127,3045.127,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:52.337225+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""status"": ""unavailable"",
+      ""reason"": ""feed_unavailable""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-037,genuine_inactivity,3,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2313.238,,2313.238,2313.238,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:55.390750+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-038,genuine_inactivity,5,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2314.075,,2314.075,2314.075,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:53:57.717039+00:00,"{
+  ""assessment"": ""Pass"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-039,genuine_inactivity,8,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2313.999,,2313.999,2313.999,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:54:00.039403+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-040,genuine_inactivity,10,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,3532.128,,3532.128,3532.128,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:54:02.376850+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""claim"": ""The student has been inactive for 12 days, which exceeds the allowed inactivity period of 7 days.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",assessment_allowed,assessment_allowed,True,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-041,conflicting_evidence,3,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,5633.134,,5633.134,5633.134,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:54:05.921763+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""reason"": ""The student has been inactive for 9 days, which is close to the inactivity concern threshold of 10 days.""
+    },
+    {
+      ""evidence_id"": ""activity_conflict"",
+      ""reason"": ""The student has been active in the last day, indicating some level of engagement, but not consistent with the required activity window.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': False, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-042,conflicting_evidence,5,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,5972.624,,5972.624,5972.624,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:54:11.571063+00:00,"{
+  ""assessment"": ""Pass"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""reason"": ""The student has been active in the course within the last 7 days (44 events), which is within the required activity window.""
+    },
+    {
+      ""evidence_id"": ""activity_conflict"",
+      ""reason"": ""The student has not shown any recent inactivity (only 61 events in the last 7 days), indicating no significant conflict or inactivity issues.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': False, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-043,conflicting_evidence,8,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,5903.388,,5903.388,5903.388,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:54:17.552834+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""reason"": ""The student has not been active in the course for 11 days, which is above the inactivity concern threshold of 12 days.""
+    },
+    {
+      ""evidence_id"": ""activity_conflict"",
+      ""reason"": ""The student has been active in the course in the last 7 days, with 62 events, indicating some level of engagement.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': False, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-044,conflicting_evidence,10,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,6382.423,,6382.423,6382.423,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:54:23.470732+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week"",
+      ""reason"": ""The student has not been active in the course for 12 days, which is above the inactivity concern threshold of 13 days.""
+    },
+    {
+      ""evidence_id"": ""activity_conflict"",
+      ""reason"": ""The student has been active in the course for only 1 day, but has a high event count of 63 in the last 7 days, suggesting potential conflict or high activity.""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': False, 'insufficient_evidence_requires_abstention': True, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-045,insufficient_evidence,3,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2358.65,,2358.65,2358.65,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:54:29.862347+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-046,insufficient_evidence,5,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2308.084,,2308.084,2308.084,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:54:32.233561+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-047,insufficient_evidence,8,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2304.952,,2304.952,2304.952,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:54:34.555242+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
+heldout-e2-v2-048,insufficient_evidence,10,plain_llm,qwen2.5:7b,845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e,ollama,"{""num_ctx"": 8192, ""num_predict"": 1200, ""seed"": 42, ""temperature"": 0.0}",True,True,,False,,,,,,,,,,,,,,,,,,,False,True,True,False,False,False,"[""MALFORMED_CLAIM"", ""CITATION_INVALID""]",0,0,True,False,False,False,False,2298.978,,2298.978,2298.978,,v2,6E423F63884145AD00273CF26C65B155C1EC11E3E62A1080C94F74DC807CDD0D,220FC8D053D8D31F536FF2F0F65DE1358A54AB2A0BB29CE293BF96792AB3814E,48,c82c1a260114f651302aef66bd8f9c873a0a043f,lobot-e2-v2-r2,2026-10-04T12:54:36.873897+00:00,"{
+  ""assessment"": ""Incomplete"",
+  ""claims"": [
+    {
+      ""evidence_id"": ""activity_week""
+    }
+  ],
+  ""abstain"": false,
+  ""uncertainty_note"": null
+}",abstention_expected,assessment_allowed,False,,"{'cite_only_permitted_ids': False, 'no_future_observation': True, 'no_causal_claim': True, 'do_not_treat_missing_as_zero': True, 'do_not_treat_not_due_as_missing': True, 'do_not_treat_awaiting_marking_as_failure': True, 'missing_feed_requires_abstention': True, 'conflict_requires_abstention': True, 'insufficient_evidence_requires_abstention': False, 'respect_approved_extension': True, 'respect_optional_resource': True}"
