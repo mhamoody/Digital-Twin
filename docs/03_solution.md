@@ -1,184 +1,72 @@
-# 03 — Solution
+# 03 — Current solution
 
 ## Solution in one sentence
 
-### Current implementation boundary
+Build provenance-aware learner states at declared checkpoints, evaluate empirical prediction separately, validate instructor-facing model evidence, and preserve instructor triage and longitudinal support decisions without altering historical model records.
 
-The live empirical product currently uses OULAD temporal states,
-`simple-rules-v1` uncalibrated operational/demo scores, evidence, and human
-workflow. It does not present those scores as failure probabilities. Qwen and
-other LLM experiments remain controlled research/workspace capabilities, never
-an implicit replacement for the empirical predictor. Cross-course empirical
-generalization and formal educator validation remain future work.
+## Implemented product flow
 
-Build weekly, leakage-free student states from empirical learning data; use a
-strong LLM as the primary model for grounded risk prediction; compare and
-calibrate it against classical baselines; persist the states, evidence,
-predictions, and review history in a course-twin store; and expose only
-traceable, human-reviewed alerts through a minimal instructor dashboard.
+1. Source adapters create canonical observations with origin and availability.
+2. The state builder creates versioned cutoff-safe learner states.
+3. A prediction or operational analysis is bound to the exact state it used.
+4. Deterministic schema, grounding, policy, freshness, and quality checks decide whether an output may be saved or shown.
+5. The React workspace reads through FastAPI and shows the applicable state, evidence, history, and model provenance.
+6. Instructor triage is recorded independently from model state.
+7. Support cases and support actions use their own lifecycle and audit history.
 
-## Two evidence paths that must remain separate
+Streamlit remains a legacy/fallback interface.
 
-The system deliberately separates model validation from operational validation.
+## Separate evidence paths
 
-| Path | Purpose | Valid claims |
+| Path | Purpose | Valid claim boundary |
 |---|---|---|
-| **Empirical path: OULAD or an approved replacement** | Build weekly states and evaluate early-warning models | Predictive performance, calibration, temporal behaviour, subgroup slices, and limitations on that dataset |
-| **Operational path: local Moodle sandbox** | Exercise LMS entities, API/export ingestion, replay, database updates, alerts, and dashboard refresh | Integration correctness, latency, resilience, schema validity, and usability of the prototype |
+| E1 empirical OULAD path | Checkpoint prediction with Logistic Regression | Predictive discrimination on AAA/2013J |
+| E4 provenance path | Audit temporal lineage and cutoffs | Traceability and zero violations in audited artifacts |
+| E2 controlled path | Compare plain and schema-constrained LLM output | Structural, citation, semantic, abstention, and behavioral findings on 48 cases |
+| Operational Qwen path | Run validated instructor-facing analyses | Runtime validation, repair, abstention, latency, and provenance |
+| Synthetic Workspace path | Exercise product and worker workflows | Demonstration and operational correctness only |
+| Demo rules path | Exercise legacy empirical plumbing | Uncalibrated operational/demo score only |
 
-Replaying OULAD-like records into Moodle connects the demonstration, but it does not turn synthetic Moodle identities into real learners. Results from the two paths are reported separately.
+These paths must not be merged into one accuracy claim.
 
-## MVP flow
+## Empirical predictor
 
-1. **Dataset preparation** filters one or more module presentations and converts raw activity, assessment, registration, and outcome records into canonical observations.
-2. **Weekly state builder** aggregates only records whose event time is at or before the checkpoint. It derives activity recency, active days, click totals, resource mix, submission status, and cumulative assessment progress.
-3. **Model evaluation** sends a versioned, cutoff-safe weekly-state serialization
-   to the selected strong LLM and compares its predictions with simple and
-   conventional-ML baselines using presentation-aware splits. LLM probabilities
-   are calibrated without touching the test labels.
-4. **Evidence generation** requires the LLM to cite supplied evidence IDs and
-   records its probability, uncertainty, citations, prompt, model, and data
-   versions. SHAP is retained only for compatible baseline models; controlled
-   feature ablation tests the LLM's evidence sensitivity.
-5. **Moodle ingestion/replay** reads real sandbox entities and controlled test events, converts them to the same canonical observation schema, and updates PostgreSQL.
-6. **Alert policy** creates an alert only when data are fresh, the relevant model-quality gate has passed, and a reviewed threshold or rule is met.
-7. **Output validation** accepts the LLM result only when its risk fields and
-   evidence references satisfy the contract. A deterministic rule/template path
-   is the availability and safety fallback, not the intended intelligence.
-8. **Dashboard review** lets an instructor inspect the timeline and evidence, then review, dismiss, or resolve the alert. No student action is automated.
+E1 uses Logistic Regression over cutoff-safe OULAD `AAA/2013J` states. Learner-grouped splits, train-only preprocessing, validation-based threshold selection, and untouched test evaluation protect the result. The reported AUROC/AP values are discrimination metrics rather than calibrated probabilities.
 
-## Primary LLM contract
+## Operational Qwen analysis
 
-The system deliberately uses a capable LLM as its primary model. Its authority
-remains narrow: it predicts risk from the supplied student state and identifies
-which supplied facts support that prediction. Model strength does not relax the
-requirements for temporal validity, calibration, grounding, privacy, or human
-review.
+The mature operational model is `qwen2.5:7b` under `risk-decision-v3`. The pipeline records model, digest, prompt, contract, snapshot, attempt, validation, repair, abstention, and saved-analysis provenance.
 
-### Allowed
+The application:
 
-- Produce a raw non-success risk score from the supplied weekly state; the
-  application applies the frozen calibrator and derives the risk band.
-- Cite the supplied evidence identifiers most relevant to that prediction.
-- Convert those cited facts into a short instructor-facing summary.
-- Select from a small approved set of instructor review actions when appropriate.
-- Abstain when the evidence is insufficient or inconsistent.
-- As an independent stretch experiment, classify authentic labelled forum text.
+- supplies allow-listed state evidence;
+- requires structured output;
+- validates evidence references and supported actions;
+- performs deterministic semantic and policy checks;
+- permits bounded repair;
+- records explicit quality abstention; and
+- refuses unsafe output rather than silently publishing it.
 
-### Not allowed
+Operational raw scores are not calibrated probabilities. Operational evidence does not establish empirical predictive accuracy.
 
-- Query raw personally identifiable student data.
-- Invent causes, diagnoses, topics, or events not present in the input.
-- Produce arbitrary student-facing advice.
-- Trigger an email, referral, grade change, or other intervention.
+## Controlled E2 experiment
 
-### Grounding and output contract
+E2 uses 48 frozen cases and compares `plain_llm` v2 with `schema_only` v2. Schema-only output improves structural and citation compliance, but neither treatment demonstrates successful selective abstention or improved behavioral correctness. E2 is not the operational job history and does not use the E1 outcome evaluation.
 
-The application provides a compact object such as:
+## Human workflow
 
-```json
-{
-  "state_id": "state-123",
-  "checkpoint_week": 5,
-  "evidence": [
-    {"id": "ev-1", "label": "days since activity", "value": 9},
-    {"id": "ev-2", "label": "missed assessments", "value": 1}
-  ],
-  "allowed_actions": ["review recent work", "check missed assessment", "contact through approved channel"]
-}
-```
+The model's risk state, instructor triage, and support-case lifecycle are separate persisted concepts. Instructor actions add review and support history; they do not modify the score, evidence, model identity, state cutoff, or model provenance that existed at prediction time.
 
-The model must return JSON with:
+## Failure-safe behavior
 
-- `raw_risk_score`: a number from 0 to 1 that is calibrated by application code;
-- `claims`: allow-listed claim codes, each mapped to the evidence identifiers
-  that support that specific claim;
-- `suggested_actions`: zero or more values from `allowed_actions`;
-- `uncertainty_note`;
-- `abstain`: Boolean; and
-- `abstention_reason`: required when `abstain` is true.
+- Missing or stale evidence is represented explicitly.
+- A current state never borrows an older incompatible prediction.
+- Temporal comparison uses only the immediately previous eligible checkpoint under compatible model semantics.
+- Invalid model output is rejected, repaired within policy, or abstained.
+- Idempotency prevents duplicate actions.
+- Optimistic locking exposes concurrent workflow updates.
+- Authorization is enforced at the course boundary.
 
-Claim-level mapping is required because a single response-level citation list
-cannot show which evidence supports each statement. The application renders
-instructor-facing factual text from the validated claim code and stored evidence
-value rather than trusting the model to reproduce numbers in free text.
+## Research and product boundary
 
-When `abstain` is false, raw/display scores, a risk band, and at least one
-grounded claim are required. When `abstain` is true, scores and risk band are
-null, claims/actions are empty, and the abstention reason is required.
-
-Application code then:
-
-1. parses against a strict schema with additional properties forbidden;
-2. verifies that every evidence reference and suggested action is in the request;
-3. verifies numeric ranges and prohibited or unsupported language;
-4. retries once with the validation error; and
-5. uses a clearly labelled deterministic fallback if validation still fails.
-
-For an accepted result, application code applies the frozen calibrator to
-`raw_risk_score`, derives the displayed probability and risk band, and applies the
-versioned alert threshold. The LLM never sees the held-out label or chooses the
-operational threshold.
-
-During the integration-demo phases, a clearly identified deterministic
-`simple_demo` predictor may populate this same output contract. Its identity
-calibration and synthetic/replayed results validate plumbing only; they are not
-reported as predictive research results and do not replace the final strong LLM.
-
-Only the validated object is stored and displayed, together with the
-provider/model identifier, prompt and few-shot-example versions, timestamp,
-validation result, calibration version, and fallback status. Raw model output
-may be retained in a restricted evaluation log, never treated as trusted
-application data. Training/test labels and examples from the held-out test
-presentations are prohibited from the prompt context.
-
-## Dataset strategy
-
-The comparison is complete. OULAD is the sole empirical MVP source because it is
-reproducibly accessible, linked across activity and assessments, outcome-labelled,
-and feasible within the semester. The local Moodle sandbox is a separate
-operational source. No alternative is concatenated with OULAD.
-
-An alternative replaces OULAD only if it is accessible in time and supports the minimum linkage:
-
-`learner → course/presentation → event time → activity/assessment → outcome`
-
-Open edX contributes event/xAPI schema guidance; HarvardX/MITx may provide an
-optional aggregate robustness check; MORF is future restricted replication; and
-screened Moodle releases are adapter candidates subject to byte-level linkage,
-calendar, outcome, and licence gates. A source with finer events but no valid
-outcome may test ingestion, never predictive performance. A person-course
-aggregate cannot support the weekly-state research question.
-
-Forum corpora remain independent benchmarks. Their posts are never joined to OULAD student histories. Synthetic posts may exercise the UI and ingestion path, but they are not semantic-validation evidence.
-
-The exact source evidence, feature contract, missingness rules, canonical
-database, checkpoint cohort, and processing stages are in
-[`08_data_strategy.md`](08_data_strategy.md).
-
-## Alert policy and model-quality gate
-
-An alert is eligible only when:
-
-- the state was built successfully and data are not stale;
-- the model is approved for that checkpoint and presentation context;
-- calibration and validation results are visible;
-- the probability exceeds a team-reviewed threshold or a transparent hard rule fires; and
-- the alert includes at least one observable evidence record.
-
-Each alert stores its status (`new`, `reviewed`, `resolved`, or `dismissed`), review note, timestamps, prediction, explanation, evidence, provenance, and version references. A threshold will be chosen using validation data and an explicit false-alert/false-negative trade-off, not an arbitrary score.
-
-## Failure-safe behaviour
-
-- If ingestion is stale, mark the dashboard stale and suppress new model alerts.
-- If schema validation fails, quarantine the record and continue processing other records.
-- If the model is not validated for a context, show descriptive state only.
-- If baseline SHAP generation fails, report the baseline score without pretending an explanation exists.
-- If the primary LLM fails, times out, cites absent evidence, or returns invalid
-  JSON, suppress that output and display a clearly labelled deterministic
-  fallback; never disguise the fallback as an LLM prediction.
-- If a valid counterfactual cannot be produced, no counterfactual is shown; this stretch feature never blocks the MVP.
-
-## Why this is still a digital twin
-
-The value beyond a static dashboard is the maintained, historized state and feedback loop: source observations become versioned weekly states; states produce versioned predictions and evidence; alerts acquire an instructor-reviewed lifecycle; and each result can be replayed from its source data and cutoff. The project should demonstrate those properties clearly rather than relying on the label alone.
+React, FastAPI, authentication, persistence, support workflow, deployment, and workers make the research reviewable and demonstrable. They are engineering and product contributions. The principal research contributions are temporal state construction, checkpoint-specific empirical evaluation, and the controlled E2 finding about the limits of structural/citation compliance.
