@@ -20,7 +20,7 @@ Table 3.1 maps each final research question to its controlling evidence. E2 and 
 
 The study did not combine these measurements into a single score. Each stream has its own population, denominator, intervention, and claim boundary. Empirical OULAD outcomes were used only for E1; controlled E2 cases were not student-performance records; operational Qwen histories did not supply predictive labels; and synthetic workspace records were used only to exercise system behavior.
 
-> **[Figure 3.1 placeholder — Research methodology and evidence streams]** Educational records are converted into canonical observations and cutoff-safe learner states, which feed the E1 predictive evaluation and E4 temporal audit. A separate E2 path compares plain and schema-constrained generation on a frozen protocol. A third operational path passes workspace snapshots through Qwen, deterministic validation, bounded repair or abstention, and instructor review. Human triage and support actions remain separate from model outputs.
+> **[Figure 3.1 placeholder — Replace with the final methodology and evidence-stream diagram during visual integration.]** Educational records are converted into canonical observations and cutoff-safe learner states, which feed the E1 predictive evaluation and E4 temporal audit. A separate E2 path compares plain and schema-constrained generation on a frozen protocol. A third operational path passes workspace snapshots through Qwen, deterministic validation, bounded repair or abstention, and instructor review. Human triage and support actions remain separate from model outputs.
 
 ## 3.2 Data Sources and Evidence Classes
 
@@ -69,7 +69,11 @@ OULAD records dates relative to the presentation rather than providing the exact
 
 A checkpoint denotes the course-relative decision time at which a learner state could have been available. The implemented builder calculated the cutoff as `checkpoint_week × 7 − 1`, producing course days 20, 34, 55, and 69 for weeks 3, 5, 8, and 10. These fixed checkpoints provide repeated early and mid-course views while preserving a consistent rule across learners.
 
-For learner *i* at checkpoint *t*, the temporal state can be expressed as `s_(i,t) = (x_(i,t), m_(i,t), p_(i,t))`, where `x_(i,t)` contains derived feature values, `m_(i,t)` records the availability or missingness interpretation of each value, and `p_(i,t)` records provenance. Every included activity or submission observation must have a course-relative day less than or equal to the applicable cutoff. A week-*t* state is therefore neither the learner’s full-course state nor a retrospective summary.
+For learner *i* at checkpoint *t*, the temporal state can be expressed as
+
+$$s_{(i,t)} = \left(x_{(i,t)}, m_{(i,t)}, p_{(i,t)}\right),$$
+
+where `x_(i,t)` contains derived feature values, `m_(i,t)` records the availability or missingness interpretation of each value, and `p_(i,t)` records provenance. Every included activity or submission observation must have a course-relative day less than or equal to the applicable cutoff. A week-*t* state is therefore neither the learner’s full-course state nor a retrospective summary.
 
 Registration and unregistration were also evaluated relative to the cutoff. A learner whose registration day followed the cutoff did not receive a state at that checkpoint. A learner whose unregistration day was on or before the cutoff was not scored as an active enrolment. A withdrawal that occurred after the cutoff remained a future outcome and could contribute to the final risk label without entering the checkpoint features.
 
@@ -208,6 +212,8 @@ E2 governance used a frozen protocol, a separate manifest, and cryptographic has
 Operational evidence was archived as a JSON snapshot and a narrative evidence report. The snapshot records its extraction boundary, model digest, wire contract, version aggregates, failure categories, and denominator limitations without exposing credentials. Product and evaluation Git commits provide code lineage, while stable learner, state, job, analysis, case, and event identifiers support traceability through the implemented system.
 
 These controls improve repeatability but do not remove environmental dependencies. E2 inference depended on a particular local Ollama model build and hardware environment, and the operational snapshot does not include a restorable production database dump. Reproduction must therefore distinguish bitwise artifact verification, deterministic offline rescoring, and new inference execution.
+
+> **Final-integration citation note:** Reconcile citations for scikit-learn (`LogisticRegression` and `StandardScaler`) and percentile bootstrap confidence intervals after the consolidated bibliography is finalized; do not assign citation numbers in this chapter yet.
 
 ## 3.17 Ethical, Privacy, and Validity Considerations
 
