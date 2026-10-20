@@ -1,0 +1,13 @@
+.git
+.venv
+.env*
+OULAD
+scribble
+artifacts
+data
+presentations
+planning
+tests
+var
+__pycache__
+*.pyc

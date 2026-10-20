@@ -1,158 +1,127 @@
-# Course-Level Digital Twin for Early Warning
+# Provenance-Aware Course Digital Twin
 
-A graduation-project prototype that builds leakage-controlled weekly student
-states from learning-management-system evidence, estimates calibrated academic
-risk, and presents traceable alerts for instructor review.
+This master's project implements a provenance-aware, checkpointed course digital twin that connects temporal learner-state reconstruction, predictive analysis, validated instructor-facing evidence, and auditable human support decisions.
 
-The project treats a digital twin as a timestamped, queryable, and historized
-representation of observable course activity and progress. It does not attempt
-to simulate a student's mind, diagnose causes, or automate educational actions.
+The twin represents observable course activity and progress at declared checkpoints. It is not real-time, causal, a continuous psychological twin, or a universal student simulator.
 
-## Project status
+## Current product
 
-The repository is currently in the planning and architecture phase. The reviewed
-requirements, research boundaries, target architecture, and delivery workflow
-are documented under `docs/`. Application code, database migrations, runnable
-pipelines, and deployment assets are planned but have not yet been implemented.
+The current instructor interface is the **React + TypeScript + Vite** workspace, served by FastAPI. It provides authenticated course and checkpoint selection, learner profiles, evidence, risk history, instructor triage, support cases, support history, policies, and data/model provenance. Streamlit remains a legacy operational fallback.
 
-## Research objective
+The empirical product serves OULAD `AAA/2013J`. Its legacy `simple-rules-v1` score is an uncalibrated operational/demo value, not a probability and not a Qwen result. Synthetic Workspace data demonstrate product and operational workflows; they do not establish empirical predictive validity.
 
-The primary objective is to determine whether a capable LLM can reason over
-leakage-controlled weekly student states and produce useful, calibrated,
-evidence-grounded estimates of non-success earlier than simple majority,
-activity-only, grade-only, and conventional structured-ML baselines.
+Risk State, Instructor Triage Status, and Support Case Status are separate. Instructor actions never rewrite historical model evidence.
 
-The planned evaluation uses checkpoints such as weeks 3, 5, 8, and 10 and keeps
-two evidence paths separate:
+## Final research questions
 
-- **Empirical research path:** OULAD, or an approved replacement, for model
-  performance, calibration, and temporal evaluation.
-- **Operational test path:** a local Moodle sandbox for ingestion, replay,
-  persistence, alert lifecycle, and dashboard validation.
+1. **RQ1 — Temporal Prediction:** How does predictive performance evolve across cutoff-safe learner states at early course checkpoints?
+2. **RQ2 — Temporal Integrity:** Can a provenance-aware temporal learner-state pipeline prevent post-cutoff information leakage while preserving traceability?
+3. **RQ3 — LLM Grounding and Reliability:** How do structural constraints and deterministic validation affect evidence compliance, abstention behavior and operational reliability of LLM-generated instructor-facing analyses?
+4. **RQ4 — Human-in-the-loop Traceability:** How can model risk, instructor triage and longitudinal support decisions be represented separately while preserving historical model evidence?
 
-Synthetic or replayed Moodle learners are used only to test the system. They are
-not evidence of real-world predictive performance.
+RQ4 is a framework/system question, not an educator-effectiveness experiment.
 
-## Planned MVP
+## Frozen research evidence
 
-1. Convert empirical and Moodle records into provenance-aware canonical
-   observations.
-2. Build one versioned state per learner, course presentation, and checkpoint.
-3. Test cutoff rules so future activity, outcomes, and assessment results cannot
-   leak into earlier states.
-4. Evaluate a strong LLM as the primary risk model against transparent and
-   conventional-ML baselines, then calibrate its risk scores.
-5. Persist observations, states, predictions, evidence, alerts, and instructor
-   reviews in PostgreSQL.
-6. Expose a minimal FastAPI service and Streamlit instructor dashboard.
-7. Require the LLM to return schema-valid risk, uncertainty, and evidence
-   references grounded only in the supplied weekly state.
-8. Validate every model response and use a deterministic rule/template path
-   when the LLM is unavailable, invalid, or outside its approved context.
+### E1 — empirical temporal prediction
 
-No alert directly contacts, grades, penalizes, or refers a student. An instructor
-must remain in the decision loop.
+E1 evaluates Logistic Regression on OULAD `AAA/2013J`: 383 source enrolments, 372 eligible learners, and 1,464 temporal states. Learner-grouped splitting, train-only preprocessing, validation-based threshold selection, and untouched test evaluation were used.
+
+| Checkpoint | AUROC | Average Precision |
+|---|---:|---:|
+| Week 3 | 0.621 | 0.379 |
+| Week 5 | 0.657 | 0.531 |
+| Week 8 | 0.896 | 0.819 |
+| Week 10 | 0.834 | 0.802 |
+
+These are Logistic Regression discrimination metrics, not Qwen results or calibrated probabilities.
+
+### E4 — temporal integrity
+
+The provenance audit covers **194,590 provenance rows** and reports **0 cutoff violations** in the audited artifacts. This establishes cutoff integrity and traceability for those artifacts, not predictive accuracy or universal source correctness.
+
+### E2 — controlled LLM grounding
+
+E2 is a separate controlled experiment with 48 frozen cases: 12 scenario families, 24 `assessment_allowed`, and 24 `abstention_expected`. The valid primary comparison is `plain_llm` v2 versus `schema_only` v2.
+
+Schema-only generation completed the full output contract and citation checks for 48/48 cases, with semantic evidence validity in 42/48. Both treatments were behaviorally correct in 24/48 and abstained in 0/48. The supported conclusion is:
+
+> Schema-constrained generation substantially improves structural and citation compliance, but does not by itself improve selective abstention or behavioral decision accuracy.
+
+E2 v1, invalid schema-only r1, the defective original `evidence_first_full`, and incomplete post-hoc `evidence_first_full_v2` are excluded from the primary comparison.
+
+### Operational Qwen evidence
+
+Operational Qwen analysis is separate from E1 and E2. The mature path uses `qwen2.5:7b`, model digest `845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e`, the `risk-decision-v3` contract, deterministic validation, bounded repair, quality abstention, and prompt/model provenance.
+
+Among saved validated analyses, v3.3 achieved a higher first-pass validation share and a lower repair share than v3.2 under the same model identity and contract. This is operational reliability evidence, not predictive accuracy. No calibrated Qwen probability was established.
+
+## Contribution hierarchy
+
+Primary research contributions:
+
+1. Provenance-aware cutoff-safe temporal learner-state construction.
+2. Checkpoint-specific empirical predictive analysis across early learner states.
+3. Controlled evidence that structural/citation compliance alone does not guarantee correct selective abstention or behavioral decisions.
+
+The versioned operational LLM pipeline is a secondary research contribution. Separating prediction/model state, instructor triage, and support-case state is a framework contribution. React, FastAPI, authentication, persistence, deployment, workers, and the Streamlit fallback are engineering/product work; the React dashboard is not claimed as research novelty.
+
+## Architecture
+
+```text
+Instructor -> React workspace -> FastAPI
+           -> exact temporal learner/course state
+           -> saved analysis or prediction
+           -> deterministic validation
+           -> instructor triage
+           -> support workflow
+           -> audit/history
+```
+
+The operational Qwen path runs through versioned snapshots, queued analysis, validated structured output, bounded correction, and explicit abstention. E1 and E2 remain separate research paths.
 
 ## Technology stack
 
-| Area | Planned technology |
+| Area | Current implementation |
 |---|---|
-| Language and data | Python, pandas, NumPy |
-| Primary modelling | A selected strong hosted or open-weight LLM behind a provider-neutral adapter |
-| Baselines/calibration | scikit-learn; post-hoc calibration fitted without test leakage |
-| Evidence | LLM evidence references, input ablation tests, and deterministic fallback; SHAP for compatible baselines only |
-| Twin store | PostgreSQL, SQLAlchemy, Alembic |
-| LMS integration | Moodle web services/API or controlled export |
+| Frontend | React, TypeScript, Vite |
 | API | FastAPI |
-| Dashboard | Streamlit |
-| Testing and quality | pytest, pytest-cov, Ruff |
+| Persistence | PostgreSQL and SQLite contract/test support; SQLAlchemy/Alembic |
+| Empirical evaluation | pandas, NumPy, scikit-learn |
+| Operational LLM | Local Qwen2.5:7b through the workspace worker |
+| Legacy interface | Streamlit fallback |
+| Quality | pytest and TypeScript type/build checks |
 
-Distributed streaming systems, Kubernetes, a custom JavaScript frontend, and a
-vector database are intentionally outside the MVP.
+## Running the product
 
-## Getting started
-
-Python 3.11 is the recommended development version. PostgreSQL and the local
-Moodle sandbox will be needed for the integrated application, but they are not
-required to read the documentation or begin isolated data work.
-
-On Windows PowerShell:
+Use the tracked Windows launcher for the integrated local profile:
 
 ```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+.\start-digital-twin.ps1
 ```
 
-The dependency ranges in `requirements.txt` are an initial development baseline.
-They should be resolved into a lock file after the first vertical slice is
-working. The LLM is a core component, but its provider-specific SDK is not
-included until the team selects the model and approved access route. Boosting
-and counterfactual packages remain optional.
+The launcher performs environment and port checks before starting the required services. Follow the deployment-specific runbooks for Lobot or other hosts.
 
-There is no application start command yet because the implementation has not
-started. Runnable preparation, state-building, evaluation, replay, and demo
-commands will be added with their corresponding source code.
+## Source of truth and precedence
 
-## Documentation
+Current claims use this precedence:
 
-| Document | Purpose |
-|---|---|
-| [`docs/01_problem.md`](docs/01_problem.md) | Problem definition, research position, and constraints |
-| [`docs/02_goal.md`](docs/02_goal.md) | Priorities, acceptance criteria, and definition of done |
-| [`docs/03_solution.md`](docs/03_solution.md) | Proposed solution and component contracts |
-| [`docs/04_stack.md`](docs/04_stack.md) | Technology choices and selection rules |
-| [`docs/05_architecture.md`](docs/05_architecture.md) | Architecture, data contracts, and evaluation boundaries |
-| [`docs/06_workflow.md`](docs/06_workflow.md) | Ownership, delivery sequence, gates, and risks |
-| [`docs/07_structure.md`](docs/07_structure.md) | Target repository structure and placement rules |
-| [`docs/08_data_strategy.md`](docs/08_data_strategy.md) | Dataset decision, direct data profile, feature contract, database shape, and pipeline |
+1. `evaluation/reports/final_research_evidence_matrix.md` in the sibling `Digital-Twin-evaluation` repository.
+2. `evaluation/reports/e2_run_validity.md`.
+3. `evaluation/reports/llm_operational_version_evidence.md`.
+4. Frozen E1, E2, and E4 result artifacts.
+5. This README and current product documentation.
+6. Historical phase, migration, deployment, meeting, and planning documents.
 
-When these documents conflict with older proposals or meeting notes, the latest
-feedback-driven MVP boundary in `docs/` takes precedence.
+Historical documents preserve what was planned or known at their stated time; they do not override the frozen final evidence.
 
-## Data, privacy, and research integrity
+## Research integrity boundaries
 
-Do not commit:
+- Keep empirical, controlled-experimental, operational, replayed, and synthetic results explicitly separated.
+- Do not present raw scores as probabilities.
+- Do not infer motivation, understanding, diagnosis, or causality from LMS data.
+- Do not expose direct identifiers or secrets.
+- Do not automate student contact, grading, penalties, or referrals.
+- Preserve exact state, evidence, model, prompt, policy, and human-action history.
 
-- identifiable student information or unrestricted educational text;
-- raw datasets that cannot legally be redistributed;
-- Moodle database dumps containing user records;
-- passwords, database URLs, API keys, or access tokens;
-- generated models, large experiment artifacts, or unrestricted LLM logs.
-
-Use pseudonymous learner identifiers. Preserve each record's origin, event time,
-ingestion time, source identifier, and schema/adapter version. Keep empirical,
-replayed, synthetic, and manual-test results explicitly labelled and report them
-separately.
-
-## Development principles
-
-- Reusable logic belongs in `src/`, not only in notebooks.
-- Every weekly state and prediction must be reproducible from versioned inputs
-  and configuration.
-- Preprocessing, imputation, feature selection, and calibration must be fitted
-  on training data only.
-- Database changes must use migrations.
-- Any change to the MVP boundary, data policy, schemas, model protocol, or
-  deployment assumptions must update the relevant documentation.
-- Pull requests should state the satisfied requirement, test evidence, data
-  origin, and documentation impact.
-
-## Near-term roadmap
-
-The first implementation milestone is a minimal vertical slice:
-
-```text
-tiny fixture
-  -> canonical observation
-  -> weekly state
-  -> LLM prediction + baseline comparison
-  -> evidence
-  -> alert
-  -> API/dashboard review
-```
-
-Full OULAD preparation, Moodle integration, the primary LLM evaluation, and
-baseline attribution checks will be added incrementally after these interfaces
-and leakage controls are tested.
+See [`docs/01_problem.md`](docs/01_problem.md), [`docs/02_goal.md`](docs/02_goal.md), [`docs/03_solution.md`](docs/03_solution.md), and [`docs/05_architecture.md`](docs/05_architecture.md) for the reconciled current research and system boundary.

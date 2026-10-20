@@ -1,196 +1,102 @@
-# 05 — Architecture, data contracts, and evaluation boundaries
+# 05 — Current architecture and evidence boundaries
 
-## Logical architecture
+## Product architecture
 
 ```text
-                         EMPIRICAL RESEARCH PATH
- Raw OULAD / approved source
-          |
-          v
- Canonical observations --> weekly state builder --> evaluation dataset
-          |                       |                         |
-          |                       v                         v
-          |                versioned twin store     baselines + strong LLM
-          |                       ^                         |
-          |                       |                         v
-          |                 evidence + alerts <------ calibrated prediction + grounded citations
-          |                       |
-          |                       v
-          |                 FastAPI / Streamlit ----> instructor review
-          |                                               |
-          +-----------------------------------------------+
-                                  recorded feedback
-
-                         OPERATIONAL TEST PATH
- Local Moodle --> web services/export --> canonical observations --> same twin store
-      ^                                                        |
-      +------------- controlled replay/test scenarios ----------+
-
-                         OPTIONAL TEXT BENCHMARK
- Authentic labelled corpus --> isolated text evaluation --> results only
-                         (never identity-joined to OULAD)
+Instructor
+  -> React workspace
+  -> FastAPI authentication and course authorization
+  -> temporal learner/course state
+  -> exactly bound saved analysis or prediction
+  -> deterministic schema, evidence, policy and quality validation
+  -> instructor triage
+  -> support-case workflow
+  -> immutable/auditable history
 ```
 
-## Canonical data layers
+Streamlit remains a legacy/fallback client. It does not define the current presentation architecture.
 
-The database separates facts from interpretations. A later model run must not overwrite the evidence used by an earlier alert.
+## Empirical path
 
-| Layer | Examples | Mutability rule |
+```text
+OULAD AAA/2013J
+  -> canonical observations
+  -> cutoff-safe weekly states
+  -> provenance links
+  -> E1 Logistic Regression evaluation
+```
+
+E1 is a research evaluation path. The operational product may also contain legacy `simple-rules-v1` records for empirical workflow demonstration. Those records are uncalibrated demo scores and are not E1 results.
+
+## Operational Qwen path
+
+```text
+Workspace events
+  -> versioned snapshot and snapshot head
+  -> analysis job and attempt
+  -> Qwen2.5:7b structured output
+  -> deterministic validation
+  -> bounded repair or quality abstention
+  -> saved analysis with model/prompt/contract provenance
+  -> React instructor review
+```
+
+This path measures operational behavior. It is not the empirical predictor and does not provide calibrated probabilities.
+
+## Controlled E2 path
+
+```text
+Frozen 48-case E2 v2 protocol
+  -> plain_llm v2 / schema_only v2
+  -> deterministic offline rescoring
+  -> archived raw and rescored results
+```
+
+E2 is separate from operational job history and E1 outcome evaluation.
+
+## State and workflow separation
+
+| Concept | Meaning | Mutation rule |
 |---|---|---|
-| Source registry | dataset, licence, checksum, presentation, import version | Append/version; never silently replace |
-| Raw/canonical observations | activity, assessment, registration, forum event | Immutable after accepted ingestion; corrections create a new version or audit event |
-| Derived weekly state | clicks to date, active days, recency, missed work, cumulative score | Rebuildable and keyed by feature-set version plus cutoff |
-| Prediction | probability, checkpoint, model/calibrator version | Append-only result of a model run |
-| Evidence/explanation | supplied feature values, LLM evidence citations/ablation results, baseline SHAP, validated summary | Linked to one prediction; never detached from its inputs |
-| Alert | policy version, threshold, confidence, freshness, status | Status changes are audited |
-| Instructor feedback | reviewer, note, decision, timestamp | Append-only audit record |
+| Observation | Source fact available at a declared time | Immutable/versioned |
+| Temporal state | Derived evidence at one cutoff | Rebuildable and versioned |
+| Prediction/analysis | Model result bound to an exact state/snapshot | Historical result remains immutable |
+| Risk state | Model-derived band or status | Does not become instructor judgment |
+| Triage status | Instructor attention/priority decision | Independent audited lifecycle |
+| Support case | Longitudinal human-support record | Independent versioned lifecycle |
+| Support action | Note, review, follow-up or closure event | Append-only/audited history |
 
-## Minimum entities
+Risk State, Triage Status, and Support Case Status are not interchangeable. Human actions do not rewrite score, evidence, cutoff, model, prompt, or prediction provenance.
 
-| Entity | Required fields |
-|---|---|
-| `source_dataset` | `source_id`, name, version, licence/access, checksum, imported_at |
-| `course_presentation` | `presentation_id`, source_id, course/module code, start/end or relative calendar |
-| `learner` | pseudonymous `learner_id`, source_id; optional protected attributes stored separately with restricted use |
-| `enrolment` | learner_id, presentation_id, registration/withdrawal dates, outcome when legitimately available |
-| `activity_observation` | observation_id, learner_id, presentation_id, activity/resource type, event_time or aggregate_date, count/value, source record, origin |
-| `assessment` | assessment_id, presentation_id, type, due date, weight, optional domain/topic |
-| `assessment_observation` | learner_id, assessment_id, submission date, score, missing/withdrawn status, origin |
-| `text_observation` | text_id, learner/pseudonym where legitimately linkable, thread/context, event_time, content or restricted-content pointer, label provenance |
-| `weekly_state` | learner_id, presentation_id, week, cutoff_at, feature_set_version, feature values, missingness flags, origin summary |
-| `prediction` | state key, model_version, prompt version, raw/calibrated probability, output, generated_at, quality-gate status |
-| `evidence` | prediction_id, evidence_id, supplied feature/value, citation/attribution method and value, display label |
-| `llm_output` | prediction_id, provider/model, prompt/few-shot versions, parsed object, validation and abstention result, fallback used, latency/cost metadata |
-| `alert` | prediction_id, policy version, type, priority, freshness, status, created_at |
-| `alert_review` | alert_id, reviewer pseudonym/role, prior/new status, note, reviewed_at |
+## Temporal safeguards
 
-Every generated or replayed row also carries:
+- Features use only observations available at or before the checkpoint.
+- E4 audits 194,590 provenance rows with 0 cutoff violations.
+- A displayed prediction must reference the exact displayed state.
+- Missing current predictions are not replaced silently with older predictions.
+- Comparisons use the immediately previous eligible checkpoint and require compatible semantics.
+- Learner-grouped evaluation prevents one trajectory crossing split boundaries.
+- Training-only preprocessing and validation-based threshold selection protect the untouched E1 test evaluation.
 
-- `data_origin`: `empirical`, `replayed`, `synthetic`, or `manual_test`;
-- `source_dataset` and `source_record_id` when applicable;
-- `generation_method` and `scenario_id` when applicable;
-- `event_time` and `ingested_at`; and
-- schema/adapter version.
+## Reliability and security safeguards
 
-## Weekly state contract
+- Browser sessions and course grants protect the React/API boundary.
+- Mutations use CSRF protection where applicable, idempotency keys, audit records, and optimistic version checks.
+- Analysis jobs, attempts, inference traces, and snapshot heads preserve runtime lineage.
+- Invalid LLM outputs are rejected, boundedly repaired, or abstained; they are not silently presented.
+- Synthetic, replayed, empirical, and manual-test origins remain explicit.
 
-The primary grain is:
+## Evidence boundaries
 
-`(learner_id, presentation_id, checkpoint_week, feature_set_version)`
-
-Planned feature groups are:
-
-| Group | Candidate features | Guardrail |
+| Evidence | Establishes | Does not establish |
 |---|---|---|
-| Activity | weekly/cumulative clicks, active days, resource-type counts | OULAD clicks are daily aggregates, not login sessions |
-| Recency/regularity | days since activity, active-week ratio, variance/regularity | Derive only from dates on or before the cutoff |
-| Assessment | attempts/submissions to date, missed due work, cumulative weighted score, recent score trend | Include a score only after its legitimate availability date |
-| Context | registration timing, prior attempts, presentation week | Do not let course-end or withdrawal information leak backward |
-| Missingness | missing activity, missing assessment, incomplete week | Preserve missingness; do not convert all missing values to zero blindly |
-| Provenance | source, origin, cutoff, feature version | Required for every state |
+| E1 OULAD evaluation | Checkpoint-specific Logistic Regression discrimination | Qwen accuracy, calibration, or cross-course generalization |
+| E4 audit | Cutoff integrity and provenance for audited artifacts | Predictive quality or universal adapter correctness |
+| E2 controlled experiment | Effects of schema constraints on controlled grounding behavior | Operational success rate or educational effectiveness |
+| Operational Qwen history | Validation, repair, abstention, latency and provenance behavior | Predictive accuracy or calibrated probability |
+| Synthetic Workspace | Product, policy, worker and workflow behavior | Authentic learner behavior or empirical validity |
+| Human-in-the-loop implementation | Traceable separation of model and human states | Improved instructor decisions or student outcomes |
 
-Potential demographics are restricted to fairness/sensitivity analysis unless the team explicitly justifies their predictive use. Report a comparison with them excluded. Demographic attributes are never actionable explanation or recommendation inputs.
+## Source precedence
 
-### Leakage rules
-
-- A week `t` state uses only observations with an allowed availability time at or before the week `t` cutoff.
-- Course-end outcome, final grade, withdrawal date, and future assessment results are labels/context, not early features.
-- Fitted preprocessing, imputation, feature selection, and calibration use training folds only.
-- Multiple weekly rows from the same learner/presentation must not be split in a way that leaks one trajectory across train and test.
-- Prefer module-presentation-aware evaluation; document any weaker split forced by sample size.
-- Automated tests deliberately inject future records and assert that earlier states do not change.
-
-## Dataset decision matrix
-
-Each candidate receives `0 = absent/unusable`, `1 = partial or costly`, or `2 = strong`. Record evidence and access date beside every score in the working comparison artifact.
-
-| Criterion | Why it matters | Minimum to replace OULAD |
-|---|---|---|
-| Timely access | The project cannot wait on an uncertain request | Files or approved environment available by the Phase 0 gate |
-| Licence/publication | Results and derived artifacts must be publishable for assessment | Clear research/academic use and reporting permission |
-| Learner/course linkage | Required to build trajectories | Stable pseudonymous learner and course/presentation identifiers |
-| Time resolution | Required for weekly states | Events or aggregates with usable relative dates |
-| Assessment linkage | Connects behaviour to progress | Assessment/submission/score data linked to the learner |
-| Outcome label | Required for empirical early-warning evaluation | Pass/fail/withdrawal/grade or a justified equivalent |
-| LMS realism | Tests transfer to an operational LMS | Event/resource types and timestamps beyond person-course totals |
-| Authentic text | Supports the optional LLM semantic task | Raw, ethically usable text with labels or a feasible labelling plan |
-| Documentation/quality | Controls implementation risk | Data dictionary, manageable missingness, reproducible download |
-| Effort/size | Must fit four people and one semester | A first weekly-state table can be built within roughly one week |
-
-The completed source scores, access checks, and evidence links are recorded in
-[`08_data_strategy.md`](08_data_strategy.md). Stanford MOOCPosts or another
-authentic corpus can only be an **independent text benchmark**, never replacement
-structured data.
-
-## Current data decision
-
-The comparison was resolved on 2026-08-02:
-
-- OULAD is the sole empirical structured source for MVP training and evaluation.
-- Local Moodle is the operational sandbox and is reported separately.
-- Open edX is a schema reference; HarvardX/MITx is at most an optional aggregate
-  check; MORF and public Moodle cohorts stay outside P0 until their access and
-  linkage gates pass.
-- Fine-grained session/login fields absent from OULAD remain absent; daily
-  activity aggregates retain day precision and an event count.
-- Authentic text corpora are evaluated independently.
-- Synthetic/replayed data are limited to API, integration, rare-state,
-  failure-recovery, and UI tests.
-
-The normalized table shape and source mappings in `08_data_strategy.md` refine
-the minimum entities above without changing their provenance and immutability
-rules.
-
-## Component contracts
-
-### Ingestion
-
-- Idempotent: re-reading the same source record does not duplicate it.
-- Incremental: stores a cursor or last successful watermark.
-- Observable: records accepted, rejected, quarantined, and delayed rows.
-- Recoverable: an interrupted batch can resume without corrupting state.
-- Read-only toward Moodle through supported interfaces; no direct production-table writes.
-
-### State builder
-
-- Pure/reproducible from canonical observations, configuration, and cutoff.
-- Emits validation counts and leakage-test results.
-- Versions feature definitions; changing a feature creates a new feature-set version.
-
-### Prediction service
-
-- Accepts a persisted state key, not arbitrary dashboard values.
-- Serializes only cutoff-safe state fields through a versioned prompt contract.
-- Uses the selected strong LLM as the primary predictor and returns its model,
-  prompt, few-shot, and calibrator versions with raw and calibrated probability.
-- Refuses unsupported checkpoint/presentation contexts.
-- Persists the exact state/model reference used for every prediction.
-
-### LLM validation and evidence service
-
-- LLM input is an allow-listed projection of the persisted weekly state.
-- The LLM must cite only evidence identifiers present in that projection.
-- Strict JSON/schema and semantic validation occur before persistence/display.
-- Controlled input ablation tests evidence sensitivity; SHAP is used only for
-  compatible structured baselines and is never presented as an LLM explanation.
-- A clearly labelled deterministic fallback is mandatory when the primary LLM
-  cannot return a safe result.
-
-### Dashboard/API
-
-- Role-restricted instructor/research access.
-- No public student or prediction endpoints.
-- Freshness and failure state visible on every relevant page.
-- Alert-status mutations are authenticated and audited.
-
-## Evaluation boundaries
-
-| Evidence source | Evaluate | Do not claim |
-|---|---|---|
-| OULAD/approved empirical dataset | primary LLM and baseline early-warning performance, calibration, temporal generalization, subgroup slices | live Moodle performance or modern-session behaviour without evidence |
-| Moodle replay/synthetic data | ingestion, latency, schema, failure recovery, alert lifecycle, interface | real-world predictive validity or authentic learner behaviour |
-| Authentic independent text corpus | text classification/verbalization metrics | joint risk prediction for OULAD learners |
-| Frozen LLM audit cases | grounding, schema, abstention, evidence sensitivity, latency, cost, reviewer interpretation | educational intervention effectiveness or hidden chain-of-thought validity |
-| Small dashboard walkthrough | task completion and major usability problems | generalizable usability or learning-outcome improvement |
-
-This separation is a core integrity requirement and should appear in the final report's results structure.
+The controlling evidence is, in order: the final research evidence matrix, E2 run-validity report, operational LLM evidence report, frozen E1/E2/E4 artifacts, current product documentation, then dated historical phase and planning documents.

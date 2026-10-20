@@ -1,0 +1,154 @@
+"""Course-scoped client for the version-two instructor workspace."""
+
+from __future__ import annotations
+
+from typing import Any
+from urllib.parse import quote
+
+from .client import DashboardApiClient
+
+
+def _course_path(presentation_id: str) -> str:
+    return f"/api/v2/courses/{quote(presentation_id, safe=':')}"
+
+
+class WorkspaceClient(DashboardApiClient):
+    """Reuse the signed dashboard transport; never connect to storage directly."""
+
+    def courses(self) -> dict[str, Any]:
+        return self._request("GET", "/api/v2/courses")
+
+    def workspace(
+        self,
+        presentation_id: str,
+        *,
+        week: int,
+        query: str = "",
+        risk: str = "",
+        status: str = "",
+        offset: int = 0,
+        limit: int = 50,
+        privacy: str = "name_id",
+        needs_review: bool = False,
+        due: bool = False,
+        watchlist: bool = False,
+        flagged: bool = False,
+        insufficient_data: bool = False,
+        priority: str = "",
+        active_cases: bool = False,
+        sort: str = "attention",
+        support_scope: str = "checkpoint",
+        as_of_day: int | None = None,
+    ) -> dict[str, Any]:
+        return self._request(
+            "GET",
+            f"{_course_path(presentation_id)}/workspace",
+            params={
+                "week": week,
+                "query": query,
+                "risk": risk,
+                "status": status,
+                "offset": offset,
+                "limit": limit,
+                "privacy": privacy,
+                "needs_review": needs_review,
+                "due": due,
+                "watchlist": watchlist,
+                "flagged": flagged,
+                "insufficient_data": insufficient_data,
+                "priority": priority,
+                "active_cases": active_cases,
+                "sort": sort,
+                "support_scope": support_scope,
+                **({"as_of_day": as_of_day} if as_of_day is not None else {}),
+            },
+        )
+
+    def learner(
+        self, presentation_id: str, learner_id: str, *, week: int, privacy: str = "name_id"
+    ) -> dict[str, Any]:
+        return self._request(
+            "GET",
+            f"{_course_path(presentation_id)}/learners/{quote(learner_id, safe=':')}",
+            params={"week": week, "privacy": privacy},
+        )
+
+    def save_triage(
+        self,
+        presentation_id: str,
+        learner_id: str,
+        payload: dict[str, Any],
+        *,
+        idempotency_key: str,
+    ) -> dict[str, Any]:
+        return self._request(
+            "POST",
+            f"{_course_path(presentation_id)}/learners/{quote(learner_id, safe=':')}/triage",
+            headers={**self.headers, "Idempotency-Key": idempotency_key},
+            json=payload,
+        )
+
+    def save_policy(self, presentation_id: str, policy: dict[str, Any]) -> dict[str, Any]:
+        return self._request("POST", f"{_course_path(presentation_id)}/policy", json=policy)
+
+    def save_case(
+        self,
+        presentation_id: str,
+        learner_id: str,
+        payload: dict[str, Any],
+        *,
+        idempotency_key: str,
+    ) -> dict[str, Any]:
+        return self._request(
+            "POST",
+            f"{_course_path(presentation_id)}/learners/{quote(learner_id, safe=':')}/case",
+            headers={**self.headers, "Idempotency-Key": idempotency_key},
+            json=payload,
+        )
+
+    def analyze(
+        self,
+        presentation_id: str,
+        *,
+        week: int,
+        model_kind: str = "llm",
+        learner_ids: list[str] | None = None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {"week": week, "model_kind": model_kind}
+        if learner_ids is not None:
+            payload["learner_ids"] = learner_ids
+        return self._request("POST", f"{_course_path(presentation_id)}/analysis", json=payload)
+
+    def model_status(self) -> dict[str, Any]:
+        return self._request("GET", "/api/v2/model/status")
+
+    def analysis_status(self, presentation_id: str) -> dict[str, Any]:
+        return self._request("GET", f"{_course_path(presentation_id)}/analysis/status")
+
+    def batch_analysis(
+        self,
+        presentation_id: str,
+        *,
+        mode: str = "unassessed",
+        scope: str = "all_weeks",
+        week: int | None = None,
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {"scope": scope, "mode": mode}
+        if week is not None:
+            payload["week"] = week
+        return self._request(
+            "POST", f"{_course_path(presentation_id)}/analysis/batch", json=payload
+        )
+
+    def save_automation(
+        self, presentation_id: str, *, enabled: bool, version: int
+    ) -> dict[str, Any]:
+        return self._request(
+            "POST",
+            f"{_course_path(presentation_id)}/analysis/automation",
+            json={"enabled": enabled, "version": version},
+        )
+
+    def resume_analysis(self, presentation_id: str) -> dict[str, Any]:
+        """Request resumption for this course; cannot resume a shared service pause."""
+        return self._request("POST", f"{_course_path(presentation_id)}/analysis/resume", json={})

@@ -2,19 +2,26 @@
 
 ## Current state
 
-Based on the meeting documents and weekly milestones, the project is still in planning/exploration with one important operational milestone completed.
+Based on the meeting documents and weekly milestones, the project has moved
+from planning into an approval-gated implementation. Earlier records describe a
+working Laragon sandbox; it was not discoverable on the machine used for the
+Phase 6 gate, so the controlled-export fallback is the current executable path.
 
 | Area | Status |
 |---|---|
 | Original and group proposals | Complete; group proposal received 90% with scope, novelty, LLM-safety, and OULAD feedback |
 | Literature and candidate datasets | Source comparison and MVP decision completed 2026-08-02; OULAD selected, alternatives assigned bounded non-merged roles in `08_data_strategy.md` |
-| Target architecture and requirements | Revised in this documentation; database/API implementation not started |
-| Local Moodle | Laragon Moodle, database, test course, assignments, pages, files, sections, and forum confirmed working |
-| Moodle integration | Web services/token/API extraction and normalized transfer to PostgreSQL not yet demonstrated |
-| OULAD preparation | Official archive directly profiled and checkpoint/feature policy specified; reproducible state builder and leakage tests not yet demonstrated |
+| Target architecture and requirements | Revised in this documentation; state, prediction, evidence, alert, PostgreSQL, FastAPI, and dashboard contracts exercised on prepared OULAD |
+| Local Moodle | Earlier project records report a Laragon test course with assignments, pages, files, sections, and forum; no installation, service, or credentials were discoverable during the Phase 6 gate |
+| Moodle integration | Read-only client and controlled-export fallback implemented; 24 learners and 4,443 replayed records pass a 12-week PostgreSQL gate; live Laragon extraction remains unavailable on this machine |
+| OULAD preparation | Complete local release profiled on 2026-08-06; `AAA/2013J` reproducibly prepared; 1,464 cutoff-safe states across weeks 3, 5, 8, and 10 pass leakage, provenance, grounding, and checksum checks |
 | Structured models | Candidate comparison baselines identified; reproducible checkpoint experiment not yet demonstrated |
+| Integration demo predictor | Deterministic `simple-rules-v1` exercises validated prediction and high-risk-only alert contracts; smoke results are not trained, calibrated, or research evidence |
+| Twin persistence | PostgreSQL 16.14 service and restricted project database operational; migration `20260806_0002`, full-volume empirical lineage plus separate controlled replay, synchronization, quarantine, and review audit checks pass |
+| FastAPI | Six-operation instructor API plus presentation sync fields pass live PostgreSQL ASGI and Uvicorn loopback gates; development header identity is not production authentication |
 | Primary LLM | Confirmed as the intended risk model; provider/access, versioned prompt contract, and proof of concept remain pending |
-| Dashboard | Requirements defined; implementation not yet demonstrated |
+| Dashboard | API-only Streamlit workspace passes live PostgreSQL and rendered-browser gates; ranked queue, evidence/provenance, four-checkpoint timeline, ingestion/alert freshness, quarantine visibility, fallback, and audited review form demonstrated |
+| Integrated hand-off | Phase 7 one-command PostgreSQL gate passes on 4,443 replay records, producing 96 states/predictions and 9 grounded alerts without changing 152,047 empirical observations; runbook, journey map, manifest, and three rendered replay views completed |
 
 Do not describe planned items as completed in presentations or reports.
 
@@ -24,10 +31,10 @@ Ownership follows the latest task distribution while concentrating each person's
 
 | Lead | Primary responsibility | Required hand-off |
 |---|---|---|
-| Mohamed Abdel Majid | OULAD inspection, weekly-state builder, leakage controls, baseline and primary-LLM evaluation | Versioned state table, tests, baseline artifact, LLM evaluation artifact |
-| Arwa Elgazar | Alternative-dataset comparison, access/licence verification, independent text benchmark if feasible | Scored dataset matrix, access evidence, recommendation and optional prepared text sample |
-| Esraa Nematalla | Moodle dataset/API investigation and canonical field mapping | Working read-only extraction, Moodle-to-canonical mapping, adapter tests |
-| Mohamed Hasan | PostgreSQL/API/replay integration, provenance, alert/dashboard vertical slice | Migrations, replay scenario, API and minimal dashboard |
+| Mohamed Abdel Majid | OULAD weekly-state builder, leakage controls, temporary/final predictor adapter, baseline and primary-LLM evaluation | Versioned state table, tests, baseline artifact, predictor and LLM evaluation artifacts |
+| Arwa Elgazar | Agent-system feasibility, permission boundaries, resource-agent safety, and retained data/access investigations | Agent decision record, threat model, permission matrix, and any remaining data-access evidence |
+| Esraa Nematalla | Integration demo, Moodle intake/adapter, end-to-end vertical slice, and journey map | Working read-only extraction, Moodle-to-canonical mapping, gated demo evidence, and current journey map |
+| Mohamed Hasan | PostgreSQL, FastAPI, provenance, alert lifecycle, and minimal Streamlit dashboard | Migrations, API, replay scenario, alert review, and dashboard |
 | Shared | Requirements review, LLM frozen-case labelling, usability walkthrough, ethics, report, demo | Signed decisions and reviewed results |
 
 The authoritative name for this team member is **Mohamed Hasan**. Older source
@@ -43,7 +50,7 @@ documentation must use **Mohamed Hasan** consistently.
 | Outcome and checkpoint definitions | Abdel Majid + team review | First model run | Written label policy, cutoff dates, withdrawal handling, and weeks to evaluate |
 | Canonical observation/state schema | Esraa + Hasan + Abdel Majid | PostgreSQL migration and Moodle adapter | Field mapping from OULAD and Moodle plus provenance and missingness rules |
 | Final MVP/stretch boundary | All members + supervisor | Any DiCE/forum/RAG implementation | Signed priority table from `02_goal.md` |
-| Strong-model selection and approved access | Hasan or named university-contact owner | Primary LLM experiment | Written confirmation of model/version, provider or local runtime, credits/compute, privacy route, and reproducibility terms |
+| Strong-model selection and approved access | Abdel Majid or named university-contact owner | Primary LLM experiment | Written confirmation of model/version, provider or local runtime, credits/compute, privacy route, and reproducibility terms |
 | Human evaluators | Team + supervisor | Dashboard walkthrough | Availability and consent/ethics expectations for a small formative exercise |
 
 ## Delivery sequence

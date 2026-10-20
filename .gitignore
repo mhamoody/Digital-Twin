@@ -1,7 +1,24 @@
 # Local scratch work
 /scribble/
 
+# Local-only project management and generated deliverables
+/planning/
+/presentations/
+/tests/
+/lms/
+/docs/09_lms_integration.md
+/*.docx
+/*.pptx
+/*.pdf
+
 # Python environments and caches
+# Frontend dependencies and generated bundles
+node_modules/
+/frontend/dist/
+/frontend/coverage/
+/frontend/.vite/
+*.tsbuildinfo
+
 /.venv/
 __pycache__/
 *.py[cod]
@@ -10,15 +27,44 @@ __pycache__/
 .coverage
 htmlcov/
 .ipynb_checkpoints/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
 
 # Local configuration and secrets
 .env
 .env.*
 !.env.example
+/var/auth/
+/var/run/
+/var/log/
+/var/backups/
+/var/models/
+/var/tools/
+/var/downloads/
+/.staging-secrets/
 
 # Local datasets and generated artifacts
-/data/raw/
-/data/interim/
-/data/processed/
-/data/synthetic/
+/OULAD/
+/data/
 /artifacts/
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.bak
+*.zip
+
+# Local validation, smoke, packaging, and presentation utilities. The hosted
+# repository retains only preparation, deployment-demo, and account operations.
+/scripts/build_demo_states.py
+/scripts/build_moodle_replay.py
+/scripts/persist_phase3.py
+/scripts/profile_oulad.py
+/scripts/smoke_*.py
+/scripts/validate_*.py
+/scripts/package_*.ps1
+/scripts/create_*.ps1
+
+# Migration SQL is tracked because the Alembic revisions load it at runtime.

@@ -1,104 +1,79 @@
 # 01 — Problem and research position
 
-## Project definition
+## Current boundary
 
-This project builds a **course-level digital twin for instructor decision support**. The twin is a timestamped, queryable, and historized representation of observable student activity and academic progress. It is refreshed as new LMS evidence arrives and preserves the state that was known at each weekly checkpoint.
+The project addresses the gap between disconnected LMS records and an instructor's need for traceable, time-specific evidence. It reconstructs what was observable about a learner at declared checkpoints, evaluates empirical prediction separately, and preserves subsequent instructor and support actions without rewriting historical model evidence.
 
-For this project, the term does **not** mean a simulation of a student's mind. The system observes LMS interactions, submissions, assessment results, and—only when authentic or appropriately labelled data are available—student-authored text. It may estimate risk, but it must not claim to measure motivation, understanding, or causality directly.
+The thesis-safe description is:
 
-| Digital-twin property | Course-level interpretation | Boundary |
-|---|---|---|
-| Continuously updated state | Weekly student-state snapshots plus scheduled Moodle ingestion | Near-real-time means scheduled refresh, not streaming infrastructure |
-| State history | Immutable observations and versioned derived states for each checkpoint | Later information must never leak into earlier predictions |
-| Prediction | Calibrated probability of non-success at selected checkpoints | A prediction is uncertain evidence, not a diagnosis |
-| Explanation | Observable features linked to each alert | Explanations describe model behavior, not causes of student behavior |
-| Feedback loop | Instructor reviews, dismisses, or resolves an alert and records a note | The system never contacts or penalizes a student automatically |
+> A provenance-aware, checkpointed course digital twin that connects temporal learner-state reconstruction, predictive analysis, validated instructor-facing evidence, and auditable human support decisions.
 
-## The problem
+The system is not real-time, causal, a continuous psychological twin, or a universal student simulator. It does not infer motivation, understanding, or unobserved causes.
 
-LMS platforms collect useful evidence, but instructors usually see it as disconnected activity reports and gradebook summaries. A slowly declining pattern—fewer active days, longer inactivity, missed work, and falling assessment progress—can remain unnoticed until the student has already failed an important assessment or withdrawn.
+## Research problem
 
-The technical problem is therefore not merely to train another pass/fail classifier. It is to determine whether a small, auditable system can:
+The technical and research problem is to determine whether a small auditable system can:
 
-1. reconstruct what was known about each student at a given point in the semester;
-2. make an early, calibrated risk estimate without future-data leakage;
-3. attach each alert to traceable evidence and an explicit model/data version; and
-4. present that evidence to an instructor without overstating certainty or automating an educational decision.
+1. reconstruct cutoff-safe learner state at early checkpoints;
+2. retain provenance from each derived value to available observations;
+3. measure how empirical predictive performance changes by checkpoint;
+4. constrain and validate LLM-generated instructor-facing evidence; and
+5. represent model state, instructor triage, and longitudinal support decisions as separate historical records.
 
-## Research focus
+## Final research questions
 
-The proposal originally combined many substantial studies: temporal modelling, grade forecasting, knowledge-state estimation, SHAP, DiCE counterfactuals, LLM text analysis, LLM grounding tests, alert evaluation, fairness analysis, and dashboard usability. The grading feedback correctly identified this as too broad for four students in one semester.
+- **RQ1 — Temporal Prediction:** How does predictive performance evolve across cutoff-safe learner states at early course checkpoints? Evidence: E1.
+- **RQ2 — Temporal Integrity:** Can a provenance-aware temporal learner-state pipeline prevent post-cutoff information leakage while preserving traceability? Evidence: E4 and implementation.
+- **RQ3 — LLM Grounding and Reliability:** How do structural constraints and deterministic validation affect evidence compliance, abstention behavior and operational reliability of LLM-generated instructor-facing analyses? Evidence: E2 and separate operational LLM evidence.
+- **RQ4 — Human-in-the-loop Traceability:** How can model risk, instructor triage and longitudinal support decisions be represented separately while preserving historical model evidence? Evidence: system/framework implementation.
 
-The revised **primary scientific contribution** is narrower:
+RQ4 does not claim educator-effectiveness evidence. E2 and operational LLM history are separate evidence classes, not one experiment.
 
-> Design and evaluate a leakage-controlled, provenance-aware weekly student-state twin in which a capable LLM is the primary risk model, and determine whether its calibrated, evidence-grounded predictions improve on static and conventional-ML baselines.
+## Contribution hierarchy
 
-This separates the research contribution from the engineering contribution:
+### Primary research contributions
 
-| Type | Contribution |
-|---|---|
-| Scientific | Temporal state construction; a strong LLM as the primary predictor; leakage-aware checkpoint evaluation; calibration; comparison with majority, activity-only, grade-only, logistic, and tree baselines; analysis of grounding and model-quality gates |
-| Engineering | Moodle ingestion/replay, PostgreSQL persistence, API, dashboard, alert lifecycle, and deployment packaging |
-| Supporting analysis | Classical ML establishes comparison baselines rather than the intended final intelligence. SHAP may explain compatible baselines; LLM evidence references and controlled input ablations assess the primary model. DiCE and semantic forum analysis remain stretch work. |
+1. Provenance-aware cutoff-safe temporal learner-state construction.
+2. Checkpoint-specific empirical predictive analysis across early learner states.
+3. Controlled evidence showing that structural/citation compliance alone does not guarantee correct selective abstention or behavioral decisions.
 
-### Research questions
+### Secondary research contribution
 
-- **RQ1:** At weeks 3, 5, 8, and 10, how well does a strong LLM predict non-success from leakage-controlled weekly states compared with majority, activity-only, grade-only, logistic, and tree-based baselines?
-- **RQ2:** Can the LLM's risk scores be calibrated sufficiently for threshold-based instructor alerts, and how does reliability vary by module presentation and checkpoint?
-- **RQ3:** Can every accepted LLM prediction cite only supplied evidence, satisfy the output contract, expose uncertainty, and remain traceable to its prompt, model, data, and state versions?
-- **RQ4:** Does the LLM add useful predictive or evidence-quality value beyond conventional structured models at an acceptable latency, cost, and failure rate?
+A versioned evidence-grounded operational LLM pipeline with deterministic validation, bounded repair, quality abstention, and auditable model/prompt provenance.
 
-## Data problem
+### Framework contribution
 
-The investigation is complete: no verified public source supplies modern
-fine-grained LMS events, linked assessment timing, a usable outcome, and
-authentic labelled forum text for the same learners. The answer is therefore to
-separate evidence paths, not fabricate a larger joined dataset.
+Separation between prediction/model state, instructor triage, and support-case state.
 
-- **OULAD is the empirical MVP source.** It is accessible, CC BY 4.0, linked,
-  outcome-labelled, and large enough for presentation-aware checkpoint
-  evaluation. Its 10,655,280 VLE rows are learner-resource-day click aggregates,
-  not sessions or event timestamps.
-- **The local Moodle sandbox is the operational source.** It supplies realistic
-  entities, timestamps, APIs, grades, and event flow, but replayed/synthetic
-  learners cannot validate predictive accuracy.
-- **Open edX contributes a modern event/xAPI schema, not public cohort rows.**
-  Rich MITx data require a request and data-use agreement.
-- **HarvardX/MITx public data are person-course aggregates.** They cannot rebuild
-  weekly states or assessment histories.
-- **MORF is a restricted remote Coursera execution environment.** It requires an
-  institutional data-use agreement and is not a downloadable supplement.
-- **Newer Moodle releases are adapter candidates, not current training data.**
-  Screened releases either lacked reproducible event-to-outcome linkage, had
-  unavailable files, or still require calendar/outcome auditing.
-- **Authentic forum corpora remain independent text benchmarks.** Their learner
-  identities are never joined to OULAD.
+React, FastAPI, authentication, persistence, deployment, workers, support UI, and Streamlit fallback are engineering/product contributions. The React dashboard is not research novelty.
 
-The accepted combination, direct OULAD profile, missing-column policy, database
-shape, feature contract, and pipeline are specified in
-[`08_data_strategy.md`](08_data_strategy.md).
+## Empirical and operational boundaries
 
-## Constraints
+- OULAD `AAA/2013J` is the empirical E1 source.
+- E1 uses Logistic Regression, not Qwen.
+- Operational Qwen analysis is not empirical predictive evaluation.
+- Synthetic Workspace courses validate workflows and runtime behavior, not educational predictive validity.
+- Scores from `simple-rules-v1` and operational Qwen are uncalibrated and must not be called probabilities.
+- Calibration was not completed.
+- Multi-course empirical generalization and educator validation remain future work.
 
-- Four team members and approximately one academic semester.
-- One course/presentation at a time; multi-course deployment is future work.
-- No dependence on Queen's internal student data without formal approval.
-- Textual and structured LMS data only; no video or audio analysis.
-- Lightweight, reproducible infrastructure suitable for student laptops.
-- All personally identifiable information must be removed before storage, modelling, or external model calls.
-- No autonomous intervention, grading, referral, or student-facing message.
+## Constraints and non-goals
 
-## Explicit non-goals for the MVP
-
-- Inferring a student's internal cognitive or emotional state.
-- Claiming that a model feature caused an outcome.
-- Production deployment at Queen's or institution-wide scaling.
-- Combining unrelated learners across public datasets as if they were the same people.
-- Using synthetic data as the principal evidence for predictive performance.
-- A full causal or counterfactual-feasibility study; DiCE is a stretch experiment.
-- A full semantic forum/short-answer research study unless suitable authentic text is secured.
-- Adaptive content generation, tutoring-system integration, multi-agent automation, or direct student action.
+- No unrelated learner identities are joined across datasets.
+- No direct student intervention, grading, penalty, or referral is automated.
+- No causal or psychological claim is derived from activity traces.
+- No claim of institution-wide or cross-platform generalization is made.
+- The empirical result is primarily scoped to one OULAD presentation.
 
 ## Source precedence
 
-These documents synthesize, in order: the original supervisor proposal, weekly meeting and task documents, the July 2026 group proposal, the completed local Moodle-sandbox work, and the latest proposal feedback. Where they conflict, the latest feedback-driven MVP boundary in this document set takes precedence.
+When documents conflict, use this order:
+
+1. `evaluation/reports/final_research_evidence_matrix.md` in the sibling evaluation repository.
+2. `evaluation/reports/e2_run_validity.md`.
+3. `evaluation/reports/llm_operational_version_evidence.md`.
+4. Frozen E1/E2/E4 artifacts.
+5. Current product documentation.
+6. Historical planning, phase, migration, and deployment notes.
+
+Historical documents describe the state or intention at their stated date and do not override the final frozen evidence.
