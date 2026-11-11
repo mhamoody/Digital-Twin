@@ -157,10 +157,10 @@ The launcher performs environment and port checks before starting FastAPI and th
 
 Start evidence review with:
 
-- [`repo_cleanup_audit/preservation_phase/canonical_research_evidence_manifest.md`](repo_cleanup_audit/preservation_phase/canonical_research_evidence_manifest.md)
-- [`repo_cleanup_audit/preservation_phase/research_evidence_sha256_manifest.csv`](repo_cleanup_audit/preservation_phase/research_evidence_sha256_manifest.csv)
-- [`repo_cleanup_audit/final_preservation/archive_content_manifest.csv`](repo_cleanup_audit/final_preservation/archive_content_manifest.csv)
-- [`repo_cleanup_audit/phase2_execution/post_cleanup_hash_verification.csv`](repo_cleanup_audit/phase2_execution/post_cleanup_hash_verification.csv)
+- [Research evidence guide](docs/RESEARCH_EVIDENCE_GUIDE.md)
+- [Validated baseline](docs/VALIDATED_BASELINE.md)
+- [Repository map](docs/REPOSITORY_MAP.md)
+- [Reproducibility guide](docs/REPRODUCIBILITY.md)
 
 Frozen outputs are immutable evidence. Create a new versioned experiment directory instead of overwriting an existing artifact.
 
